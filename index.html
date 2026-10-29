@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap">
-<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <style>
 /* Layout: single scrolling page, sticky header, clinic search first, trust framework, clinic partner section, early-access modal. */
 :root{
@@ -63,6 +63,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .brand{display:flex;align-items:center;gap:.5rem;font-family:var(--display);font-weight:800;font-size:1.15rem;text-decoration:none;color:var(--fg)}
 .links{display:flex;gap:1.3rem;align-items:center}
 .links a{color:var(--fg);text-decoration:none;font-size:.92rem;font-weight:500}
+.links a[aria-current="true"]{color:var(--pink);font-weight:600}
 .menu-btn{display:none}
 @media(max-width:760px){
   .links{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;background:var(--bg);border-bottom:1px solid var(--line);padding:1rem max(16px,env(safe-area-inset-left,0px));gap:.9rem}
@@ -132,6 +133,31 @@ footer{border-top:1px solid var(--line);padding-block:1.6rem 2.4rem;color:var(--
 .ok-msg{background:var(--soft);border-radius:10px;padding:.8rem 1rem;font-size:.92rem}
 .theme{border:1.5px solid var(--line);background:var(--surface);border-radius:50%;width:38px;height:38px;cursor:pointer}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+/* find-nearby: location bar, live chips, map, distance */
+.locbar{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:1rem;margin-top:1.1rem}
+.locbar>*{min-width:0}
+.locbar .txt{display:flex;flex-direction:column;gap:.15rem}
+.locbar strong{font-size:.98rem}
+.locbar small{color:var(--muted);font-size:.83rem;line-height:1.45}
+@media(max-width:600px){.locbar{grid-template-columns:1fr}}
+@media(max-width:600px){.locbar .btn{width:100%}}
+.loc-status{display:flex;flex-wrap:wrap;gap:.45rem .6rem;align-items:center;margin-top:.7rem;font-size:.85rem;color:var(--muted);min-height:0}
+.loc-status:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:99px;padding:.22rem .68rem;font-size:.79rem;font-weight:600;background:var(--soft);color:var(--muted);white-space:nowrap}
+.chip.live{color:var(--ok)}
+.chip.warn{color:var(--warn)}
+.sortrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;margin-top:1rem}
+.rescount{font-size:.87rem;color:var(--muted)}
+.linkish{background:none;border:0;padding:0;color:var(--pink);font-weight:600;cursor:pointer;text-decoration:underline;font-size:.85rem}
+#map{height:330px;border-radius:14px;background:var(--soft);z-index:0}
+.mapwrap{margin-top:.9rem}
+.mapnote{font-size:.76rem;color:var(--muted);margin-top:.45rem}
+.leaflet-container{font:inherit}
+.leaflet-popup-content{font:15px/1.5 var(--body);margin:.8rem .9rem;color:#2A1620}
+.leaflet-popup-content strong{display:block}
+.dist{font-weight:700;color:var(--pink);white-space:nowrap}
+.card.near{border-color:var(--orange);box-shadow:0 12px 26px rgba(255,98,0,.15)}
+.ribbon{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
 html{scroll-behavior:smooth}
 </style>
 </head>
@@ -170,7 +196,7 @@ html{scroll-behavior:smooth}
       <p class="sw">Jua kabla ya kwenda.</p>
       <p class="lead">Front Belt is building the most trusted clinic directory in Nairobi. You will see which clinics are open today, how busy they are, and whether their details have been checked, before you leave home.</p>
       <div class="row">
-        <button class="btn btn-primary" data-open="patient">Get early access</button>
+        <button class="btn btn-primary" data-geo>Find a clinic near me</button>
         <button class="btn btn-ghost" data-open="clinic">List my clinic</button>
       </div>
       <p class="note" style="margin-top:.4rem">We are in early access. Clinics shown below are sample listings so you can see how Front Belt will work. They are not real clinics yet.</p>
@@ -188,9 +214,19 @@ html{scroll-behavior:smooth}
   </div>
 
   <section id="clinics" style="padding-top:1.5rem">
-    <span class="eyebrow">Sample listings</span>
-    <h2>See how a clinic search will look</h2>
-    <p class="lead" style="margin-top:.6rem">Try the filters. Every clinic here is made up for demonstration.</p>
+    <span class="eyebrow">Find a clinic</span>
+    <h2>Which clinic is nearest you right now?</h2>
+    <p class="lead" style="margin-top:.6rem">You do not need to know the area name. Share your location and Front Belt puts the closest clinics first, with the real distance from where you are standing.</p>
+
+    <div class="locbar">
+      <button class="btn btn-primary" id="geo-btn" type="button" data-geo>Use my location</button>
+      <div class="txt">
+        <strong id="geo-title">Find the nearest clinic to you</strong>
+        <small id="geo-sub">Your location stays on your phone. It is used only to sort this list, never stored or sent to us.</small>
+      </div>
+    </div>
+    <div class="loc-status" id="geo-status" role="status" aria-live="polite"></div>
+
     <div class="search">
       <input class="field" id="q" type="search" placeholder="Search by name or area, e.g. Kilimani" aria-label="Search clinics">
       <select class="field" id="area" aria-label="Filter by area"><option value="">All areas</option></select>
@@ -198,8 +234,17 @@ html{scroll-behavior:smooth}
         <option value="">Any trust level</option><option>Trusted</option><option>Verified</option><option>Listed</option>
       </select>
     </div>
+    <div class="sortrow">
+      <span class="rescount" id="rescount"></span>
+      <span class="chip" id="data-stamp">Sample data</span>
+      <button class="linkish" id="map-toggle" type="button" data-maptoggle>Show map</button>
+    </div>
+    <div class="mapwrap" id="mapwrap" hidden>
+      <div id="map"></div>
+      <p class="mapnote">Map data &copy; OpenStreetMap contributors.</p>
+    </div>
     <div class="cards" id="cards" aria-live="polite"></div>
-    <p class="note">Distances and wait times are examples. Real listings will show what each clinic reported that day.</p>
+    <p class="note">We are in early access. These listings are samples, placed at the centre of each Nairobi area, so you can see how distance search works. They are not real clinics yet.</p>
   </section>
 
   <section id="how" style="padding-top:0">
@@ -327,43 +372,318 @@ html{scroll-behavior:smooth}
 
 <script>
 (function(){
-  var CLINICS=[
-    {n:"Sample Family Clinic",a:"Kilimani",l:"Verified",s:"open",t:"Open today · updated 8:05 am",w:"about 20 min",b:55,d:"1.2 km"},
-    {n:"Sample Community Medical Centre",a:"Westlands",l:"Trusted",s:"open",t:"Open today · updated 7:40 am",w:"about 35 min",b:80,d:"3.4 km"},
-    {n:"Sample Health Point",a:"South B",l:"Listed",s:"stale",t:"Not updated today",w:"unknown",b:0,d:"4.1 km"},
-    {n:"Sample Women's and Child Clinic",a:"Lavington",l:"Verified",s:"open",t:"Open today · updated 8:20 am",w:"about 10 min",b:25,d:"2.6 km"},
-    {n:"Sample Dental and Medical Clinic",a:"Kilimani",l:"Listed",s:"closed",t:"Closed today",w:"-",b:0,d:"1.8 km"},
-    {n:"Sample Eastlands Clinic",a:"Donholm",l:"Verified",s:"open",t:"Open today · updated 7:55 am",w:"about 25 min",b:60,d:"7.9 km"}
-  ];
-  var $=function(id){return document.getElementById(id)};
-  var areas=[];CLINICS.forEach(function(c){if(areas.indexOf(c.a)<0)areas.push(c.a)});
-  areas.sort().forEach(function(a){var o=document.createElement("option");o.textContent=a;$("area").appendChild(o)});
+  /* ---------------------------------------------------------------
+     WHERE THE DATA COMES FROM
+     Leave LIVE_API empty and the page uses the built-in samples below.
+     Set it to a URL that returns a JSON array of clinics and the page
+     refreshes itself every POLL_MS while it stays open:
+       [{ "name":"...", "area":"Kilimani", "level":"Verified",
+          "status":"open", "wait":"about 20 min", "busy":55,
+          "lat":-1.293, "lng":36.787, "updated":"8:05" }]
+     README.md explains how to fill it from a real database.
+  ----------------------------------------------------------------*/
+  var LIVE_API = "";
+  var POLL_MS = 60000;
 
+  /* lat/lng are the centre of each area, so distance search can be tried
+     before real clinics are added. */
+  var SAMPLE_CLINICS = [
+    {n:"Sample Family Clinic",a:"Kilimani",l:"Verified",s:"open",t:"Open today · updated 8:05 am",w:"about 20 min",b:55,lat:-1.2930,lng:36.7870},
+    {n:"Sample Community Medical Centre",a:"Westlands",l:"Trusted",s:"open",t:"Open today · updated 7:40 am",w:"about 35 min",b:80,lat:-1.2650,lng:36.8030},
+    {n:"Sample Health Point",a:"South B",l:"Listed",s:"stale",t:"Not updated today",w:"unknown",b:0,lat:-1.3100,lng:36.8330},
+    {n:"Sample Women's and Child Clinic",a:"Lavington",l:"Verified",s:"open",t:"Open today · updated 8:20 am",w:"about 10 min",b:25,lat:-1.2760,lng:36.7720},
+    {n:"Sample Dental and Medical Clinic",a:"Kilimani",l:"Listed",s:"closed",t:"Closed today",w:"-",b:0,lat:-1.2960,lng:36.7830},
+    {n:"Sample Eastlands Clinic",a:"Donholm",l:"Verified",s:"open",t:"Open today · updated 7:55 am",w:"about 25 min",b:60,lat:-1.2880,lng:36.8900}
+  ];
+
+  var $=function(id){return document.getElementById(id)};
+  var clinics=[],me=null,watchId=null;
+  var map=null,mapReady=false,mapLayer=null,mapLoading=false;
+
+  function normalize(r){
+    var lat=Number(r.lat!=null?r.lat:r.latitude),lng=Number(r.lng!=null?r.lng:r.longitude);
+    return {
+      name:r.name||r.n, area:r.area||r.a, level:r.level||r.l, status:r.status||r.s,
+      text:r.text||r.t||"", wait:r.wait||r.w||"unknown", busy:Number(r.busy!=null?r.busy:r.b!=null?r.b:0),
+      lat:lat, lng:lng, dist:null
+    };
+  }
+  function isUsable(c){return !!c.name && isFinite(c.lat) && isFinite(c.lng)}
+
+  clinics=SAMPLE_CLINICS.map(normalize).filter(isUsable);
+
+  /* area dropdown, rebuilt whenever the data changes */
+  function fillAreas(){
+    var sel=$("area"),keep=sel.value,areas=[];
+    clinics.forEach(function(c){if(areas.indexOf(c.area)<0)areas.push(c.area)});
+    areas.sort();
+    sel.textContent="";
+    var all=document.createElement("option");all.value="";all.textContent="All areas";sel.appendChild(all);
+    areas.forEach(function(a){var o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o)});
+    if(areas.indexOf(keep)>-1)sel.value=keep;
+  }
+  fillAreas();
+
+  /* ---- distance maths ------------------------------------------- */
+  function distanceKm(lat1,lng1,lat2,lng2){
+    var R=6371,rad=Math.PI/180;
+    var dLat=(lat2-lat1)*rad,dLng=(lng2-lng1)*rad;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  function fmtDist(km){
+    if(km==null)return "";
+    if(km<0.95){
+      var m=Math.round(km*1000/10)*10;
+      return m<50?"under 50 m":m+" m";
+    }
+    return km<10?km.toFixed(1)+" km":Math.round(km)+" km";
+  }
+  function esc(s){
+    return String(s==null?"":s).replace(/[&<>"']/g,function(m){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];
+    });
+  }
+  function clock(){var d=new Date();return d.getHours()+":"+("0"+d.getMinutes()).slice(-2)}
+
+  function nearest(list,openOnly){
+    if(!me)return null;
+    var best=null,bd=Infinity;
+    (list||clinics).forEach(function(c){
+      if(openOnly&&c.status!=="open")return;
+      var d=distanceKm(me.lat,me.lng,c.lat,c.lng);
+      if(d<bd){bd=d;best=c}
+    });
+    return best?{c:best,d:bd}:null;
+  }
+
+  /* ---- the list ------------------------------------------------- */
   function render(){
     var q=$("q").value.trim().toLowerCase(),ar=$("area").value,lv=$("lvl").value,box=$("cards");
-    box.textContent="";
-    var list=CLINICS.filter(function(c){
-      return (!q||(c.n+" "+c.a).toLowerCase().indexOf(q)>-1)&&(!ar||c.a===ar)&&(!lv||c.l===lv);
+    var list=clinics.filter(function(c){
+      return (!q||(c.name+" "+c.area).toLowerCase().indexOf(q)>-1)&&(!ar||c.area===ar)&&(!lv||c.level===lv);
     });
-    if(!list.length){var e=document.createElement("div");e.className="empty";e.textContent="No sample clinics match. Try a different area or trust level.";box.appendChild(e);return}
+    list.forEach(function(c){c.dist=me?distanceKm(me.lat,me.lng,c.lat,c.lng):null});
+    if(me)list.sort(function(a,b){return a.dist-b.dist});
+
+    var pick=nearest(list,true);
+    box.textContent="";
+
+    var count=$("rescount");
+    count.textContent=list.length+(list.length===1?" clinic":" clinics")+(me?" · nearest first":" · use your location to sort by distance");
+
+    if(!list.length){
+      var e=document.createElement("div");e.className="empty";
+      e.textContent="No clinics match. Try a different area or trust level.";box.appendChild(e);return;
+    }
     list.forEach(function(c){
-      var d=document.createElement("article");d.className="card";
+      var isPick=pick&&pick.c===c&&!q&&!ar&&!lv;
+      var d=document.createElement("article");d.className="card"+(isPick?" near":"");
+
       var top=document.createElement("div");top.className="top";
-      var h=document.createElement("h3");h.textContent=c.n;
-      var bd=document.createElement("span");bd.className="badge b-"+c.l;bd.textContent=c.l;
+      var h=document.createElement("h3");h.textContent=c.name;
+      var bd=document.createElement("span");bd.className="badge b-"+c.level;bd.textContent=c.level;
       top.appendChild(h);top.appendChild(bd);
-      var st=document.createElement("span");st.className="pill "+c.s;
-      var dot=document.createElement("span");dot.className="dot";st.appendChild(dot);st.appendChild(document.createTextNode(c.t));
+      d.appendChild(top);
+
+      if(isPick){var rib=document.createElement("span");rib.className="ribbon";rib.textContent="Closest to you";d.appendChild(rib)}
+
+      var st=document.createElement("span");st.className="pill "+c.status;
+      var dot=document.createElement("span");dot.className="dot";st.appendChild(dot);st.appendChild(document.createTextNode(c.text));
+      d.appendChild(st);
+
       var m=document.createElement("div");m.className="meta";
-      [c.a,c.d+" away","Wait: "+c.w].forEach(function(x){var s=document.createElement("span");s.textContent=x;m.appendChild(s)});
-      d.appendChild(top);d.appendChild(st);d.appendChild(m);
-      if(c.s==="open"){var bar=document.createElement("div");bar.className="bar";var i=document.createElement("i");i.style.width=c.b+"%";bar.appendChild(i);d.appendChild(bar)}
+      var spanArea=document.createElement("span");spanArea.textContent=c.area;m.appendChild(spanArea);
+      if(c.dist!=null){
+        var spanD=document.createElement("span");spanD.className="dist";spanD.textContent=fmtDist(c.dist)+" away";m.appendChild(spanD);
+      }
+      var spanW=document.createElement("span");spanW.textContent="Wait: "+c.wait;m.appendChild(spanW);
+      d.appendChild(m);
+
+      if(c.status==="open"){
+        var bar=document.createElement("div");bar.className="bar";
+        var i=document.createElement("i");i.style.width=c.busy+"%";bar.appendChild(i);d.appendChild(bar);
+      }
       var tag=document.createElement("small");tag.style.color="var(--muted)";tag.textContent="Sample listing";d.appendChild(tag);
       box.appendChild(d);
     });
   }
+
   ["q","area","lvl"].forEach(function(id){$(id).addEventListener("input",render)});
   render();
+
+  /* ---- live data ------------------------------------------------ */
+  function stamp(text,warn){
+    var el=$("data-stamp");el.textContent=text;
+    el.className="chip"+(warn?" warn":"");
+  }
+  function loadClinics(){
+    if(!LIVE_API){stamp("Sample data");return}
+    fetch(LIVE_API,{cache:"no-store"}).then(function(r){
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      return r.json();
+    }).then(function(rows){
+      if(!Array.isArray(rows))throw new Error("Expected an array of clinics");
+      var next=rows.map(normalize).filter(isUsable);
+      if(!next.length)throw new Error("No usable clinics in response");
+      clinics=next;fillAreas();render();
+      if(mapReady)drawMap();
+      stamp("Live · checked "+clock());
+    }).catch(function(err){
+      stamp("Offline · showing last known",true);
+      if(window.console)console.warn("Clinic data refresh failed:",err.message);
+    });
+  }
+  if(LIVE_API){loadClinics();setInterval(loadClinics,POLL_MS)}
+
+  /* ---- location ------------------------------------------------- */
+  function setStatus(parts){
+    var box=$("geo-status");box.textContent="";
+    parts.forEach(function(p){
+      if(p.t==="link"){
+        var b=document.createElement("button");b.type="button";b.className="linkish";
+        b.textContent=p.text;b.setAttribute(p.attr,"");box.appendChild(b);return;
+      }
+      var s=document.createElement("span");s.className="chip"+(p.cls?" "+p.cls:"");s.textContent=p.text;box.appendChild(s);
+    });
+  }
+
+  function locate(){
+    var btn=$("geo-btn");
+    if(!navigator.geolocation){
+      setStatus([{text:"This browser cannot share location. Pick your area instead.",cls:"warn"}]);return;
+    }
+    if(!window.isSecureContext){
+      setStatus([{text:"Location needs an https:// address. Pick your area instead.",cls:"warn"}]);return;
+    }
+    btn.disabled=true;btn.textContent="Finding you…";
+    $("geo-sub").textContent="Waiting for your device to share its location…";
+    navigator.geolocation.getCurrentPosition(onPosition,onGeoError,{enableHighAccuracy:true,timeout:12000,maximumAge:20000});
+  }
+
+  function onPosition(pos){applyMe(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy)}
+  function onMove(pos){
+    if(!me)return;
+    if(distanceKm(me.lat,me.lng,pos.coords.latitude,pos.coords.longitude)<0.03)return;
+    applyMe(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy);
+  }
+
+  function applyMe(lat,lng,acc){
+    me={lat:lat,lng:lng,acc:acc||0};
+    var btn=$("geo-btn");btn.disabled=false;btn.textContent="Update my location";
+
+    var pick=nearest(clinics,true)||nearest(clinics,false);
+    if(pick){
+      $("geo-title").textContent="Closest open clinic: "+pick.c.name;
+      $("geo-sub").textContent="In "+pick.c.area+", "+fmtDist(pick.d)+" away. The list is sorted nearest first.";
+    }
+    setStatus([
+      {text:"Location on",cls:"live"},
+      {text:"Accurate to about ±"+Math.max(10,Math.round(me.acc))+" m"},
+      {text:"Refresh",t:"link",attr:"data-geo"}
+    ]);
+    render();
+    if(mapReady)drawMap();
+
+    if(watchId===null&&navigator.geolocation.watchPosition){
+      try{watchId=navigator.geolocation.watchPosition(onMove,function(){},{maximumAge:15000,timeout:20000})}catch(x){}
+    }
+  }
+
+  function onGeoError(err){
+    var btn=$("geo-btn");btn.disabled=false;btn.textContent="Try my location again";
+    $("geo-title").textContent="Find the nearest clinic to you";
+    var msg=err&&err.code===1
+      ? "Location is blocked. Allow it in your browser, or pick your area below."
+      : err&&err.code===3
+      ? "Your device took too long to find you. Try again, or pick your area below."
+      : "We could not read your location. Pick your area below instead.";
+    $("geo-sub").textContent="No location, no problem: search by name or choose an area.";
+    setStatus([{text:msg,cls:"warn"}]);
+  }
+
+  /* ---- optional map --------------------------------------------- */
+  function loadLeaflet(cb){
+    if(window.L)return cb();
+    if(mapLoading)return;
+    mapLoading=true;
+    var css=document.createElement("link");css.rel="stylesheet";
+    css.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";document.head.appendChild(css);
+    var s=document.createElement("script");s.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    s.onload=cb;
+    s.onerror=function(){
+      mapLoading=false;
+      $("map").innerHTML='<p class="mapnote" style="padding:1rem">The map could not load. The list below still works.</p>';
+    };
+    document.head.appendChild(s);
+  }
+
+  function showMap(){
+    $("mapwrap").hidden=false;
+    $("map-toggle").textContent="Hide map";
+    loadLeaflet(function(){
+      if(!map){
+        map=L.map("map",{scrollWheelZoom:false}).setView([-1.2864,36.8172],12);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
+          maxZoom:19,attribution:"&copy; OpenStreetMap contributors"
+        }).addTo(map);
+        mapLayer=L.layerGroup().addTo(map);
+        mapReady=true;
+      }
+      drawMap();
+      setTimeout(function(){map.invalidateSize()},200);
+    });
+  }
+
+  function drawMap(){
+    if(!map||!mapLayer)return;
+    mapLayer.clearLayers();
+    var pts=[];
+    clinics.forEach(function(c){
+      var col=c.status==="open"?"#0F8A4F":c.status==="stale"?"#B45309":"#8A6F7A";
+      var mk=L.circleMarker([c.lat,c.lng],{radius:8,color:"#fff",weight:2,fillColor:col,fillOpacity:1});
+      var d=me?fmtDist(distanceKm(me.lat,me.lng,c.lat,c.lng)):"";
+      mk.bindPopup("<strong>"+esc(c.name)+"</strong>"+esc(c.area)+(d?" · "+esc(d)+" away":"")+"<br>"+esc(c.text||c.wait));
+      mk.addTo(mapLayer);pts.push([c.lat,c.lng]);
+    });
+    if(me){
+      L.circle([me.lat,me.lng],{radius:Math.max(60,Math.min(me.acc||80,400)),color:"#E8135F",fillColor:"#E8135F",fillOpacity:.12,weight:1}).addTo(mapLayer);
+      L.circleMarker([me.lat,me.lng],{radius:7,color:"#fff",weight:3,fillColor:"#E8135F",fillOpacity:1}).bindPopup("<strong>You are here</strong>"+"±"+Math.max(10,Math.round(me.acc||0))+" m").addTo(mapLayer);
+      pts.push([me.lat,me.lng]);
+    }
+    if(pts.length)map.fitBounds(pts,{padding:[40,40],maxZoom:15});
+  }
+
+  /* ---- which section am I in? ----------------------------------- */
+  var navLinks=[].slice.call(document.querySelectorAll('.links a[href^="#"]'));
+  if(window.IntersectionObserver&&navLinks.length){
+    var spy=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting)return;
+        navLinks.forEach(function(a){
+          a.setAttribute("aria-current",a.getAttribute("href")==="#"+en.target.id?"true":"false");
+        });
+      });
+    },{rootMargin:"-84px 0px -68% 0px"});
+    ["clinics","trust","for-clinics","faq"].forEach(function(id){
+      var el=document.getElementById(id);if(el)spy.observe(el);
+    });
+  }
+
+  /* new controls, kept separate from the modal/theme handlers below */
+  document.addEventListener("click",function(e){
+    if(e.target.closest("[data-geo]")){
+      e.preventDefault();
+      var sec=$("clinics");
+      if(sec&&sec.getBoundingClientRect().top<0){sec.scrollIntoView({block:"start"})}
+      locate();return;
+    }
+    if(e.target.closest("[data-maptoggle]")){
+      var wrap=$("mapwrap");
+      if(wrap.hidden){showMap()}
+      else{wrap.hidden=true;$("map-toggle").textContent="Show map"}
+    }
+  });
 
   /* modal */
   var mode="patient";
