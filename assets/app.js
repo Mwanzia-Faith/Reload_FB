@@ -282,7 +282,12 @@
   function setStamp() {
     var el = $('data-stamp');
     if (!el) return;
-    if (dataErr) { el.textContent = 'Offline · showing last known'; el.className = 'chip warn'; return; }
+    if (dataErr) {
+      var samplesOnly = all.length && all.every(function (c) { return c.sample; });
+      el.textContent = samplesOnly ? 'Offline · showing sample clinics' : 'Offline · showing last known';
+      el.className = 'chip warn';
+      return;
+    }
     if (FB.mode === 'demo') { el.textContent = 'Demo data · this browser'; el.className = 'chip seed'; return; }
     el.textContent = 'Live · checked ' + clock(lastLoaded || new Date());
     el.className = 'chip live';
@@ -304,6 +309,23 @@
     setStamp();
     renderCurrent();
   });
+
+  /* A configured database that never answers (wrong config, Firestore not
+     created yet, rules not published) leaves the site with nothing to show.
+     Say so instead of presenting an empty directory as if it were correct. */
+  function watchFirstLoad() {
+    if (FB.mode !== 'firebase') return;
+    setTimeout(function () {
+      if (lastLoaded || dataErr) return;
+      dataErr = new Error('The database did not answer yet.');
+      if (!all.length) all = fallbackRows();
+      setStamp();
+      renderCurrent();
+      var ftr = $('ftr-mode');
+      if (ftr) ftr.textContent = 'Database not connected yet — sample clinics shown.';
+    }, 9000);
+  }
+  watchFirstLoad();
 
   FB.onAuth(function (u) {
     me = u;
