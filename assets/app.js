@@ -1556,17 +1556,22 @@
   }
   paintContactButton();
 
+  /* hidden markup can lag the script by a few minutes in a browser cache,
+     so every optional element is checked rather than assumed */
+  function show(id, on) { var el = $(id); if (el) el.hidden = !on; }
+
   function contactDone(msg) {
     $('contact-form').querySelectorAll('label, #c-submit, #c-err, #c-fallback').forEach(function (el) { el.hidden = true; });
-    $('c-done-msg').textContent = msg;
-    $('c-done').hidden = false;
+    if ($('c-done-msg')) $('c-done-msg').textContent = msg;
+    show('c-done', true);
   }
 
-  $('c-again').addEventListener('click', function () {
+  var againBtn = $('c-again');
+  if (againBtn) againBtn.addEventListener('click', function () {
     $('contact-form').reset();
     $('contact-form').querySelectorAll('label, #c-submit').forEach(function (el) { el.hidden = false; });
-    $('c-done').hidden = true;
-    $('c-fallback').hidden = true;
+    show('c-done', false);
+    show('c-fallback', false);
     $('c-name').focus();
   });
 
@@ -1588,9 +1593,11 @@
 
     if (!CONTACT_KEY) {
       var link = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      /* show the written address first: handing off to a mail app can take
+         over the page, and the visitor must not lose the way to reach us */
+      show('c-fallback', true);
       toast('Opening your email app…');
       try { window.location.href = link; } catch (x) {}
-      $('c-fallback').hidden = false;
       return;
     }
 
@@ -1620,13 +1627,13 @@
       err.textContent = 'That did not send (' + ((res && res.message) || 'no answer from the mail service') +
         '). You can email us directly at ' + EMAIL + '.';
       err.hidden = false;
-      $('c-fallback').hidden = false;
+      show('c-fallback', true);
     }).catch(function () {
       btn.disabled = false;
       paintContactButton();
       err.textContent = 'The connection dropped, so the message was not sent. Email us directly at ' + EMAIL + '.';
       err.hidden = false;
-      $('c-fallback').hidden = false;
+      show('c-fallback', true);
     });
   });
 
