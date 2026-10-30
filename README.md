@@ -118,6 +118,37 @@ The location never leaves the device: no geocoding call, nothing sent to a serve
 
 Distances are only as good as the clinic coordinates. The sample clinics sit at the centre of each Nairobi area, so distances to them are illustrative — real listings carry real `lat`/`lng`, captured either by the team in **Add clinic** or by the clinic itself in its console.
 
+## Will the email actually arrive?
+
+Two different things are going on, and only one of them is the site's job.
+
+**The address itself.** `frontbelttechnologiesltd@gmail.com` is an ordinary Gmail mailbox, and `gmail.com` publishes working mail servers (MX records checked), so mail addressed to it is delivered if the account exists. Nothing the website can do changes that — if the mailbox exists, it receives; if it does not, the sender gets a bounce. Sending yourself one message is the only real test.
+
+**How the site hands the message over.** Right now the contact form builds a `mailto:` link, which hands the message to the *visitor's* email app. That works on a desktop with Outlook or on a phone with Gmail set up — but on a locked-down browser, or a phone with no mail account configured, it silently does nothing. Nothing is lost, but the message never leaves.
+
+So you have two options:
+
+### Option A — keep it as it is
+
+Free, no accounts, no dependency. The button says **Open in my email app**, and if nothing opens the page now tells the visitor to email the address directly.
+
+### Option B — the form sends it for you (recommended)
+
+The message is posted straight to a form service that emails it to you. The visitor needs no email app at all, and you get a copy in your inbox plus a record on the service.
+
+1. Go to <https://web3forms.com> and enter `frontbelttechnologiesltd@gmail.com`. It emails you a free **access key**.
+2. Paste it into `assets/app.js`:
+
+```js
+var CONTACT_KEY = 'your-access-key-here';
+```
+
+3. Commit and push. The button becomes **Send message**, and submissions are delivered directly.
+
+That signup email is itself the proof you were asking for: if that key arrives in the inbox, the mailbox receives mail from the outside world.
+
+Notes on this choice: Web3Forms' free tier is 250 submissions a month, it removes the need for a server, and the access key is public by design — it can only submit to the address it was issued for, so it cannot be abused to send from your identity. If you later want submissions stored in your own database instead of only emailed, the same handler is one place to change.
+
 ## Status
 
 Early access. Clinics marked *Sample* are demonstrations, not real clinics. The contact form opens the visitor's email app with the details filled in, addressed to `frontbelttechnologiesltd@gmail.com`.

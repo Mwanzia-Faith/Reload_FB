@@ -338,8 +338,16 @@
             </select>
           </label>
           <label>Message<textarea class="field" id="c-msg" rows="4" required></textarea></label>
-          <button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-mail"/></svg> Open in my email app</button>
+          <button class="btn btn-primary" type="submit" id="c-submit"><svg class="ic"><use href="#i-mail"/></svg> Open in my email app</button>
           <p class="ok-msg" id="c-err" hidden></p>
+          <div class="stack" id="c-done" hidden>
+            <p class="ok-msg" id="c-done-msg"></p>
+            <button class="btn btn-ghost btn-sm" type="button" id="c-again">Write another message</button>
+          </div>
+          <p class="muted small" id="c-fallback" hidden>
+            Nothing opened? Your device may have no email app set up. Email us directly at
+            <code class="sel">frontbelttechnologiesltd@gmail.com</code> — the address is also on the left.
+          </p>
         </form>
       </div>
     </div>

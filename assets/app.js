@@ -9,6 +9,15 @@
   var DATA = window.FB_DATA;
   var EMAIL = 'frontbelttechnologiesltd@gmail.com';
 
+  /* Contact form delivery.
+     Empty  -> the button opens the visitor's own email app (no server needed,
+               but it fails silently where no email app is set up).
+     Filled -> the message is POSTed to Web3Forms and lands in the inbox
+               directly, no email app involved. Get a free access key in one
+               minute at https://web3forms.com (the key is emailed to you —
+               which also proves the inbox receives mail). See README.md. */
+  var CONTACT_KEY = '';
+
   var all = [];            /* every clinic this visitor is allowed to see */
   var me = null;           /* signed-in profile, or null */
   var meGeo = null;        /* {lat,lng,acc} from the device */
@@ -1537,11 +1546,36 @@
     $(id).addEventListener('change', renderFind);
   });
 
+  /* the button says what will actually happen */
+  function paintContactButton() {
+    var b = $('c-submit');
+    if (!b) return;
+    b.innerHTML = CONTACT_KEY
+      ? '<svg class="ic"><use href="#i-mail"/></svg> Send message'
+      : '<svg class="ic"><use href="#i-mail"/></svg> Open in my email app';
+  }
+  paintContactButton();
+
+  function contactDone(msg) {
+    $('contact-form').querySelectorAll('label, #c-submit, #c-err, #c-fallback').forEach(function (el) { el.hidden = true; });
+    $('c-done-msg').textContent = msg;
+    $('c-done').hidden = false;
+  }
+
+  $('c-again').addEventListener('click', function () {
+    $('contact-form').reset();
+    $('contact-form').querySelectorAll('label, #c-submit').forEach(function (el) { el.hidden = false; });
+    $('c-done').hidden = true;
+    $('c-fallback').hidden = true;
+    $('c-name').focus();
+  });
+
   $('contact-form').addEventListener('submit', function (e) {
     e.preventDefault();
     var n = $('c-name').value.trim();
     var em = $('c-email').value.trim();
     var msg = $('c-msg').value.trim();
+    var topic = $('c-topic').value;
     var err = $('c-err');
     if (!n || !/^\S+@\S+\.\S+$/.test(em) || !msg) {
       err.textContent = 'Please add your name, a valid email and a message.';
@@ -1549,11 +1583,51 @@
       return;
     }
     err.hidden = true;
-    var subject = $('c-topic').value + ' — ' + n;
-    var body = 'Name: ' + n + '\nEmail: ' + em + '\nAbout: ' + $('c-topic').value + '\n\n' + msg;
-    var link = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-    toast('Opening your email app…');
-    try { window.location.href = link; } catch (x) {}
+    var subject = topic + ' — ' + n;
+    var body = 'Name: ' + n + '\nEmail: ' + em + '\nAbout: ' + topic + '\n\n' + msg;
+
+    if (!CONTACT_KEY) {
+      var link = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      toast('Opening your email app…');
+      try { window.location.href = link; } catch (x) {}
+      $('c-fallback').hidden = false;
+      return;
+    }
+
+    /* send it ourselves, so it works on a phone with no mail app */
+    var btn = $('c-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Sending…';
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: CONTACT_KEY,
+        subject: 'Front Belt website — ' + subject,
+        name: n,
+        email: em,
+        topic: topic,
+        message: msg,
+        botcheck: false
+      })
+    }).then(function (r) { return r.json().catch(function () { return {}; }); }).then(function (res) {
+      btn.disabled = false;
+      paintContactButton();
+      if (res && res.success) {
+        contactDone('Thank you, ' + n + '. Your message is on its way — we reply within two working days.');
+        return;
+      }
+      err.textContent = 'That did not send (' + ((res && res.message) || 'no answer from the mail service') +
+        '). You can email us directly at ' + EMAIL + '.';
+      err.hidden = false;
+      $('c-fallback').hidden = false;
+    }).catch(function () {
+      btn.disabled = false;
+      paintContactButton();
+      err.textContent = 'The connection dropped, so the message was not sent. Email us directly at ' + EMAIL + '.';
+      err.hidden = false;
+      $('c-fallback').hidden = false;
+    });
   });
 
   /* theme before first paint where possible */
