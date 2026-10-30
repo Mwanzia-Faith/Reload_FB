@@ -378,11 +378,7 @@
           <span id="auth-switch-text">New here?</span>
           <button class="linkish" type="button" id="auth-switch">Create an account</button>
         </div>
-        <div class="demobox" id="demo-admin" hidden>
-          <strong>Preview the admin console</strong>
-          <p class="muted small">Demo mode only. The Front Belt team console is where clinics are enlisted, trust levels are set and listings are removed.</p>
-          <button class="btn btn-ghost btn-sm" type="button" id="demo-admin-btn"><svg class="ic"><use href="#i-chart"/></svg> Open team console (demo)</button>
-        </div>
+
       </form>
       <p class="note" id="mode-note"></p>
     </div>
@@ -421,6 +417,40 @@
         </div>
       </div>
       <div id="prov-body"></div>
+    </div>
+  </section>
+
+  <!-- ============================== TEAM ACCESS (private, not linked in nav) ============================== -->
+  <section class="view" id="view-team" hidden>
+    <div class="wrap narrow">
+      <div class="viewhead">
+        <span class="eyebrow"><svg class="ic"><use href="#i-lock"/></svg> Front Belt team</span>
+        <h1>Team access</h1>
+        <p class="lead">This console is for Front Belt staff: it enlists clinics, sets trust levels and removes listings. Patients and clinics sign in from the normal sign-in page.</p>
+      </div>
+
+      <div id="team-signedin" hidden>
+        <div class="panel stack">
+          <h2 class="h-sm">Not a team account</h2>
+          <p class="muted" id="team-signedin-msg"></p>
+          <div class="row">
+            <button class="btn btn-primary" type="button" data-signout><svg class="ic"><use href="#i-logout"/></svg> Sign out and try again</button>
+            <a class="btn btn-ghost" href="#/home">Back to the site</a>
+          </div>
+        </div>
+      </div>
+
+      <form class="panel stack" id="team-form" novalidate>
+        <div class="stack" id="team-creds">
+          <label>Team email<input class="field" id="team-email" type="email" autocomplete="username" placeholder="you@frontbelt…"></label>
+          <label>Password<input class="field" id="team-pass" type="password" autocomplete="current-password" minlength="6"></label>
+        </div>
+        <label id="team-code-wrap" hidden>Team code<input class="field" id="team-code" type="password" autocomplete="off"></label>
+        <button class="btn btn-primary" type="submit" id="team-submit"><svg class="ic"><use href="#i-lock"/></svg> Enter team console</button>
+        <p class="ok-msg err" id="team-err" hidden></p>
+        <p class="muted small" id="team-note"></p>
+      </form>
+      <p class="muted small" style="margin-top:1rem">Lost access? Ask whoever set up the Front Belt account to reset your team role.</p>
     </div>
   </section>
 

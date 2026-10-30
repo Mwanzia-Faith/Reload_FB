@@ -1,0 +1,109 @@
+rules_version = '2';
+
+/* ------------------------------------------------------------------
+   Front Belt — Firestore security rules
+
+   This is the only thing that actually keeps the team console private.
+   The page hides it and routes away from it, but a page is just text:
+   anyone can read the JavaScript. These rules run on Google's servers,
+   so they decide what any account is really allowed to do.
+
+   Roles live in users/{uid}.role and can only be set from the Firebase
+   console by you — no account can promote itself.
+-------------------------------------------------------------------*/
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isTeam() {
+      return signedIn() && profile().role == 'admin';
+    }
+
+    /* fields a clinic may change on its own record */
+    function clinicFieldsOk() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['name', 'area', 'address', 'lat', 'lng', 'phone', 'hours',
+                  'services', 'note', 'registrationNo', 'licenceRef', 'updatedAt']);
+    }
+
+    /* ---------- clinics ---------- */
+
+    match /clinics/{clinicId} {
+      /* the public site reads published clinics only; the team sees all,
+         and a provider can always see the record they own */
+      allow read: if resource.data.published == true
+                  || isTeam()
+                  || (signedIn() && resource.data.ownerUid == request.auth.uid);
+
+      /* enlisting a clinic is a team action */
+      allow create: if isTeam();
+
+      /* deleting a listing is a team action */
+      allow delete: if isTeam();
+
+      allow update: if isTeam()
+        || (signedIn()
+            && resource.data.ownerUid == request.auth.uid
+            && clinicFieldsOk())
+        /* a clinic may take itself off the public site, never put itself back */
+        || (signedIn()
+            && resource.data.ownerUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['published'])
+            && request.resource.data.published == false)
+        /* the daily status update */
+        || (signedIn()
+            && resource.data.ownerUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status', 'waitMinutes', 'busy', 'note', 'lastStatusAt', 'updatedAt']));
+
+      /* status history, written when a clinic updates */
+      match /updates/{updateId} {
+        allow read: if true;
+        allow create: if signedIn();
+        allow update, delete: if isTeam();
+      }
+    }
+
+    /* ---------- accounts ---------- */
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isTeam());
+
+      /* a new account picks patient or provider — never admin */
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role in ['patient', 'provider'];
+
+      /* people may edit their own name and saved clinics, but not their role */
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+
+      /* accounts are never deleted from the browser */
+      allow delete: if false;
+    }
+
+    /* ---------- trust upgrade requests ---------- */
+
+    match /requests/{requestId} {
+      allow read: if isTeam()
+                  || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      /* approving or rejecting is a team action */
+      allow update, delete: if isTeam();
+    }
+
+    /* everything else is closed */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

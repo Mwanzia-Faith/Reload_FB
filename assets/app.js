@@ -15,6 +15,12 @@
   var savedIds = [];
   var authRole = 'patient';
   var authMode = 'signin';
+  /* Demo mode only: the local team console is opened with this code instead of
+     a real account, so a visitor clicking around cannot wander into it.
+     Change it to anything you like — and read README.md: a code that lives in
+     the page source protects the look of the demo, not the data. Real access
+     control is the Firestore rules in firestore.rules. */
+  var TEAM_CODE = 'frontbelt-team';
   var dataErr = null;
   var lastLoaded = null;
   var modalOpen = false;
@@ -23,6 +29,7 @@
   var map = null, mapLayer = null, mapReady = false, mapLoading = null;
   var lastReqs = [];
   var provClinicId = null;
+  var adminFilter = { q: '', f: '' };
 
   /* ---------------- small helpers ---------------- */
   function esc(s) {
@@ -118,6 +125,8 @@
     return u.role === 'admin' ? '#/admin' : u.role === 'provider' ? '#/provider' : '#/account';
   }
 
+  function isTeam() { return !!(me && me.role === 'admin'); }
+
   /* ---------------- modal ---------------- */
   function openModal(title, html, cls) {
     $('modal-title').textContent = title;
@@ -157,8 +166,25 @@
   var ROUTES = {
     home: 'view-home', find: 'view-find', trust: 'view-trust', clinics: 'view-clinics',
     faq: 'view-faq', contact: 'view-contact', signin: 'view-signin',
-    account: 'view-account', provider: 'view-provider', admin: 'view-admin'
+    account: 'view-account', provider: 'view-provider', team: 'view-team', admin: 'view-admin'
   };
+  /* routes that are nobody else's business — never linked in the nav or footer */
+  var PRIVATE_ROUTES = ['team', 'admin', 'provider', 'account'];
+
+  var TITLES = {
+    home: 'Trusted clinic directory for Nairobi',
+    find: 'Find a clinic near you',
+    trust: 'How the trust levels work',
+    clinics: 'For clinic owners',
+    faq: 'Questions and answers',
+    contact: 'Talk to the team',
+    signin: 'Sign in',
+    account: 'Your dashboard',
+    provider: 'Provider console',
+    team: 'Team access',
+    admin: 'Team console'
+  };
+  function pageTitle(r) { return TITLES[r] || TITLES.home; }
   var NAV_FOR = { home: 'home', find: 'find', trust: 'trust', clinics: 'clinics', faq: 'faq', contact: 'contact' };
 
   function currentRoute() {
@@ -170,9 +196,27 @@
     var r = currentRoute();
     if (r === 'account' && !me) { location.hash = '#/signin'; return; }
     if (r === 'provider' && !me) { location.hash = '#/signin'; return; }
-    if (r === 'admin' && !me) { location.hash = '#/signin'; return; }
+    /* The team console has its own door: not signed in at all, or signed in as
+       an ordinary account, never lands on it. */
+    if (r === 'admin' && !isTeam()) {
+      $('admin-stats').innerHTML = '';
+      $('admin-requests').innerHTML = '';
+      $('admin-table').innerHTML = '';
+      location.hash = '#/team';
+      return;
+    }
+    if (r === 'team' && isTeam()) { location.hash = '#/admin'; return; }
 
     Object.keys(ROUTES).forEach(function (k) { $(ROUTES[k]).hidden = (k !== r); });
+
+    document.title = pageTitle(r) + ' · Front Belt';
+    var meta = document.querySelector('meta[name="robots"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'robots');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', PRIVATE_ROUTES.indexOf(r) > -1 ? 'noindex,nofollow' : 'index,follow');
 
     var navKey = NAV_FOR[r];
     document.querySelectorAll('[data-nav]').forEach(function (a) {
@@ -191,6 +235,7 @@
     else if (r === 'signin') { renderAuth(); }
     else if (r === 'account') { renderAccount(); }
     else if (r === 'provider') { renderProvider(); }
+    else if (r === 'team') { renderTeam(); }
     else if (r === 'admin') { renderAdmin(); }
 
     window.scrollTo(0, 0);
@@ -202,6 +247,7 @@
     if (r === 'find') { renderFind(); return; }
     if (r === 'home') { renderHome(); return; }
     if (r === 'account') { renderAccount(); return; }
+    if (r === 'team') { renderTeam(); return; }
     if (r === 'provider' || r === 'admin') {
       var a = document.activeElement;
       if (modalOpen || (a && a.closest && a.closest('#prov-body, #admin-table, #admin-requests'))) return;
@@ -255,7 +301,7 @@
     savedIds = (u && u.saved) || [];
     syncAccountBtn();
     var r = currentRoute();
-    if (r === 'account' || r === 'provider' || r === 'admin') render();
+    if (r === 'account' || r === 'provider' || r === 'admin' || r === 'team') render();
   });
 
   function syncAccountBtn() {
@@ -527,7 +573,6 @@
       b.setAttribute('aria-pressed', String(b.getAttribute('data-role') === authRole));
     });
 
-    $('demo-admin').hidden = (FB.mode !== 'demo');
     $('mode-note').textContent = FB.mode === 'demo'
       ? 'Demo mode: accounts and clinics are stored in this browser only, so you can try the whole workflow. Nothing is sent anywhere.'
       : 'Accounts are managed by Firebase Authentication. Your clinic and its data live in the Front Belt database.';
@@ -589,12 +634,6 @@
     });
   });
 
-  $('demo-admin-btn').addEventListener('click', function () {
-    FB.demoAdmin().then(function () {
-      toast('Previewing the Front Belt team console');
-      location.hash = '#/admin';
-    });
-  });
 
   document.addEventListener('click', function (e) {
     if (e.target.closest('[data-signin-role]')) {
@@ -976,9 +1015,78 @@
   }
 
   /* ================================================================
+     TEAM ACCESS
+     Its own entrance, with no link from anywhere on the public site.
+     ================================================================ */
+  function renderTeam() {
+    var demo = FB.mode === 'demo';
+    var signedIn = !!me && !isTeam();
+
+    $('team-signedin').hidden = !signedIn;
+    $('team-form').hidden = signedIn;
+
+    if (signedIn) {
+      $('team-signedin-msg').textContent = 'You are signed in as ' + (me.name || me.email) +
+        ' (' + me.role + '). Entering this console needs a team account, so nothing here is shown to you.';
+    }
+
+    $('team-creds').hidden = demo;
+    $('team-code-wrap').hidden = !demo;
+    $('team-note').textContent = demo
+      ? 'Demo mode: clinics and accounts live in this browser only. The team code is what keeps a visitor clicking around out of this console — it is not real security, and it is visible in the page source.'
+      : 'Use your Front Belt team account. If your account is not a team account, you will be returned here.';
+    $('team-err').hidden = true;
+  }
+
+  $('team-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = $('team-err'), btn = $('team-submit');
+    err.hidden = true;
+
+    function fail(msg) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg class="ic"><use href="#i-lock"/></svg> Enter team console';
+      err.textContent = msg;
+      err.hidden = false;
+    }
+
+    if (FB.mode === 'demo') {
+      if ($('team-code').value.trim() !== TEAM_CODE) { fail('That team code is not right.'); return; }
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin"></span> Opening…';
+      FB.demoAdmin().then(function () {
+        $('team-code').value = '';
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="ic"><use href="#i-lock"/></svg> Enter team console';
+        toast('Team console open');
+        location.hash = '#/admin';
+      }).catch(function (e2) { fail(e2.message || 'Could not open the console.'); });
+      return;
+    }
+
+    var email = $('team-email').value.trim(), pass = $('team-pass').value;
+    if (!/^\S+@\S+\.\S+$/.test(email)) { fail('Enter the team email address.'); return; }
+    if (pass.length < 6) { fail('Enter the password for that account.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Checking…';
+    FB.signIn({ email: email, password: pass }).then(function (u) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg class="ic"><use href="#i-lock"/></svg> Enter team console';
+      $('team-pass').value = '';
+      if (u.role !== 'admin') {
+        FB.signOut();
+        fail('That account is not a Front Belt team account.');
+        return;
+      }
+      toast('Welcome back, ' + (u.name || 'team'));
+      location.hash = '#/admin';
+    }).catch(function (e2) { fail(e2.message || 'That did not work. Try again.'); });
+  });
+
+  /* ================================================================
      TEAM (ADMIN) CONSOLE
      ================================================================ */
-  var adminFilter = { q: '', f: '' };
 
   function renderAdmin() {
     if (!me) return;

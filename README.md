@@ -8,13 +8,19 @@ Jua kabla ya kwenda.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The whole website — one self-contained page, no build step and no dependencies. |
+| `index.html` | Every view: home, clinic finder, trust framework, clinic sign-up, FAQ, contact, sign-in, patient dashboard, provider console, team console, team access. |
+| `assets/styles.css` | The design system — colours, type, layout, light and dark themes. |
+| `assets/data.js` | The sample clinics used when no database is connected. |
+| `assets/store.js` | The data layer. One API, two backends: local demo (`localStorage`) and Firebase (Firestore + Auth). Picks Firebase automatically as soon as `assets/firebase-config.js` holds a real config. |
+| `assets/firebase-config.js` | Empty placeholder. Paste your Firebase web config here to go live. |
+| `assets/app.js` | Routing, GPS search, sign-in, provider console, team console. |
+| `firestore.rules` | **The real access control.** Deploy these to Firebase. |
 
-Everything (styles, icons and scripts) lives inside `index.html`, so the site runs from any static host.
+No build step and no dependencies: the site runs from any static host.
 
 ## Viewing it locally
 
-Open `index.html` in a browser, or serve the folder:
+Serve the folder (opening `index.html` from disk works too, but a server behaves like the live site):
 
 ```sh
 python -m http.server 8000
@@ -24,69 +30,99 @@ Then visit <http://localhost:8000>.
 
 ## Hosting on GitHub Pages
 
-1. Go to **Settings → Pages** in this repository.
-2. Under **Build and deployment → Source**, choose **Deploy from a branch**.
-3. Pick branch **main** and folder **/ (root)**, then **Save**.
-4. The site goes live at `https://Mwanzia-Faith.github.io/Reload_FB/` in about a minute.
+1. **Settings → Pages**
+2. **Build and deployment → Source**: *Deploy from a branch*
+3. Branch **main**, folder **/ (root)**, **Save**
+
+Live at <https://Mwanzia-Faith.github.io/Reload_FB/> in about a minute.
+
+## Three kinds of visitor
+
+The first thing the site asks is who you are, and everything after that follows your answer.
+
+| Who | Where they land | What they can do |
+| --- | --- | --- |
+| **Patient** (`#/find`) | Clinic finder | Search by distance, filter, save clinics, see today's status |
+| **Clinic** (`#/provider`) | Provider console | Put their clinic on the map with real coordinates, post the daily status, apply for a higher trust level, hide their listing |
+| **Front Belt team** (`#/admin`) | Team console | Enlist clinics, edit coordinates, set trust levels, publish or remove listings, approve upgrade requests, spot clinics that stopped updating |
+
+Sign-in returns each account to its own console, so nobody has to remember a URL.
+
+## Team access — keeping the console private
+
+The team console has its own entrance at **`#/team`**. It is not linked from the navigation, the footer or anywhere else on the public site, and the page is marked `noindex,nofollow` so search engines keep out.
+
+What happens on each path:
+
+- **Not signed in** → `#/admin` sends you to `#/team`, never to the console.
+- **Signed in as a patient or clinic** → `#/team` says *"Not a team account"*, offers to sign out, and shows nothing from the console. Any console content already in the page is wiped before the redirect.
+- **Team account** → straight to the console, and the header button reads **Team**.
+
+**Demo mode** (no Firebase config yet) asks for a **team code** instead of an account, because there is no server to check a password. The default is:
+
+```
+frontbelt-team
+```
+
+Change it in `assets/app.js`:
+
+```js
+var TEAM_CODE = 'frontbelt-team';
+```
+
+Be clear about what that is: the page hides the console and the code stops a visitor clicking around your demo from wandering in, but both live in the page source. **A static page cannot keep a secret.** Real access control is the next section.
+
+## Making it genuinely private: connect Firebase
+
+1. Create a project at <https://console.firebase.google.com>.
+2. **Build → Firestore Database → Create database** (production mode).
+3. **Build → Authentication → Sign-in method → Email/Password → Enable**.
+4. **Project settings → Your apps → Web app** and copy the config into `assets/firebase-config.js`:
+
+```js
+window.FIREBASE_CONFIG = {
+  apiKey: '…',
+  authDomain: '…firebaseapp.com',
+  projectId: '…',
+  storageBucket: '…appspot.com',
+  messagingSenderId: '…',
+  appId: '…'
+};
+```
+
+5. **Create your own team account**: sign in once on the site (it will be created as a patient), then open **Firestore → users → your uid** and change `role` to `admin`.
+6. **Deploy `firestore.rules`** — Firestore → Rules → paste the contents of `firestore.rules` → **Publish**. Without this step, the rules that ship with a new project block everything and the site will look empty.
+
+After that, the rules are what protect you:
+
+- only `role == 'admin'` can create, publish, delete or change the trust level of a clinic,
+- a clinic can edit its own details and post its daily status, but **cannot touch `trust` or `published`** — it can hide itself, never republish itself,
+- nobody can set their own role, so nobody can promote themselves to team,
+- signed-out visitors can only read clinics where `published == true`,
+- verification requests are readable by their owner and the team, and only the team can approve them.
+
+Because the team role is granted in the Firebase console, it can never be obtained from the website.
+
+> Firebase's free Spark plan is enough to start. Note that Cloud Storage is not used here; clinics are documents, not files.
 
 ## How distance and location search works
 
-Visitors do not need to know an area name. The **Use my location** button asks the browser for a GPS fix and the page then:
+Visitors do not need to know an area name. **Use my location** asks the browser for a GPS fix, then the page:
 
-- calculates the true great-circle distance from the visitor to every clinic (Haversine formula, no API needed),
-- sorts the list nearest first and flags the closest **open** clinic,
-- keeps updating while the page is open as the visitor moves (`watchPosition`, ignored unless they move more than 30 m),
+- calculates the true great-circle distance to every clinic (Haversine formula, no API needed),
+- sorts nearest first and flags the closest **open** clinic,
+- keeps re-sorting while the visitor moves (`watchPosition`, ignoring movement under 30 m),
 - can drop optional pins on an OpenStreetMap map (Leaflet, loaded only when the map is first opened).
 
-The location never leaves the device: there is no geocoding call and nothing is sent to a server. If a visitor blocks location, the search falls back to name and area filters.
+The location never leaves the device: no geocoding call, nothing sent to a server. If location is blocked, search falls back to name and area filters.
 
-Distances are only as accurate as the clinic coordinates. The sample clinics sit at the centre of each Nairobi area, so distances to them are illustrative — real listings need real `lat`/`lng`.
-
-## Going real-time: what you need to integrate
-
-Right now the page ships with sample data and shows a **Sample data** chip. The plumbing for live data is already built: set one constant at the top of the script and the page will poll it every 60 seconds, show a **Live · checked 8:05** chip, and fall back to **Offline · showing last known** if a request fails.
-
-```js
-var LIVE_API = "https://your-endpoint.example/clinics";
-```
-
-The endpoint must return a JSON array (no key, publicly readable, CORS enabled):
-
-```json
-[
-  {
-    "name": "Kilimani Family Clinic",
-    "area": "Kilimani",
-    "level": "Verified",
-    "status": "open",
-    "text": "Open today · updated 8:05 am",
-    "wait": "about 20 min",
-    "busy": 55,
-    "lat": -1.293, "lng": 36.787,
-    "updated": "8:05"
-  }
-]
-```
-
-`status` is `open`, `closed` or `stale`. `busy` is 0–100 and drives the busyness bar. `level` is `Listed`, `Verified` or `Trusted`.
-
-You need one thing a static site cannot provide: **somewhere to store what clinics report each morning.** Three sensible routes, cheapest first:
-
-| Option | Good for | What you get |
-| --- | --- | --- |
-| **Google Sheets + Apps Script web app** | Phase 1, up to ~50 clinics | Free. Each clinic edits a row from their phone; a published script returns it as JSON for `LIVE_API`. No accounts, no database to run. |
-| **Supabase** | Once you need clinic logins | Free tier: Postgres database, built-in auth so each clinic only edits its own row, and realtime subscriptions that push changes instantly instead of polling. JS client works from a plain HTML page. |
-| **Firebase (Firestore)** | Same stage as Supabase | Free tier: realtime listeners and auth. Good if you prefer Google's ecosystem. |
-
-A realtime pub/sub service on its own (Pusher, Ably) is not enough — those transport updates, but you still need somewhere to store and authorise them.
-
-Whichever you pick, the trust rule matters: writes must be authenticated so a clinic can only update its own record, and the public read endpoint should never expose documents or phone numbers.
+Distances are only as good as the clinic coordinates. The sample clinics sit at the centre of each Nairobi area, so distances to them are illustrative — real listings carry real `lat`/`lng`, captured either by the team in **Add clinic** or by the clinic itself in its console.
 
 ## Status
 
-Early access. The clinic listings shown on the page are sample data for demonstration and are **not** real clinics. The early-access form opens the visitor's email app with the details filled in, addressed to `frontbelttechnologiesltd@gmail.com`.
+Early access. Clinics marked *Sample* are demonstrations, not real clinics. The contact form opens the visitor's email app with the details filled in, addressed to `frontbelttechnologiesltd@gmail.com`.
 
-Location search is live and works today. Clinic status is not yet live — it shows sample values until `LIVE_API` is pointed at a real source.
+Location search works today. Clinic status, trust levels and accounts are stored in your browser (demo mode) until a Firebase config is added, at which point they become shared and live.
 
 ## Contact
 
