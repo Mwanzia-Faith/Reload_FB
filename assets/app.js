@@ -29,7 +29,7 @@
      Change it to anything you like — and read README.md: a code that lives in
      the page source protects the look of the demo, not the data. Real access
      control is the Firestore rules in firestore.rules. */
-  var TEAM_CODE = 'frontbelt-team';
+  var TEAM_CODE = 'ILOVEFB';
   var dataErr = null;
   var lastLoaded = null;
   var modalOpen = false;
@@ -1060,7 +1060,8 @@
     }
 
     if (FB.mode === 'demo') {
-      if ($('team-code').value.trim() !== TEAM_CODE) { fail('That team code is not right.'); return; }
+      /* typed on a phone, so case and stray spaces should not matter */
+      if ($('team-code').value.trim().toUpperCase() !== TEAM_CODE.toUpperCase()) { fail('That team code is not right.'); return; }
       btn.disabled = true;
       btn.innerHTML = '<span class="spin"></span> Opening…';
       FB.demoAdmin().then(function () {

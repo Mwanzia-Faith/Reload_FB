@@ -61,13 +61,13 @@ What happens on each path:
 **Demo mode** (no Firebase config yet) asks for a **team code** instead of an account, because there is no server to check a password. The default is:
 
 ```
-frontbelt-team
+ILOVEFB
 ```
 
 Change it in `assets/app.js`:
 
 ```js
-var TEAM_CODE = 'frontbelt-team';
+var TEAM_CODE = 'ILOVEFB';
 ```
 
 Be clear about what that is: the page hides the console and the code stops a visitor clicking around your demo from wandering in, but both live in the page source. **A static page cannot keep a secret.** Real access control is the next section.
