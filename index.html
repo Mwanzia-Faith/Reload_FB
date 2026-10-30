@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Front Belt · Trusted clinic directory for Nairobi</title>
-<meta name="description" content="Front Belt is building the most trusted clinic directory in Nairobi. See which clinics are open today, how busy they are, and how much their details have been checked, before you leave home.">
+<meta name="description" content="Front Belt is the trusted clinic directory for Nairobi. See which clinics are open today, how busy they are, and how much their details have been checked — sorted by how near they are to you.">
 <meta name="author" content="Front Belt Technologies">
 <meta name="theme-color" content="#E8135F">
 <meta property="og:type" content="website">
@@ -19,154 +19,48 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E8135F'/%3E%3Cpath d='M28 15h8v8h8v8h-8v8h-8v-8h-8v-8h8z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap">
-<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<style>
-/* Layout: single scrolling page, sticky header, clinic search first, trust framework, clinic partner section, early-access modal. */
-:root{
-  --bg:#FFFAF7; --surface:#FFFFFF; --fg:#2A1620; --muted:#6E5560; --line:#F0DDD6;
-  --pink:#E8135F; --orange:#FF6200; --yellow:#FFD000; --soft:#FFEFE6;
-  --ok:#0F8A4F; --warn:#B45309; --off:#8A6F7A;
-  --grad:linear-gradient(120deg,#FF1A6C,#FF6200 60%,#FFD000);
-  --display:'Montserrat','Segoe UI',system-ui,sans-serif; --body:'Inter','Segoe UI',system-ui,sans-serif;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#1A0F14; --surface:#25161D; --fg:#FBEFE9; --muted:#C2A9B1; --line:#3B2630; --soft:#32202A;
-  --pink:#FF5C93; --ok:#4ADE95; --warn:#F5B35A; --off:#B79AA5; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#1A0F14; --surface:#25161D; --fg:#FBEFE9; --muted:#C2A9B1; --line:#3B2630; --soft:#32202A;
-  --pink:#FF5C93; --ok:#4ADE95; --warn:#F5B35A; --off:#B79AA5; color-scheme:dark}
-*{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
-h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800}
-h2{font-size:clamp(1.5rem,4vw,2.1rem);font-weight:800}
-h3{font-size:1.1rem;font-weight:700}
-p{margin:0}
-a{color:var(--pink)}
-.wrap{max-width:1040px;margin:0 auto}
-section{padding-block:3.2rem}
-.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--pink)}
-.lead{color:var(--muted);max-width:60ch}
-.stack{display:flex;flex-direction:column;gap:.9rem}
-.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:0;border-radius:10px;padding:.8rem 1.3rem;font-weight:600;cursor:pointer;text-decoration:none}
-.btn-primary{background:var(--grad);color:#2A1620}
-.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--fg)}
-.row{display:flex;flex-wrap:wrap;gap:.8rem}
-/* header */
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
-.nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-block:.7rem;max-width:1040px;margin:0 auto}
-.brand{display:flex;align-items:center;gap:.5rem;font-family:var(--display);font-weight:800;font-size:1.15rem;text-decoration:none;color:var(--fg)}
-.links{display:flex;gap:1.3rem;align-items:center}
-.links a{color:var(--fg);text-decoration:none;font-size:.92rem;font-weight:500}
-.links a[aria-current="true"]{color:var(--pink);font-weight:600}
-.menu-btn{display:none}
-@media(max-width:760px){
-  .links{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;background:var(--bg);border-bottom:1px solid var(--line);padding:1rem max(16px,env(safe-area-inset-left,0px));gap:.9rem}
-  .links.open{display:flex}
-  .menu-btn{display:inline-flex}
-}
-/* hero */
-.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:center;padding-block:2.6rem 2rem}
-.hero>*{min-width:0}
-@media(max-width:820px){.hero{grid-template-columns:1fr}}
-.sw{font-family:var(--display);font-weight:700;color:var(--orange);font-size:1rem}
-.mock{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.1rem;display:flex;flex-direction:column;gap:.8rem;box-shadow:0 12px 30px rgba(232,19,95,.08)}
-.mock small{color:var(--muted)}
-.pill{display:inline-flex;align-items:center;gap:.35rem;border-radius:99px;padding:.15rem .65rem;font-size:.78rem;font-weight:600;background:var(--soft)}
-.pill.open{color:var(--ok)} .pill.closed{color:var(--off)} .pill.stale{color:var(--warn)}
-.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
-/* search */
-.search{display:grid;grid-template-columns:2fr 1fr 1fr;gap:.7rem;margin-top:1.2rem}
-.search>*{min-width:0}
-@media(max-width:700px){.search{grid-template-columns:1fr}}
-.field{width:100%;padding:.8rem .9rem;border-radius:10px;border:1.5px solid var(--line);background:var(--surface)}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;margin-top:1.2rem}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.1rem;display:flex;flex-direction:column;gap:.7rem;min-width:0}
-.card .top{display:flex;justify-content:space-between;gap:.6rem;align-items:flex-start}
-.badge{font-size:.72rem;font-weight:700;padding:.15rem .55rem;border-radius:6px;white-space:nowrap}
-.b-Verified{background:#DDF6E8;color:#0B6B3B}.b-Listed{background:var(--soft);color:var(--muted)}.b-Trusted{background:#FFE9B8;color:#7A4A00}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .b-Verified{background:#12382A;color:#7CF0B2}:root:not([data-theme="light"]) .b-Trusted{background:#473514;color:#FFD27A}}
-:root[data-theme="dark"] .b-Verified{background:#12382A;color:#7CF0B2}:root[data-theme="dark"] .b-Trusted{background:#473514;color:#FFD27A}
-.bar{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
-.bar i{display:block;height:100%;background:var(--grad);border-radius:99px}
-.meta{display:flex;flex-wrap:wrap;gap:.4rem 1rem;font-size:.85rem;color:var(--muted)}
-.note{font-size:.82rem;color:var(--muted);border-left:3px solid var(--yellow);padding-left:.7rem;margin-top:1rem}
-.empty{padding:1.5rem;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:12px;margin-top:1rem}
-/* tiers */
-.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin-top:1.4rem}
-.tier{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.1rem;display:flex;flex-direction:column;gap:.5rem;min-width:0}
-.tier .lvl{font-family:var(--display);font-weight:800;color:var(--pink);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}
-.tier ul{margin:0;padding-left:1.1rem;color:var(--muted);font-size:.92rem}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.4rem}
-.two>*{min-width:0}
-@media(max-width:700px){.two{grid-template-columns:1fr}}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.2rem}
-.panel ul{margin:.6rem 0 0;padding-left:1.1rem;color:var(--muted)}
-.band{background:var(--soft);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
-/* faq */
-.tabs{display:flex;gap:.5rem;margin-top:1.2rem}
-.tab{border:1.5px solid var(--line);background:var(--surface);border-radius:99px;padding:.45rem 1rem;cursor:pointer;font-weight:600}
-.tab[aria-selected="true"]{background:var(--grad);border-color:transparent;color:#2A1620}
-details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;margin-top:.7rem}
-summary{cursor:pointer;font-weight:600}
-details p{color:var(--muted);margin-top:.5rem}
-/* roadmap */
-.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1.4rem}
-.road .step{border-top:4px solid var(--line);padding-top:.8rem}
-.road .step.now{border-color:var(--orange)}
-.road .step small{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
-/* contact */
-.copy{display:inline-flex;gap:.6rem;align-items:center;flex-wrap:wrap}
-code.sel{background:var(--soft);padding:.3rem .6rem;border-radius:8px;user-select:all;word-break:break-all}
-footer{border-top:1px solid var(--line);padding-block:1.6rem 2.4rem;color:var(--muted);font-size:.88rem;display:flex;flex-wrap:wrap;gap:.8rem 2rem;justify-content:space-between}
-/* modal */
-.modal{position:fixed;inset:0;z-index:50;background:rgba(26,15,20,.6);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.modal[hidden]{display:none}
-.sheet{background:var(--surface);border-radius:16px;max-width:460px;width:100%;max-height:100%;overflow:auto;padding:1.4rem;display:flex;flex-direction:column;gap:.9rem}
-.sheet label{font-size:.85rem;font-weight:600;display:flex;flex-direction:column;gap:.3rem}
-.x{align-self:flex-end;border:0;background:var(--soft);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1.1rem;line-height:1}
-.ok-msg{background:var(--soft);border-radius:10px;padding:.8rem 1rem;font-size:.92rem}
-.theme{border:1.5px solid var(--line);background:var(--surface);border-radius:50%;width:40px;height:40px;cursor:pointer;flex:none}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-/* find-nearby: location bar, live chips, map, distance */
-.locbar{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:1rem;margin-top:1.1rem}
-.locbar>*{min-width:0}
-.locbar .txt{display:flex;flex-direction:column;gap:.15rem}
-.locbar strong{font-size:.98rem}
-.locbar small{color:var(--muted);font-size:.83rem;line-height:1.45}
-@media(max-width:600px){.locbar{grid-template-columns:1fr}}
-@media(max-width:600px){.locbar .btn{width:100%}}
-.loc-status{display:flex;flex-wrap:wrap;gap:.45rem .6rem;align-items:center;margin-top:.7rem;font-size:.85rem;color:var(--muted);min-height:0}
-.loc-status:empty{display:none}
-.chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:99px;padding:.22rem .68rem;font-size:.79rem;font-weight:600;background:var(--soft);color:var(--muted);white-space:nowrap}
-.chip.live{color:var(--ok)}
-.chip.warn{color:var(--warn)}
-.sortrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;margin-top:1rem}
-.rescount{font-size:.87rem;color:var(--muted)}
-.linkish{background:none;border:0;padding:.55rem 0;color:var(--pink);font-weight:600;cursor:pointer;text-decoration:underline;font-size:.85rem;display:inline-flex;align-items:center;min-height:40px}
-#map{height:330px;border-radius:14px;background:var(--soft);z-index:0}
-.mapwrap{margin-top:.9rem}
-.mapnote{font-size:.76rem;color:var(--muted);margin-top:.45rem}
-.leaflet-container{font:inherit}
-.leaflet-popup-content{font:15px/1.5 var(--body);margin:.8rem .9rem;color:#2A1620}
-.leaflet-popup-content strong{display:block}
-.dist{font-weight:700;color:var(--pink);white-space:nowrap}
-.card.near{border-color:var(--orange);box-shadow:0 12px 26px rgba(255,98,0,.15)}
-.ribbon{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
-html{scroll-behavior:smooth}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
 
-<header>
-  <div class="nav">
-    <a class="brand" href="#top" aria-label="Front Belt home">
-      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+<!-- icon sprite: referenced as <svg class="ic"><use href="#i-pin"/></svg> -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V6l-7-3z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-clinic" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M2 21h20"/><path d="M12 8.5v6M9 11.5h6"/><path d="M9.5 21v-4h5v4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2A2.6 2.6 0 0 1 14.6 10c0 1.7-2.6 2-2.6 3.8"/><path d="M12 17.2h.01"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7.5 8 5.5 8-5.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4z"/><path d="M9 4v14M15 6v14"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/><path d="M16.4 5.5a3.4 3.4 0 0 1 0 6.4"/><path d="M17.6 14.2A6 6 0 0 1 21.4 20"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10.5" rx="2.6"/><path d="M8 10V7.8a4 4 0 0 1 8 0V10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.8 4.4 4.4L19 6.6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4.2L20 8.2 15.8 4 4 15.8V20z"/><path d="m14 6 4 4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9.5 7V4.8h5V7"/><path d="M6 7l1 12.2h10L18 7"/><path d="M10 11v4.5M14 11v4.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 4.5V10H15"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7 20v-6M12 20V7M17 20v-9"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 5h4.5A1.5 1.5 0 0 1 20 6.5v11a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8.5 6.5 12l3.5 3.5"/><path d="M6.8 12H15"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.5V12l3.2 2"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.4 3.6h3l1.5 4-2 1.6a11.4 11.4 0 0 0 5.9 5.9l1.6-2 4 1.5v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.4 5.8a2 2 0 0 1 2-2.2z"/></symbol>
+  <symbol id="i-crosshair" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.4"/><path d="M12 2.5v3.6M12 17.9v3.6M2.5 12h3.6M17.9 12h3.6"/><circle cx="12" cy="12" r="1.6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13"/><path d="m13 7 5 5-5 5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 7.6a4.1 4.1 0 0 1 7.5 3C19.5 15.4 12 20 12 20z"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="17" rx="2.4"/><path d="M9 8h2M13 8h2M9 12h2M13 12h2"/><path d="M10 21v-4h4v4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.8 12S6 6.4 12 6.4 21.2 12 21.2 12 18 17.6 12 17.6 2.8 12 2.8 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4 2.8 20h18.4L12 4z"/><path d="M12 9.5v4.4M12 17.2h.01"/></symbol>
+</svg>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="#/home" aria-label="Front Belt home">
+      <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
         <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF1A6C"/><stop offset=".6" stop-color="#FF6200"/><stop offset="1" stop-color="#FFD000"/></linearGradient></defs>
         <path d="M32 4C19.8 4 10 13.6 10 25.5 10 41 32 60 32 60s22-19 22-34.5C54 13.6 44.2 4 32 4z" fill="url(#lg)"/>
         <path d="M28 15h8v8h8v8h-8v8h-8v-8h-8v-8h8z" fill="#fff"/>
@@ -174,577 +68,429 @@ html{scroll-behavior:smooth}
       </svg>
       <span>Front <span class="grad-text">Belt</span></span>
     </a>
-    <nav class="links" id="links" aria-label="Main">
-      <a href="#clinics" data-closemob>Find a clinic</a>
-      <a href="#trust" data-closemob>How trust works</a>
-      <a href="#for-clinics" data-closemob>For clinics</a>
-      <a href="#faq" data-closemob>FAQ</a>
-      <button class="btn btn-primary" data-open="patient" data-closemob>Join early access</button>
+
+    <nav class="mainnav" id="mainnav" aria-label="Sections">
+      <a href="#/find" data-nav="find"><svg class="ic"><use href="#i-pin"/></svg><span>Find a clinic</span></a>
+      <a href="#/trust" data-nav="trust"><svg class="ic"><use href="#i-shield"/></svg><span>Trust</span></a>
+      <a href="#/clinics" data-nav="clinics"><svg class="ic"><use href="#i-clinic"/></svg><span>For clinics</span></a>
+      <a href="#/faq" data-nav="faq"><svg class="ic"><use href="#i-help"/></svg><span>FAQ</span></a>
+      <a href="#/contact" data-nav="contact"><svg class="ic"><use href="#i-mail"/></svg><span>Contact</span></a>
     </nav>
-    <div class="row" style="flex-wrap:nowrap;gap:.5rem">
-      <button class="theme" data-theme-toggle aria-label="Switch light or dark theme">◐</button>
-      <button class="btn btn-ghost menu-btn" data-menu aria-label="Open menu" aria-expanded="false">Menu</button>
+
+    <div class="hracc">
+      <button class="iconbtn" data-theme-toggle aria-label="Switch light or dark theme" title="Light / dark">
+        <svg class="ic"><use href="#i-moon"/></svg>
+      </button>
+      <a class="btn btn-primary btn-sm" id="account-btn" href="#/signin">
+        <svg class="ic"><use href="#i-user"/></svg><span>Sign in</span>
+      </a>
+      <button class="iconbtn menu-btn" data-menu aria-label="Open menu" aria-expanded="false" aria-controls="mainnav">
+        <svg class="ic"><use href="#i-menu"/></svg>
+      </button>
     </div>
   </div>
 </header>
 
-<main class="wrap" id="top">
-  <div class="hero">
-    <div class="stack">
-      <span class="eyebrow">Nairobi clinics · early access</span>
-      <h1>Know before you go.<br><span class="grad-text">Clinics you can trust.</span></h1>
-      <p class="sw">Jua kabla ya kwenda.</p>
-      <p class="lead">Front Belt is building the most trusted clinic directory in Nairobi. You will see which clinics are open today, how busy they are, and whether their details have been checked, before you leave home.</p>
-      <div class="row">
-        <button class="btn btn-primary" data-geo>Find a clinic near me</button>
-        <button class="btn btn-ghost" data-open="clinic">List my clinic</button>
-      </div>
-      <p class="note" style="margin-top:.4rem">We are in early access. Clinics shown below are sample listings so you can see how Front Belt will work. They are not real clinics yet.</p>
-    </div>
-    <div class="mock" aria-label="Example of a clinic status card">
-      <small>EXAMPLE CARD</small>
-      <div class="top" style="display:flex;justify-content:space-between;gap:.6rem">
-        <strong>Sample Family Clinic</strong><span class="badge b-Verified">Verified</span>
-      </div>
-      <span class="pill open"><span class="dot"></span>Open today · updated 8:05 am</span>
-      <div class="meta"><span>Wait: about 20 min</span><span>Busyness: moderate</span></div>
-      <div class="bar"><i style="width:55%"></i></div>
-      <small>Clinics update this card each morning. If they stop, we say so.</small>
-    </div>
-  </div>
+<main id="main">
 
-  <section id="clinics" style="padding-top:1.5rem">
-    <span class="eyebrow">Find a clinic</span>
-    <h2>Which clinic is nearest you right now?</h2>
-    <p class="lead" style="margin-top:.6rem">You do not need to know the area name. Share your location and Front Belt puts the closest clinics first, with the real distance from where you are standing.</p>
-
-    <div class="locbar">
-      <button class="btn btn-primary" id="geo-btn" type="button" data-geo>Use my location</button>
-      <div class="txt">
-        <strong id="geo-title">Find the nearest clinic to you</strong>
-        <small id="geo-sub">Your location stays on your phone. It is used only to sort this list, never stored or sent to us.</small>
-      </div>
-    </div>
-    <div class="loc-status" id="geo-status" role="status" aria-live="polite"></div>
-
-    <div class="search">
-      <input class="field" id="q" type="search" placeholder="Search by name or area, e.g. Kilimani" aria-label="Search clinics">
-      <select class="field" id="area" aria-label="Filter by area"><option value="">All areas</option></select>
-      <select class="field" id="lvl" aria-label="Filter by trust level">
-        <option value="">Any trust level</option><option>Trusted</option><option>Verified</option><option>Listed</option>
-      </select>
-    </div>
-    <div class="sortrow">
-      <span class="rescount" id="rescount"></span>
-      <span class="chip" id="data-stamp">Sample data</span>
-      <button class="linkish" id="map-toggle" type="button" data-maptoggle>Show map</button>
-    </div>
-    <div class="mapwrap" id="mapwrap" hidden>
-      <div id="map"></div>
-      <p class="mapnote">Map data &copy; OpenStreetMap contributors.</p>
-    </div>
-    <div class="cards" id="cards" aria-live="polite"></div>
-    <p class="note">We are in early access. These listings are samples, placed at the centre of each Nairobi area, so you can see how distance search works. They are not real clinics yet.</p>
-  </section>
-
-  <section id="how" style="padding-top:0">
-    <span class="eyebrow">How it works</span>
-    <h2>Three things you can check in under a minute</h2>
-    <div class="tiers">
-      <div class="tier"><h3>Open or closed today</h3><p style="color:var(--muted)">The clinic confirms its status each morning, including public holidays and unplanned closures.</p></div>
-      <div class="tier"><h3>How busy it is</h3><p style="color:var(--muted)">Expected wait and a simple busyness bar, so you can choose a quieter time or a nearby clinic.</p></div>
-      <div class="tier"><h3>How much we have checked</h3><p style="color:var(--muted)">A trust level shows what we have actually reviewed. No clinic can buy one.</p></div>
-    </div>
-  </section>
-
-  <section id="trust" class="band" style="margin-top:1rem">
+  <!-- ============================== HOME ============================== -->
+  <section class="view" id="view-home" hidden>
     <div class="wrap">
-      <span class="eyebrow">Trust Intelligence Framework</span>
-      <h2>Four levels, each earned</h2>
-      <p class="lead" style="margin-top:.6rem">Every clinic starts at Listed and moves up as we review more. Badges describe the documents and behaviour we checked. They do not rate the quality of medical care.</p>
+      <div class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow"><svg class="ic"><use href="#i-pin"/></svg> Nairobi clinics · early access</span>
+          <h1>Know before you go.<br><span class="grad-text">Clinics you can trust.</span></h1>
+          <p class="sw">Jua kabla ya kwenda.</p>
+          <p class="lead">See which clinics near you are open today, how busy they are, and how much we have checked — before you leave home.</p>
+          <div class="row">
+            <a class="btn btn-primary" href="#/find"><svg class="ic"><use href="#i-crosshair"/></svg> Find a clinic near me</a>
+            <a class="btn btn-ghost" href="#/clinics"><svg class="ic"><use href="#i-clinic"/></svg> List my clinic</a>
+          </div>
+        </div>
+        <div class="mock" aria-label="Example of a clinic status card">
+          <small class="mono">EXAMPLE CARD</small>
+          <div class="mock-top"><strong>Sample Family Clinic</strong><span class="badge b-Verified">Verified</span></div>
+          <span class="pill open"><span class="dot"></span>Open today · updated 8:05 am</span>
+          <div class="meta"><span>Wait: about 20 min</span><span>Busyness: moderate</span></div>
+          <div class="bar"><i style="width:55%"></i></div>
+          <small>Clinics update this card each morning. If they stop, we say so.</small>
+        </div>
+      </div>
+
+      <h2 class="roles-title">Where would you like to start?</h2>
+      <div class="roles">
+        <a class="rolecard" href="#/find">
+          <span class="roleicon"><svg class="ic"><use href="#i-pin"/></svg></span>
+          <div>
+            <h3>I am looking for care</h3>
+            <p>Share your location and get the nearest clinics first, with today's status and wait time.</p>
+          </div>
+          <svg class="ic rolearrow"><use href="#i-arrow"/></svg>
+        </a>
+        <a class="rolecard" href="#/clinics">
+          <span class="roleicon alt"><svg class="ic"><use href="#i-clinic"/></svg></span>
+          <div>
+            <h3>I run a clinic</h3>
+            <p>Get listed with your exact coordinates, keep your status current, and earn a trust level.</p>
+          </div>
+          <svg class="ic rolearrow"><use href="#i-arrow"/></svg>
+        </a>
+      </div>
+
+      <div class="stats" id="home-stats"></div>
+      <p class="note">We are in early access. Listings marked <em>Sample</em> are demonstrations placed at the centre of each Nairobi area, so you can see how distance search works. Real clinics are added one at a time.</p>
+
+      <div class="teasers">
+        <a class="teaser" href="#/trust">
+          <svg class="ic"><use href="#i-shield"/></svg>
+          <h3>How trust works</h3>
+          <p>Four levels, each earned. Badges describe what we checked — never a medical quality score.</p>
+        </a>
+        <a class="teaser" href="#/clinics">
+          <svg class="ic"><use href="#i-clinic"/></svg>
+          <h3>For clinics</h3>
+          <p>Free in Phase 1. Give us a status update each morning, get found by patients ready to visit.</p>
+        </a>
+        <a class="teaser" href="#/contact">
+          <svg class="ic"><use href="#i-users"/></svg>
+          <h3>Talk to the team</h3>
+          <p>Questions, feedback, or a clinic to introduce? We answer every message.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== FIND ============================== -->
+  <section class="view" id="view-find" hidden>
+    <div class="wrap">
+      <div class="viewhead">
+        <span class="eyebrow"><svg class="ic"><use href="#i-pin"/></svg> Find a clinic</span>
+        <h1>Which clinic is nearest you right now?</h1>
+        <p class="lead">You do not need to know the area name. Share your location and Front Belt puts the closest clinics first, with the real distance from where you are standing.</p>
+      </div>
+
+      <div class="locbar">
+        <button class="btn btn-primary" id="geo-btn" type="button" data-geo>
+          <svg class="ic"><use href="#i-crosshair"/></svg> Use my location
+        </button>
+        <div class="txt">
+          <strong id="geo-title">Find the nearest clinic to you</strong>
+          <small id="geo-sub">Your location stays on your phone. It is used only to sort this list, never stored or sent to us.</small>
+        </div>
+      </div>
+      <div class="loc-status" id="geo-status" role="status" aria-live="polite"></div>
+
+      <div class="search">
+        <label class="srch"><svg class="ic"><use href="#i-search"/></svg>
+          <input class="field" id="q" type="search" placeholder="Search by name or area, e.g. Kilimani" aria-label="Search clinics">
+        </label>
+        <select class="field" id="area" aria-label="Filter by area"><option value="">All areas</option></select>
+        <select class="field" id="lvl" aria-label="Filter by trust level">
+          <option value="">Any trust level</option><option>Trusted</option><option>Verified</option><option>Listed</option>
+        </select>
+      </div>
+
+      <div class="sortrow">
+        <span class="rescount" id="rescount"></span>
+        <div class="row" style="gap:.5rem">
+          <span class="chip" id="data-stamp">Sample data</span>
+          <button class="linkish" id="map-toggle" type="button" data-maptoggle>
+            <svg class="ic"><use href="#i-map"/></svg><span>Show map</span>
+          </button>
+        </div>
+      </div>
+      <div class="mapwrap" id="mapwrap" hidden>
+        <div id="map"></div>
+        <p class="mapnote">Map data &copy; OpenStreetMap contributors.</p>
+      </div>
+      <div class="cards" id="cards" aria-live="polite"></div>
+      <p class="note" id="find-note">Listings marked <em>Sample</em> are demonstrations, not real clinics.</p>
+    </div>
+  </section>
+
+  <!-- ============================== TRUST ============================== -->
+  <section class="view" id="view-trust" hidden>
+    <div class="wrap">
+      <div class="viewhead">
+        <span class="eyebrow"><svg class="ic"><use href="#i-shield"/></svg> Trust Intelligence Framework</span>
+        <h1>Four levels, each earned</h1>
+        <p class="lead">Every clinic starts at Listed and moves up as we review more. Badges describe the documents and behaviour we checked. They do not rate the quality of medical care.</p>
+      </div>
+
       <div class="tiers">
         <div class="tier"><span class="lvl">Level 1</span><h3>Listed</h3><ul><li>Name, area and contact details collected</li><li>Not yet reviewed by us</li></ul></div>
         <div class="tier"><span class="lvl">Level 2</span><h3>Verified</h3><ul><li>Registration and licence documents reviewed</li><li>Location and phone confirmed</li></ul></div>
-        <div class="tier"><span class="lvl">Level 3</span><h3>Trusted</h3><ul><li>Verified, plus daily updates kept up over time</li><li>Patient feedback reviewed</li></ul></div>
+        <div class="tier hot"><span class="lvl">Level 3</span><h3>Trusted</h3><ul><li>Verified, plus daily updates kept up over time</li><li>Patient feedback reviewed</li></ul></div>
         <div class="tier"><span class="lvl">Level 4</span><h3>Certified</h3><ul><li>Planned for later</li><li>Needs a partner, such as a professional body</li></ul></div>
       </div>
+
+      <h2>How a clinic moves up</h2>
+      <div class="steps">
+        <div class="step"><span class="stepn">1</span><h3>The clinic applies</h3><p>From its console, a clinic submits its registration number and licence reference for the level it wants.</p></div>
+        <div class="step"><span class="stepn">2</span><h3>We review</h3><p>A person on the Front Belt team checks the documents against the registration and licence records.</p></div>
+        <div class="step"><span class="stepn">3</span><h3>The badge changes</h3><p>When the team sets the new level, the badge on the public site updates within seconds — no redeploy, no waiting.</p></div>
+        <div class="step"><span class="stepn">4</span><h3>It can also come down</h3><p>If a licence lapses or updates stop, the level drops and the listing says why.</p></div>
+      </div>
+
       <div class="two">
-        <div class="panel"><h3>If a clinic stops updating</h3>
-          <ul><li>1 missed day: shows “Not updated today”</li><li>3 missed days: shows “Status unknown” and drops in search</li><li>7 missed days: hidden until the clinic updates</li></ul></div>
-        <div class="panel"><h3>What we will not do</h3>
+        <div class="panel"><h3><svg class="ic"><use href="#i-clock"/></svg> If a clinic stops updating</h3>
+          <ul><li><b>1 missed day:</b> shows “Not updated today”</li><li><b>3 missed days:</b> shows “Status unknown” and drops in search</li><li><b>7 missed days:</b> hidden until the clinic updates</li></ul></div>
+        <div class="panel"><h3><svg class="ic"><use href="#i-warn"/></svg> What we will not do</h3>
           <ul><li>Sell trust badges</li><li>Show invented reviews or ratings</li><li>Claim a clinic is safe or high quality</li></ul></div>
       </div>
     </div>
   </section>
 
-  <section id="for-clinics">
-    <span class="eyebrow">For clinic owners and managers</span>
-    <h2>Be found by patients who are ready to visit</h2>
-    <p class="lead" style="margin-top:.6rem">Joining is free in Phase 1. We ask for a little in return, because that is what keeps patients trusting the listings.</p>
-    <div class="two">
-      <div class="panel"><h3>Your clinic gives</h3>
-        <ul><li>Name, area, opening hours and services</li><li>Registration and licence documents for review</li><li>A quick status update each morning, from your phone</li><li>A named person we can contact</li></ul></div>
-      <div class="panel"><h3>Your clinic gets</h3>
-        <ul><li>A free listing in a Nairobi-only directory</li><li>A trust badge based on documents we reviewed</li><li>Fewer wasted trips and phone calls from patients</li><li>An early say in how the product is built</li></ul></div>
-    </div>
-    <div class="row" style="margin-top:1.2rem"><button class="btn btn-primary" data-open="clinic">List my clinic</button></div>
-  </section>
-
-  <section id="story" class="band">
-    <div class="wrap two" style="margin-top:0">
-      <div class="stack"><span class="eyebrow">Why Front Belt</span><h2>Built by someone who has mapped how far care is</h2></div>
-      <div class="stack"><p class="lead">Front Belt was started by a solo founder in Nairobi with a GIS background. An earlier project mapped healthcare accessibility in Matungu Subcounty, Kakamega County, and showed how often the hardest part of getting care is simply knowing where to go and whether it is open.</p>
-      <p class="lead">We are starting with clinics in Nairobi because that is a problem we can solve well, and prove, before we take on anything else.</p></div>
-    </div>
-  </section>
-
-  <section id="roadmap">
-    <span class="eyebrow">Roadmap</span>
-    <h2>One thing done well, then more</h2>
-    <div class="road">
-      <div class="step now"><small>Now · Phase 1</small><h3>Nairobi clinics</h3><p style="color:var(--muted)">Our target is 50 clinics across at least six areas, with most updating daily and the first Verified badges awarded.</p></div>
-      <div class="step"><small>After Phase 1</small><h3>More health services</h3><p style="color:var(--muted)">Only once the clinic targets are met and patients are using it.</p></div>
-      <div class="step"><small>Later</small><h3>Other services</h3><p style="color:var(--muted)">Other kinds of businesses and places, using the same trust approach.</p></div>
-    </div>
-  </section>
-
-  <section id="faq" style="padding-top:0">
-    <span class="eyebrow">Questions</span>
-    <h2>FAQ</h2>
-    <div class="tabs" role="tablist">
-      <button class="tab" role="tab" aria-selected="true" data-tab="pat" id="t-pat">Patients</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="own" id="t-own">Clinic owners</button>
-    </div>
-    <div id="faq-pat" role="tabpanel">
-      <details><summary>Is Front Belt live yet?</summary><p>Not fully. We are in early access and adding real clinics one at a time. The listings on this page are samples.</p></details>
-      <details><summary>Does a badge mean the clinic gives good care?</summary><p>No. A badge shows which documents and behaviours we have reviewed, such as registration and daily updates. It is not a medical quality rating.</p></details>
-      <details><summary>Is it an emergency service?</summary><p>No. In an emergency, go to the nearest hospital or call your local emergency number.</p></details>
-      <details><summary>Does it cost anything?</summary><p>Searching is free for patients.</p></details>
-    </div>
-    <div id="faq-own" role="tabpanel" hidden>
-      <details><summary>What does it cost to list?</summary><p>Nothing in Phase 1. We may later offer optional paid features such as featured placement. Trust badges will never be for sale.</p></details>
-      <details><summary>How long does the daily update take?</summary><p>It is meant to take under a minute: open or closed, expected wait and how busy you are.</p></details>
-      <details><summary>What documents do you need?</summary><p>Your clinic registration and the licences that apply to your services. We will tell you exactly what when you reach out.</p></details>
-      <details><summary>What if we miss a few days?</summary><p>Your card shows “Not updated today”, then “Status unknown”, and after seven days it is hidden until you update again.</p></details>
-    </div>
-  </section>
-
-  <section id="contact" class="band">
-    <div class="wrap two" style="margin-top:0">
-      <div class="stack"><span class="eyebrow">Contact</span><h2>Talk to the founder</h2><p class="lead">Questions, feedback or a clinic to introduce? Write to us.</p></div>
-      <div class="stack">
-        <div class="copy"><code class="sel" id="mail">frontbelttechnologiesltd@gmail.com</code><button class="btn btn-ghost" data-copy="mail">Copy email</button></div>
-        <p style="color:var(--muted);font-size:.92rem">WhatsApp number coming soon.</p>
-        <span class="ok-msg" id="copied" hidden>Copied to clipboard.</span>
+  <!-- ============================== FOR CLINICS ============================== -->
+  <section class="view" id="view-clinics" hidden>
+    <div class="wrap">
+      <div class="viewhead">
+        <span class="eyebrow"><svg class="ic"><use href="#i-clinic"/></svg> For clinic owners and managers</span>
+        <h1>Be found by patients who are ready to visit</h1>
+        <p class="lead">Joining is free in Phase 1. We ask for a little in return, because that is what keeps patients trusting the listings.</p>
       </div>
+
+      <div class="two">
+        <div class="panel"><h3>Your clinic gives</h3>
+          <ul><li>Name, area, opening hours and services</li><li>Your exact coordinates, so patients nearby find you</li><li>Registration and licence documents for review</li><li>A quick status update each morning, from your phone</li><li>A named person we can contact</li></ul></div>
+        <div class="panel"><h3>Your clinic gets</h3>
+          <ul><li>A free listing in a Nairobi-only directory</li><li>A trust badge based on documents we reviewed</li><li>Fewer wasted trips and phone calls from patients</li><li>A console to change anything, any day</li><li>An early say in how the product is built</li></ul></div>
+      </div>
+
+      <div class="cta-band">
+        <div>
+          <h2>Ready to be listed?</h2>
+          <p class="lead">Create a provider account, add your clinic with its coordinates, and send us your documents for review. Your listing goes live as soon as we approve it.</p>
+        </div>
+        <div class="row">
+          <a class="btn btn-primary" href="#/signin" data-signin-role="provider"><svg class="ic"><use href="#i-building"/></svg> Create a provider account</a>
+          <a class="btn btn-ghost" href="#/contact">Talk to the team</a>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="panel"><h3>What it costs</h3><p class="muted">Nothing in Phase 1. We may later offer optional paid features such as featured placement. Trust badges will never be for sale.</p></div>
+        <div class="panel"><h3>How long the daily update takes</h3><p class="muted">Under a minute: open or closed, expected wait, how busy you are. It works from a phone with no app to install.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== FAQ ============================== -->
+  <section class="view" id="view-faq" hidden>
+    <div class="wrap">
+      <div class="viewhead">
+        <span class="eyebrow"><svg class="ic"><use href="#i-help"/></svg> Questions</span>
+        <h1>Frequently asked</h1>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-tab="pat" id="t-pat">Patients</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="own" id="t-own">Clinic owners</button>
+      </div>
+      <div id="faq-pat" role="tabpanel">
+        <details><summary>Is Front Belt live yet?</summary><p>Not fully. We are in early access and adding real clinics one at a time. Listings marked “Sample” are demonstrations.</p></details>
+        <details><summary>Does a badge mean the clinic gives good care?</summary><p>No. A badge shows which documents and behaviours we have reviewed, such as registration and daily updates. It is not a medical quality rating.</p></details>
+        <details><summary>Do I have to create an account to search?</summary><p>No. Searching, distance sorting and the map all work without signing in. An account only adds saved clinics.</p></details>
+        <details><summary>Is it an emergency service?</summary><p>No. In an emergency, go to the nearest hospital or call your local emergency number.</p></details>
+        <details><summary>Does it cost anything?</summary><p>Searching is free for patients.</p></details>
+      </div>
+      <div id="faq-own" role="tabpanel" hidden>
+        <details><summary>What does it cost to list?</summary><p>Nothing in Phase 1. We may later offer optional paid features such as featured placement. Trust badges will never be for sale.</p></details>
+        <details><summary>Can I change my own listing?</summary><p>Yes. Your provider console lets you edit your details, coordinates, hours and services, and update today's status whenever it changes.</p></details>
+        <details><summary>Can I upgrade my own trust level?</summary><p>You can apply for it with your documents, but only the Front Belt team can grant it. That is deliberate: if clinics could upgrade themselves, the badge would mean nothing.</p></details>
+        <details><summary>How do I remove my clinic from the listing?</summary><p>Use “Hide my listing” in your console — it comes off the public site immediately and your data stays for when you return. The Front Belt team can delete a listing completely on request.</p></details>
+        <details><summary>How long does the daily update take?</summary><p>Under a minute: open or closed, expected wait and how busy you are.</p></details>
+        <details><summary>What documents do you need?</summary><p>Your clinic registration and the licences that apply to your services. The console asks for the registration number and a document reference.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== CONTACT ============================== -->
+  <section class="view" id="view-contact" hidden>
+    <div class="wrap">
+      <div class="viewhead">
+        <span class="eyebrow"><svg class="ic"><use href="#i-mail"/></svg> Contact</span>
+        <h1>Talk to the team</h1>
+        <p class="lead">Questions, feedback, a clinic to introduce, or something on the site that looks wrong? Write to us — a person reads every message.</p>
+      </div>
+      <div class="two">
+        <div class="contactcard">
+          <div class="contactrow"><svg class="ic"><use href="#i-mail"/></svg>
+            <div><strong>Email</strong><div class="copy"><code class="sel" id="mail">frontbelttechnologiesltd@gmail.com</code><button class="btn btn-ghost btn-sm" data-copy="mail">Copy</button></div></div>
+          </div>
+          <div class="contactrow"><svg class="ic"><use href="#i-clock"/></svg>
+            <div><strong>When we reply</strong><p class="muted">Within two working days. Clinic verification requests are reviewed in the order they arrive.</p></div>
+          </div>
+          <div class="contactrow"><svg class="ic"><use href="#i-users"/></svg>
+            <div><strong>Who you are writing to</strong><p class="muted">Front Belt Technologies, the small team building this in Nairobi. WhatsApp is coming soon.</p></div>
+          </div>
+          <span class="ok-msg" id="copied" hidden>Copied to clipboard.</span>
+        </div>
+        <form class="panel stack" id="contact-form" novalidate>
+          <h3>Send a message</h3>
+          <label>Your name<input class="field" id="c-name" autocomplete="name" required></label>
+          <label>Email<input class="field" id="c-email" type="email" autocomplete="email" required></label>
+          <label>What is this about?
+            <select class="field" id="c-topic">
+              <option>A question about the site</option>
+              <option>I want my clinic listed</option>
+              <option>Something looks wrong</option>
+              <option>Partnership or press</option>
+            </select>
+          </label>
+          <label>Message<textarea class="field" id="c-msg" rows="4" required></textarea></label>
+          <button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-mail"/></svg> Open in my email app</button>
+          <p class="ok-msg" id="c-err" hidden></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== SIGN IN ============================== -->
+  <section class="view" id="view-signin" hidden>
+    <div class="wrap narrow">
+      <div class="viewhead">
+        <span class="eyebrow"><svg class="ic"><use href="#i-lock"/></svg> Your account</span>
+        <h1 id="auth-title">Sign in to Front Belt</h1>
+        <p class="lead" id="auth-sub">Tell us who you are and the site opens in the right place: a patient dashboard, or your clinic console.</p>
+      </div>
+
+      <div class="rolepick" id="rolepick">
+        <button class="rolebtn" data-role="patient" type="button" aria-pressed="false">
+          <svg class="ic"><use href="#i-user"/></svg>
+          <strong>I am looking for care</strong>
+          <small>Save clinics and see them first next time</small>
+        </button>
+        <button class="rolebtn" data-role="provider" type="button" aria-pressed="false">
+          <svg class="ic"><use href="#i-building"/></svg>
+          <strong>I run a clinic</strong>
+          <small>Manage your listing, status and trust level</small>
+        </button>
+      </div>
+
+      <form class="panel stack" id="auth-form" novalidate>
+        <label id="l-name" hidden>Your name<input class="field" id="a-name" autocomplete="name"></label>
+        <label>Email<input class="field" id="a-email" type="email" autocomplete="email" required></label>
+        <label>Password<input class="field" id="a-pass" type="password" autocomplete="current-password" minlength="6" required></label>
+        <button class="btn btn-primary" type="submit" id="auth-submit">Sign in</button>
+        <p class="ok-msg err" id="auth-err" hidden></p>
+        <p class="muted small" id="auth-note"></p>
+        <div class="authswitch">
+          <span id="auth-switch-text">New here?</span>
+          <button class="linkish" type="button" id="auth-switch">Create an account</button>
+        </div>
+        <div class="demobox" id="demo-admin" hidden>
+          <strong>Preview the admin console</strong>
+          <p class="muted small">Demo mode only. The Front Belt team console is where clinics are enlisted, trust levels are set and listings are removed.</p>
+          <button class="btn btn-ghost btn-sm" type="button" id="demo-admin-btn"><svg class="ic"><use href="#i-chart"/></svg> Open team console (demo)</button>
+        </div>
+      </form>
+      <p class="note" id="mode-note"></p>
+    </div>
+  </section>
+
+  <!-- ============================== PATIENT DASHBOARD ============================== -->
+  <section class="view" id="view-account" hidden>
+    <div class="wrap">
+      <div class="viewhead between">
+        <div>
+          <span class="eyebrow"><svg class="ic"><use href="#i-user"/></svg> Your dashboard</span>
+          <h1 id="acct-hello">Welcome back</h1>
+          <p class="lead">Your saved clinics, and what is open near you today.</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" data-signout><svg class="ic"><use href="#i-logout"/></svg> Sign out</button>
+      </div>
+      <div class="statrow" id="acct-stats"></div>
+      <h2 class="h-sm">Saved clinics</h2>
+      <div class="cards" id="saved-cards"></div>
+      <div class="row" style="margin-top:1.2rem"><a class="btn btn-primary" href="#/find"><svg class="ic"><use href="#i-pin"/></svg> Find a clinic near me</a></div>
+    </div>
+  </section>
+
+  <!-- ============================== PROVIDER CONSOLE ============================== -->
+  <section class="view" id="view-provider" hidden>
+    <div class="wrap">
+      <div class="viewhead between">
+        <div>
+          <span class="eyebrow"><svg class="ic"><use href="#i-building"/></svg> Provider console</span>
+          <h1 id="prov-title">Your clinic</h1>
+          <p class="lead" id="prov-sub"></p>
+        </div>
+        <div class="row" style="gap:.5rem">
+          <a class="btn btn-ghost btn-sm" href="#/find" id="prov-view-link"><svg class="ic"><use href="#i-eye"/></svg> View public listing</a>
+          <button class="btn btn-ghost btn-sm" data-signout><svg class="ic"><use href="#i-logout"/></svg> Sign out</button>
+        </div>
+      </div>
+      <div id="prov-body"></div>
+    </div>
+  </section>
+
+  <!-- ============================== ADMIN CONSOLE ============================== -->
+  <section class="view" id="view-admin" hidden>
+    <div class="wrap wide">
+      <div class="viewhead between">
+        <div>
+          <span class="eyebrow"><svg class="ic"><use href="#i-chart"/></svg> Front Belt team</span>
+          <h1>Clinic operations</h1>
+          <p class="lead">Enlist clinics with real coordinates, set trust levels, publish or remove listings, and watch who has stopped updating.</p>
+        </div>
+        <div class="row" style="gap:.5rem">
+          <button class="btn btn-primary btn-sm" id="add-clinic"><svg class="ic"><use href="#i-plus"/></svg> Add clinic</button>
+          <button class="btn btn-ghost btn-sm" data-signout><svg class="ic"><use href="#i-logout"/></svg> Sign out</button>
+        </div>
+      </div>
+      <div class="statrow" id="admin-stats"></div>
+      <div class="toolbar">
+        <label class="srch"><svg class="ic"><use href="#i-search"/></svg>
+          <input class="field" id="admin-q" type="search" placeholder="Search clinics" aria-label="Search all clinics">
+        </label>
+        <select class="field" id="admin-filter" aria-label="Filter clinics">
+          <option value="">All clinics</option>
+          <option value="open">Open today</option>
+          <option value="stale">Needs attention</option>
+          <option value="hidden">Not published</option>
+          <option value="requests">Verification requests</option>
+        </select>
+      </div>
+      <div id="admin-requests"></div>
+      <div id="admin-table"></div>
     </div>
   </section>
 </main>
 
-<footer class="wrap">
-  <span>© Front Belt Technologies · Nairobi, Kenya</span>
-  <span>Early access. Sample listings are not real clinics.</span>
+<footer class="ftr">
+  <div class="wrap ftr-in">
+    <span>© Front Belt Technologies · Nairobi, Kenya</span>
+    <span id="ftr-mode">Early access.</span>
+    <a href="#/contact">Talk to the team</a>
+  </div>
 </footer>
 
-<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mtitle" data-selfclose>
-  <div class="sheet">
-    <button class="x" data-close aria-label="Close">×</button>
-    <h3 id="mtitle">Join early access</h3>
-    <div class="tabs" style="margin-top:0">
-      <button class="tab" aria-selected="true" data-mtab="patient" id="m-patient">I am a patient</button>
-      <button class="tab" aria-selected="false" data-mtab="clinic" id="m-clinic">I run a clinic</button>
+<nav class="tabbar" aria-label="Quick navigation">
+  <a href="#/home" data-nav="home"><svg class="ic"><use href="#i-home"/></svg><span>Home</span></a>
+  <a href="#/find" data-nav="find"><svg class="ic"><use href="#i-pin"/></svg><span>Find</span></a>
+  <a href="#/trust" data-nav="trust"><svg class="ic"><use href="#i-shield"/></svg><span>Trust</span></a>
+  <a href="#/clinics" data-nav="clinics"><svg class="ic"><use href="#i-clinic"/></svg><span>Clinics</span></a>
+  <a href="#/faq" data-nav="faq"><svg class="ic"><use href="#i-help"/></svg><span>FAQ</span></a>
+</nav>
+
+<!-- shared modal: clinic editor, status update, confirm -->
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="sheet" id="sheet">
+    <div class="sheet-head">
+      <h3 id="modal-title">Title</h3>
+      <button class="iconbtn" data-close aria-label="Close"><svg class="ic"><use href="#i-close"/></svg></button>
     </div>
-    <form id="form" class="stack" novalidate>
-      <label>Your name<input class="field" id="f-name" autocomplete="name" required></label>
-      <label>Email<input class="field" id="f-email" type="email" autocomplete="email" required></label>
-      <label id="l-area">Area in Nairobi<input class="field" id="f-area" placeholder="e.g. Kilimani"></label>
-      <label id="l-clinic" hidden>Clinic name<input class="field" id="f-clinic"></label>
-      <button class="btn btn-primary" type="submit">Request early access</button>
-      <p class="ok-msg" id="err" hidden></p>
-    </form>
-    <div id="done" class="stack" hidden>
-      <p class="ok-msg" id="done-msg"></p>
-      <a class="btn btn-primary" id="mail-link" href="#">Open email app</a>
-      <button class="btn btn-ghost" data-close>Close</button>
-    </div>
+    <div id="modal-body"></div>
   </div>
 </div>
 
-<script>
-(function(){
-  /* ---------------------------------------------------------------
-     WHERE THE DATA COMES FROM
-     Leave LIVE_API empty and the page uses the built-in samples below.
-     Set it to a URL that returns a JSON array of clinics and the page
-     refreshes itself every POLL_MS while it stays open:
-       [{ "name":"...", "area":"Kilimani", "level":"Verified",
-          "status":"open", "wait":"about 20 min", "busy":55,
-          "lat":-1.293, "lng":36.787, "updated":"8:05" }]
-     README.md explains how to fill it from a real database.
-  ----------------------------------------------------------------*/
-  var LIVE_API = "";
-  var POLL_MS = 60000;
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-  /* lat/lng are the centre of each area, so distance search can be tried
-     before real clinics are added. */
-  var SAMPLE_CLINICS = [
-    {n:"Sample Family Clinic",a:"Kilimani",l:"Verified",s:"open",t:"Open today · updated 8:05 am",w:"about 20 min",b:55,lat:-1.2930,lng:36.7870},
-    {n:"Sample Community Medical Centre",a:"Westlands",l:"Trusted",s:"open",t:"Open today · updated 7:40 am",w:"about 35 min",b:80,lat:-1.2650,lng:36.8030},
-    {n:"Sample Health Point",a:"South B",l:"Listed",s:"stale",t:"Not updated today",w:"unknown",b:0,lat:-1.3100,lng:36.8330},
-    {n:"Sample Women's and Child Clinic",a:"Lavington",l:"Verified",s:"open",t:"Open today · updated 8:20 am",w:"about 10 min",b:25,lat:-1.2760,lng:36.7720},
-    {n:"Sample Dental and Medical Clinic",a:"Kilimani",l:"Listed",s:"closed",t:"Closed today",w:"-",b:0,lat:-1.2960,lng:36.7830},
-    {n:"Sample Eastlands Clinic",a:"Donholm",l:"Verified",s:"open",t:"Open today · updated 7:55 am",w:"about 25 min",b:60,lat:-1.2880,lng:36.8900}
-  ];
+<noscript><p class="note" style="margin:2rem auto;max-width:60ch">Front Belt needs JavaScript for the clinic search and consoles. You can still reach us at frontbelttechnologiesltd@gmail.com.</p></noscript>
 
-  var $=function(id){return document.getElementById(id)};
-  var clinics=[],me=null,watchId=null;
-  var map=null,mapReady=false,mapLayer=null,mapLoading=false;
-
-  function normalize(r){
-    var lat=Number(r.lat!=null?r.lat:r.latitude),lng=Number(r.lng!=null?r.lng:r.longitude);
-    return {
-      name:r.name||r.n, area:r.area||r.a, level:r.level||r.l, status:r.status||r.s,
-      text:r.text||r.t||"", wait:r.wait||r.w||"unknown", busy:Number(r.busy!=null?r.busy:r.b!=null?r.b:0),
-      lat:lat, lng:lng, dist:null
-    };
-  }
-  function isUsable(c){return !!c.name && isFinite(c.lat) && isFinite(c.lng)}
-
-  clinics=SAMPLE_CLINICS.map(normalize).filter(isUsable);
-
-  /* area dropdown, rebuilt whenever the data changes */
-  function fillAreas(){
-    var sel=$("area"),keep=sel.value,areas=[];
-    clinics.forEach(function(c){if(areas.indexOf(c.area)<0)areas.push(c.area)});
-    areas.sort();
-    sel.textContent="";
-    var all=document.createElement("option");all.value="";all.textContent="All areas";sel.appendChild(all);
-    areas.forEach(function(a){var o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o)});
-    if(areas.indexOf(keep)>-1)sel.value=keep;
-  }
-  fillAreas();
-
-  /* ---- distance maths ------------------------------------------- */
-  function distanceKm(lat1,lng1,lat2,lng2){
-    var R=6371,rad=Math.PI/180;
-    var dLat=(lat2-lat1)*rad,dLng=(lng2-lng1)*rad;
-    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLng/2)*Math.sin(dLng/2);
-    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  }
-  function fmtDist(km){
-    if(km==null)return "";
-    if(km<0.95){
-      var m=Math.round(km*1000/10)*10;
-      return m<50?"under 50 m":m+" m";
-    }
-    return km<10?km.toFixed(1)+" km":Math.round(km)+" km";
-  }
-  function esc(s){
-    return String(s==null?"":s).replace(/[&<>"']/g,function(m){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];
-    });
-  }
-  function clock(){var d=new Date();return d.getHours()+":"+("0"+d.getMinutes()).slice(-2)}
-
-  function nearest(list,openOnly){
-    if(!me)return null;
-    var best=null,bd=Infinity;
-    (list||clinics).forEach(function(c){
-      if(openOnly&&c.status!=="open")return;
-      var d=distanceKm(me.lat,me.lng,c.lat,c.lng);
-      if(d<bd){bd=d;best=c}
-    });
-    return best?{c:best,d:bd}:null;
-  }
-
-  /* ---- the list ------------------------------------------------- */
-  function render(){
-    var q=$("q").value.trim().toLowerCase(),ar=$("area").value,lv=$("lvl").value,box=$("cards");
-    var list=clinics.filter(function(c){
-      return (!q||(c.name+" "+c.area).toLowerCase().indexOf(q)>-1)&&(!ar||c.area===ar)&&(!lv||c.level===lv);
-    });
-    list.forEach(function(c){c.dist=me?distanceKm(me.lat,me.lng,c.lat,c.lng):null});
-    if(me)list.sort(function(a,b){return a.dist-b.dist});
-
-    var pick=nearest(list,true);
-    box.textContent="";
-
-    var count=$("rescount");
-    count.textContent=list.length+(list.length===1?" clinic":" clinics")+(me?" · nearest first":" · use your location to sort by distance");
-
-    if(!list.length){
-      var e=document.createElement("div");e.className="empty";
-      e.textContent="No clinics match. Try a different area or trust level.";box.appendChild(e);return;
-    }
-    list.forEach(function(c){
-      var isPick=pick&&pick.c===c&&!q&&!ar&&!lv;
-      var d=document.createElement("article");d.className="card"+(isPick?" near":"");
-
-      var top=document.createElement("div");top.className="top";
-      var h=document.createElement("h3");h.textContent=c.name;
-      var bd=document.createElement("span");bd.className="badge b-"+c.level;bd.textContent=c.level;
-      top.appendChild(h);top.appendChild(bd);
-      d.appendChild(top);
-
-      if(isPick){var rib=document.createElement("span");rib.className="ribbon";rib.textContent="Closest to you";d.appendChild(rib)}
-
-      var st=document.createElement("span");st.className="pill "+c.status;
-      var dot=document.createElement("span");dot.className="dot";st.appendChild(dot);st.appendChild(document.createTextNode(c.text));
-      d.appendChild(st);
-
-      var m=document.createElement("div");m.className="meta";
-      var spanArea=document.createElement("span");spanArea.textContent=c.area;m.appendChild(spanArea);
-      if(c.dist!=null){
-        var spanD=document.createElement("span");spanD.className="dist";spanD.textContent=fmtDist(c.dist)+" away";m.appendChild(spanD);
-      }
-      var spanW=document.createElement("span");spanW.textContent="Wait: "+c.wait;m.appendChild(spanW);
-      d.appendChild(m);
-
-      if(c.status==="open"){
-        var bar=document.createElement("div");bar.className="bar";
-        var i=document.createElement("i");i.style.width=c.busy+"%";bar.appendChild(i);d.appendChild(bar);
-      }
-      var tag=document.createElement("small");tag.style.color="var(--muted)";tag.textContent="Sample listing";d.appendChild(tag);
-      box.appendChild(d);
-    });
-  }
-
-  ["q","area","lvl"].forEach(function(id){$(id).addEventListener("input",render)});
-  render();
-
-  /* ---- live data ------------------------------------------------ */
-  function stamp(text,warn){
-    var el=$("data-stamp");el.textContent=text;
-    el.className="chip"+(warn?" warn":"");
-  }
-  function loadClinics(){
-    if(!LIVE_API){stamp("Sample data");return}
-    fetch(LIVE_API,{cache:"no-store"}).then(function(r){
-      if(!r.ok)throw new Error("HTTP "+r.status);
-      return r.json();
-    }).then(function(rows){
-      if(!Array.isArray(rows))throw new Error("Expected an array of clinics");
-      var next=rows.map(normalize).filter(isUsable);
-      if(!next.length)throw new Error("No usable clinics in response");
-      clinics=next;fillAreas();render();
-      if(mapReady)drawMap();
-      stamp("Live · checked "+clock());
-    }).catch(function(err){
-      stamp("Offline · showing last known",true);
-      if(window.console)console.warn("Clinic data refresh failed:",err.message);
-    });
-  }
-  if(LIVE_API){loadClinics();setInterval(loadClinics,POLL_MS)}
-
-  /* ---- location ------------------------------------------------- */
-  function setStatus(parts){
-    var box=$("geo-status");box.textContent="";
-    parts.forEach(function(p){
-      if(p.t==="link"){
-        var b=document.createElement("button");b.type="button";b.className="linkish";
-        b.textContent=p.text;b.setAttribute(p.attr,"");box.appendChild(b);return;
-      }
-      var s=document.createElement("span");s.className="chip"+(p.cls?" "+p.cls:"");s.textContent=p.text;box.appendChild(s);
-    });
-  }
-
-  function locate(){
-    var btn=$("geo-btn");
-    if(!navigator.geolocation){
-      setStatus([{text:"This browser cannot share location. Pick your area instead.",cls:"warn"}]);return;
-    }
-    if(!window.isSecureContext){
-      setStatus([{text:"Location needs an https:// address. Pick your area instead.",cls:"warn"}]);return;
-    }
-    btn.disabled=true;btn.textContent="Finding you…";
-    $("geo-sub").textContent="Waiting for your device to share its location…";
-    navigator.geolocation.getCurrentPosition(onPosition,onGeoError,{enableHighAccuracy:true,timeout:12000,maximumAge:20000});
-  }
-
-  function onPosition(pos){applyMe(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy)}
-  function onMove(pos){
-    if(!me)return;
-    if(distanceKm(me.lat,me.lng,pos.coords.latitude,pos.coords.longitude)<0.03)return;
-    applyMe(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy);
-  }
-
-  function applyMe(lat,lng,acc){
-    me={lat:lat,lng:lng,acc:acc||0};
-    var btn=$("geo-btn");btn.disabled=false;btn.textContent="Update my location";
-
-    var pick=nearest(clinics,true)||nearest(clinics,false);
-    if(pick){
-      $("geo-title").textContent="Closest open clinic: "+pick.c.name;
-      $("geo-sub").textContent="In "+pick.c.area+", "+fmtDist(pick.d)+" away. The list is sorted nearest first.";
-    }
-    setStatus([
-      {text:"Location on",cls:"live"},
-      {text:"Accurate to about ±"+Math.max(10,Math.round(me.acc))+" m"},
-      {text:"Refresh",t:"link",attr:"data-geo"}
-    ]);
-    render();
-    if(mapReady)drawMap();
-
-    if(watchId===null&&navigator.geolocation.watchPosition){
-      try{watchId=navigator.geolocation.watchPosition(onMove,function(){},{maximumAge:15000,timeout:20000})}catch(x){}
-    }
-  }
-
-  function onGeoError(err){
-    var btn=$("geo-btn");btn.disabled=false;btn.textContent="Try my location again";
-    $("geo-title").textContent="Find the nearest clinic to you";
-    var msg=err&&err.code===1
-      ? "Location is blocked. Allow it in your browser, or pick your area below."
-      : err&&err.code===3
-      ? "Your device took too long to find you. Try again, or pick your area below."
-      : "We could not read your location. Pick your area below instead.";
-    $("geo-sub").textContent="No location, no problem: search by name or choose an area.";
-    setStatus([{text:msg,cls:"warn"}]);
-  }
-
-  /* ---- optional map --------------------------------------------- */
-  function loadLeaflet(cb){
-    if(window.L)return cb();
-    if(mapLoading)return;
-    mapLoading=true;
-    var css=document.createElement("link");css.rel="stylesheet";
-    css.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";document.head.appendChild(css);
-    var s=document.createElement("script");s.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    s.onload=cb;
-    s.onerror=function(){
-      mapLoading=false;
-      $("map").innerHTML='<p class="mapnote" style="padding:1rem">The map could not load. The list below still works.</p>';
-    };
-    document.head.appendChild(s);
-  }
-
-  function showMap(){
-    $("mapwrap").hidden=false;
-    $("map-toggle").textContent="Hide map";
-    loadLeaflet(function(){
-      if(!map){
-        map=L.map("map",{scrollWheelZoom:false}).setView([-1.2864,36.8172],12);
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
-          maxZoom:19,attribution:"&copy; OpenStreetMap contributors"
-        }).addTo(map);
-        mapLayer=L.layerGroup().addTo(map);
-        mapReady=true;
-      }
-      drawMap();
-      setTimeout(function(){map.invalidateSize()},200);
-    });
-  }
-
-  function drawMap(){
-    if(!map||!mapLayer)return;
-    mapLayer.clearLayers();
-    var pts=[];
-    clinics.forEach(function(c){
-      var col=c.status==="open"?"#0F8A4F":c.status==="stale"?"#B45309":"#8A6F7A";
-      var mk=L.circleMarker([c.lat,c.lng],{radius:8,color:"#fff",weight:2,fillColor:col,fillOpacity:1});
-      var d=me?fmtDist(distanceKm(me.lat,me.lng,c.lat,c.lng)):"";
-      mk.bindPopup("<strong>"+esc(c.name)+"</strong>"+esc(c.area)+(d?" · "+esc(d)+" away":"")+"<br>"+esc(c.text||c.wait));
-      mk.addTo(mapLayer);pts.push([c.lat,c.lng]);
-    });
-    if(me){
-      L.circle([me.lat,me.lng],{radius:Math.max(60,Math.min(me.acc||80,400)),color:"#E8135F",fillColor:"#E8135F",fillOpacity:.12,weight:1}).addTo(mapLayer);
-      L.circleMarker([me.lat,me.lng],{radius:7,color:"#fff",weight:3,fillColor:"#E8135F",fillOpacity:1}).bindPopup("<strong>You are here</strong>"+"±"+Math.max(10,Math.round(me.acc||0))+" m").addTo(mapLayer);
-      pts.push([me.lat,me.lng]);
-    }
-    if(pts.length)map.fitBounds(pts,{padding:[40,40],maxZoom:15});
-  }
-
-  /* ---- which section am I in? ----------------------------------- */
-  var navLinks=[].slice.call(document.querySelectorAll('.links a[href^="#"]'));
-  if(window.IntersectionObserver&&navLinks.length){
-    var spy=new IntersectionObserver(function(entries){
-      entries.forEach(function(en){
-        if(!en.isIntersecting)return;
-        navLinks.forEach(function(a){
-          a.setAttribute("aria-current",a.getAttribute("href")==="#"+en.target.id?"true":"false");
-        });
-      });
-    },{rootMargin:"-84px 0px -68% 0px"});
-    ["clinics","trust","for-clinics","faq"].forEach(function(id){
-      var el=document.getElementById(id);if(el)spy.observe(el);
-    });
-  }
-
-  /* new controls, kept separate from the modal/theme handlers below */
-  document.addEventListener("click",function(e){
-    if(e.target.closest("[data-geo]")){
-      e.preventDefault();
-      var sec=$("clinics");
-      if(sec&&sec.getBoundingClientRect().top<0){sec.scrollIntoView({block:"start"})}
-      locate();return;
-    }
-    if(e.target.closest("[data-maptoggle]")){
-      var wrap=$("mapwrap");
-      if(wrap.hidden){showMap()}
-      else{wrap.hidden=true;$("map-toggle").textContent="Show map"}
-    }
-  });
-
-  /* modal */
-  var mode="patient";
-  function setMode(m){
-    mode=m;
-    $("m-patient").setAttribute("aria-selected",m==="patient");
-    $("m-clinic").setAttribute("aria-selected",m==="clinic");
-    $("l-clinic").hidden=m!=="clinic";
-    $("mtitle").textContent=m==="clinic"?"List your clinic":"Join early access";
-  }
-  function openModal(m){setMode(m);$("form").hidden=false;$("done").hidden=true;$("err").hidden=true;$("modal").hidden=false;setTimeout(function(){$("f-name").focus()},50)}
-  function closeModal(){$("modal").hidden=true}
-
-  document.addEventListener("click",function(e){
-    var t=e.target.closest("[data-open],[data-close],[data-mtab],[data-tab],[data-menu],[data-closemob],[data-copy],[data-theme-toggle]");
-    if(e.target===$("modal")){closeModal();return}
-    if(!t)return;
-    if(t.hasAttribute("data-open"))openModal(t.getAttribute("data-open"));
-    if(t.hasAttribute("data-close"))closeModal();
-    if(t.hasAttribute("data-mtab"))setMode(t.getAttribute("data-mtab"));
-    if(t.hasAttribute("data-tab")){
-      var w=t.getAttribute("data-tab");
-      $("t-pat").setAttribute("aria-selected",w==="pat");$("t-own").setAttribute("aria-selected",w==="own");
-      $("faq-pat").hidden=w!=="pat";$("faq-own").hidden=w!=="own";
-    }
-    if(t.hasAttribute("data-menu")){var o=$("links").classList.toggle("open");t.setAttribute("aria-expanded",o)}
-    if(t.hasAttribute("data-closemob")){$("links").classList.remove("open")}
-    if(t.hasAttribute("data-copy")){
-      var txt=$(t.getAttribute("data-copy")).textContent;
-      var show=function(){$("copied").hidden=false;setTimeout(function(){$("copied").hidden=true},2000)};
-      try{navigator.clipboard.writeText(txt).then(show,function(){selectEl($(t.getAttribute("data-copy")))})}catch(x){selectEl($(t.getAttribute("data-copy")))}
-    }
-    if(t.hasAttribute("data-theme-toggle")){
-      var r=document.documentElement,cur=r.getAttribute("data-theme");
-      var dark=cur?cur==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;
-      r.setAttribute("data-theme",dark?"light":"dark");
-    }
-  });
-  function selectEl(el){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r)}
-  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeModal()});
-
-  $("form").addEventListener("submit",function(e){
-    e.preventDefault();
-    var n=$("f-name").value.trim(),em=$("f-email").value.trim(),er=$("err");
-    if(!n||!/^\S+@\S+\.\S+$/.test(em)||(mode==="clinic"&&!$("f-clinic").value.trim())){
-      er.textContent="Please enter your name, a valid email"+(mode==="clinic"?" and your clinic name":"")+".";er.hidden=false;return;
-    }
-    $("form").hidden=true;$("done").hidden=false;
-    var clinic=mode==="clinic"?$("f-clinic").value.trim():"";
-    var area=$("f-area").value.trim();
-    var subject=mode==="clinic"?"Clinic listing request"+(clinic?": "+clinic:""):"Early access request";
-    var lines=["Name: "+n,"Email: "+em];
-    if(area)lines.push("Area in Nairobi: "+area);
-    if(clinic)lines.push("Clinic name: "+clinic);
-    lines.push("Request type: "+(mode==="clinic"?"Clinic owner":"Patient"));
-    var link="mailto:frontbelttechnologiesltd@gmail.com?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(lines.join("\n"));
-    $("mail-link").setAttribute("href",link);
-    $("done-msg").textContent="Thank you, "+n+". Your email app should open with these details ready to send to frontbelttechnologiesltd@gmail.com. If nothing opens, use the button below.";
-    try{window.location.href=link}catch(x){}
-  });
-})();
-</script>
-
-</body></html>
+<script src="assets/data.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
