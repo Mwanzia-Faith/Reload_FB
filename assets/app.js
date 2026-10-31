@@ -293,11 +293,14 @@
     el.className = 'chip live';
   }
 
+  function setFtrMode(text) { var f = $('ftr-mode'); if (f) f.textContent = text; }
+
   FB.onClinics(function (rows, err) {
     if (err) {
       dataErr = err;
       if (!all.length) all = fallbackRows();
       setStamp();
+      setFtrMode('Database not reachable — sample clinics shown.');
       if (window.console) console.warn('Clinic data:', err.message);
       renderCurrent();
       return;
@@ -307,6 +310,7 @@
     lastLoaded = new Date();
     all = rows.filter(function (c) { return c && c.name; });
     setStamp();
+    setFtrMode('Live database.');
     renderCurrent();
   });
 
@@ -321,8 +325,7 @@
       if (!all.length) all = fallbackRows();
       setStamp();
       renderCurrent();
-      var ftr = $('ftr-mode');
-      if (ftr) ftr.textContent = 'Database not connected yet — sample clinics shown.';
+      setFtrMode('Database not connected yet — sample clinics shown.');
     }, 9000);
   }
   watchFirstLoad();
@@ -1666,9 +1669,7 @@
     if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
   } catch (x) {}
 
-  $('ftr-mode').textContent = FB.mode === 'demo'
-    ? 'Demo mode — this browser only.'
-    : 'Live database.';
+  setFtrMode(FB.mode === 'demo' ? 'Demo mode — this browser only.' : 'Live database.');
 
   window.addEventListener('hashchange', render);
   if (!location.hash) location.hash = '#/home';
