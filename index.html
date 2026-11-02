@@ -12,11 +12,17 @@
 <meta property="og:title" content="Front Belt · Find anything near you in Nairobi">
 <meta property="og:description" content="Know before you go. Front Belt shows what is near you in Nairobi — from clinics to salons — with real distance and directions.">
 <meta property="og:locale" content="en_KE">
+<meta property="og:image" content="https://mwanzia-faith.github.io/Reload_FB/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Front Belt · Find anything near you in Nairobi">
 <meta name="twitter:description" content="Know before you go. Front Belt shows what is near you in Nairobi — from clinics to salons — with real distance and directions.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E8135F'/%3E%3Cpath d='M28 15h8v8h8v8h-8v8h-8v-8h-8v-8h8z' fill='%23fff'/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E8135F'/%3E%3Cpath d='M28 15h8v8h8v8h-8v8h-8v-8h-8v-8h8z' fill='%23fff'/%3E%3C/svg%3E">
+<meta name="twitter:image" content="https://mwanzia-faith.github.io/Reload_FB/assets/og.png">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="mask-icon" href="assets/logo.svg" color="#E8135F">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap">
@@ -68,19 +74,14 @@
 <header class="hdr">
   <div class="hdr-in">
     <a class="brand" href="#/home" aria-label="Front Belt home">
-      <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
-        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF1A6C"/><stop offset=".6" stop-color="#FF6200"/><stop offset="1" stop-color="#FFD000"/></linearGradient></defs>
-        <path d="M32 4C19.8 4 10 13.6 10 25.5 10 41 32 60 32 60s22-19 22-34.5C54 13.6 44.2 4 32 4z" fill="url(#lg)"/>
-        <path d="M28 15h8v8h8v8h-8v8h-8v-8h-8v-8h8z" fill="#fff"/>
-        <path d="M4 44c14 8 40 8 56-6" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linecap="round"/>
-      </svg>
+      <img src="assets/logo.svg" width="36" height="36" alt="">
       <span>Front <span class="grad-text">Belt</span></span>
     </a>
 
     <nav class="mainnav" id="mainnav" aria-label="Sections">
       <a href="#/find" data-nav="find"><svg class="ic"><use href="#i-grid"/></svg><span>Explore</span></a>
       <a href="#/trust" data-nav="trust"><svg class="ic"><use href="#i-shield"/></svg><span>Trust</span></a>
-      <a href="#/clinics" data-nav="clinics"><svg class="ic"><use href="#i-clinic"/></svg><span>For clinics</span></a>
+      <a href="#/clinics" data-nav="clinics"><svg class="ic"><use href="#i-clinic"/></svg><span>For business</span></a>
       <a href="#/faq" data-nav="faq"><svg class="ic"><use href="#i-help"/></svg><span>FAQ</span></a>
       <a href="#/contact" data-nav="contact"><svg class="ic"><use href="#i-mail"/></svg><span>Contact</span></a>
     </nav>
@@ -139,8 +140,8 @@
         </a>
         <a class="teaser" href="#/clinics">
           <svg class="ic"><use href="#i-clinic"/></svg>
-          <h3>For clinics</h3>
-          <p>Free in Phase 1. Give us a status update each morning, get found by patients ready to visit.</p>
+          <h3>For businesses</h3>
+          <p>Free in Phase 1. Add your clinic, shop, salon or studio and get found by people ready to come.</p>
         </a>
         <a class="teaser" href="#/contact">
           <svg class="ic"><use href="#i-users"/></svg>
@@ -278,12 +279,12 @@
       </div>
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" aria-selected="true" data-tab="pat" id="t-pat">Patients</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="own" id="t-own">Clinic owners</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="own" id="t-own">Business owners</button>
       </div>
       <div id="faq-pat" role="tabpanel">
         <details><summary>Is Front Belt live yet?</summary><p>Not fully. We are in early access and adding real clinics one at a time. Listings marked “Sample” are demonstrations.</p></details>
         <details><summary>Does a badge mean the clinic gives good care?</summary><p>No. A badge shows which documents and behaviours we have reviewed, such as registration and daily updates. It is not a medical quality rating.</p></details>
-        <details><summary>Do I have to create an account to search?</summary><p>No. Searching, distance sorting and the map all work without signing in. An account only adds saved clinics.</p></details>
+        <details><summary>Do I have to create an account to search?</summary><p>No. Searching, distance sorting and the map all work without signing in. An account only adds saved places.</p></details>
         <details><summary>Is it an emergency service?</summary><p>No. In an emergency, go to the nearest hospital or call your local emergency number.</p></details>
         <details><summary>Does it cost anything?</summary><p>Searching is free for patients.</p></details>
       </div>
@@ -353,18 +354,18 @@
       <div class="viewhead">
         <span class="eyebrow"><svg class="ic"><use href="#i-lock"/></svg> Your account</span>
         <h1 id="auth-title">Sign in to Front Belt</h1>
-        <p class="lead" id="auth-sub">Tell us who you are and the site opens in the right place: a patient dashboard, or your clinic console.</p>
+        <p class="lead" id="auth-sub">Tell us who you are and the site opens in the right place: a patient dashboard, or your listing’s console.</p>
       </div>
 
       <div class="rolepick" id="rolepick">
         <button class="rolebtn" data-role="patient" type="button" aria-pressed="false">
           <svg class="ic"><use href="#i-user"/></svg>
           <strong>I am looking for care</strong>
-          <small>Save clinics and see them first next time</small>
+          <small>Save places and see them first next time</small>
         </button>
         <button class="rolebtn" data-role="provider" type="button" aria-pressed="false">
           <svg class="ic"><use href="#i-building"/></svg>
-          <strong>I run a clinic</strong>
+          <strong>I run a business or clinic</strong>
           <small>Manage your listing, status and trust level</small>
         </button>
       </div>
@@ -393,14 +394,14 @@
         <div>
           <span class="eyebrow"><svg class="ic"><use href="#i-user"/></svg> Your dashboard</span>
           <h1 id="acct-hello">Welcome back</h1>
-          <p class="lead">Your saved clinics, and what is open near you today.</p>
+          <p class="lead">Your saved places, and what is open near you today.</p>
         </div>
         <button class="btn btn-ghost btn-sm" data-signout><svg class="ic"><use href="#i-logout"/></svg> Sign out</button>
       </div>
       <div class="statrow" id="acct-stats"></div>
-      <h2 class="h-sm">Saved clinics</h2>
+      <h2 class="h-sm">Saved places</h2>
       <div class="cards" id="saved-cards"></div>
-      <div class="row" style="margin-top:1.2rem"><a class="btn btn-primary" href="#/find"><svg class="ic"><use href="#i-pin"/></svg> Find a clinic near me</a></div>
+      <div class="row" style="margin-top:1.2rem"><a class="btn btn-primary" href="#/find"><svg class="ic"><use href="#i-pin"/></svg> Find places near me</a></div>
     </div>
   </section>
 
@@ -501,7 +502,7 @@
   <a href="#/home" data-nav="home"><svg class="ic"><use href="#i-home"/></svg><span>Home</span></a>
   <a href="#/find" data-nav="find"><svg class="ic"><use href="#i-grid"/></svg><span>Explore</span></a>
   <a href="#/trust" data-nav="trust"><svg class="ic"><use href="#i-shield"/></svg><span>Trust</span></a>
-  <a href="#/clinics" data-nav="clinics"><svg class="ic"><use href="#i-clinic"/></svg><span>Clinics</span></a>
+  <a href="#/clinics" data-nav="clinics"><svg class="ic"><use href="#i-clinic"/></svg><span>Business</span></a>
   <a href="#/faq" data-nav="faq"><svg class="ic"><use href="#i-help"/></svg><span>FAQ</span></a>
 </nav>
 

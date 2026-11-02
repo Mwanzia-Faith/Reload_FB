@@ -73,6 +73,8 @@ strong{font-weight:700}
 .stack{display:flex;flex-direction:column;gap:.9rem}
 .row{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center}
 .grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* the wordmark carries all six category colours, in wheel order */
+.brand .grad-text{background:linear-gradient(115deg,#E8135F 0%,#E8590C 24%,#B45309 44%,#0F766E 64%,#1D4ED8 82%,#7E22CE 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .h-sm{font-size:1.15rem;margin:2rem 0 .2rem}
 
 /* ---------- buttons / fields ---------- */
@@ -133,7 +135,7 @@ label{display:flex;flex-direction:column;gap:.35rem;font-size:.86rem;font-weight
 }
 .hdr-in{max-width:1240px;margin:0 auto;padding:.6rem 20px;display:flex;align-items:center;gap:1rem}
 .brand{display:flex;align-items:center;gap:.55rem;font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:-.03em;text-decoration:none;color:var(--fg);flex:none}
-.brand svg{display:block}
+.brand svg,.brand img{display:block}
 .mainnav{display:flex;align-items:center;gap:.15rem;margin-left:auto}
 .mainnav a{
   display:inline-flex;align-items:center;gap:.42rem;padding:.5rem .7rem;border-radius:999px;

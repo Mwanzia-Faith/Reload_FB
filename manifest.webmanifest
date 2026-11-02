@@ -1,0 +1,16 @@
+{
+  "name": "Front Belt · Find anything near you in Nairobi",
+  "short_name": "Front Belt",
+  "description": "Clinics, food, beauty, tech and money, books and home — found by distance, with directions that start from where you are standing.",
+  "start_url": "./#/home",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFAF7",
+  "theme_color": "#E8135F",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

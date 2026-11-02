@@ -31,6 +31,7 @@
   var me = null;           /* signed-in profile, or null */
   var meGeo = null;        /* {lat,lng,acc} from the device */
   var savedIds = [];
+  var curList = [];   /* what the list view is showing right now — the map draws this */
   var authRole = 'patient';
   var authMode = 'signin';
   /* Demo mode only: the local team console is opened with this code instead of
@@ -666,6 +667,7 @@
       if (b._dist != null) return 1;
       return String(a.name).localeCompare(String(b.name));
     });
+    curList = list;
 
     var pick = null;
     if (meGeo) {
@@ -811,7 +813,8 @@
     if (!map || !mapLayer) return;
     mapLayer.clearLayers();
     var pts = [];
-    publicClinics().forEach(function (c) {
+    /* only what the list is showing: the active category, search and filters */
+    curList.forEach(function (c) {
       if (!isFinite(c.lat) || !isFinite(c.lng)) return;
       var s = statusOf(c);
       var col = isHealth(c)
@@ -820,6 +823,7 @@
       var d = meGeo ? fmtDist(distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng)) : '';
       L.circleMarker([c.lat, c.lng], { radius: 8, color: '#fff', weight: 2, fillColor: col, fillOpacity: 1 })
         .bindPopup('<strong>' + esc(c.name) + '</strong>' + esc(c.area) + (d ? ' · ' + esc(d) + ' away' : '') +
+          (c.sample ? '<br><em>Sample listing</em>' : '') +
           '<br>' + esc(isHealth(c) ? s.text : (c.type || catOf(c).label)) +
           '<br><span style="font-size:13px;color:#6E5560">' + esc(c.trust || 'Listed') + '</span>' +
           '<br><a href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener">Directions</a>')
@@ -910,7 +914,7 @@
       $('a-pass').value = '';
       toast('Signed in as ' + (u.name || u.email));
       if (authMode === 'signup' && authRole === 'provider' && u.role !== 'provider' && u.role !== 'admin') {
-        toast('Account created. Add your clinic in the console.', 5000);
+        toast('Account created. Add your listing in the console.', 5000);
       }
       location.hash = routeForRole(u);
     }).catch(function (e2) {
@@ -1069,11 +1073,11 @@
       return;
     }
     if (!c) {
-      $('prov-title').textContent = 'Add your clinic';
+      $('prov-title').textContent = 'Add your listing';
       $('prov-sub').textContent = 'Takes about three minutes. The team approves it before it appears publicly.';
       body.innerHTML = '<form class="prov-card stack" id="new-clinic" novalidate>' +
         clinicFormFields({ area: '' }) +
-        '<button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-plus"/></svg> Send my clinic for review</button>' +
+        '<button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-plus"/></svg> Send my listing for review</button>' +
         '<p class="ok-msg err" id="nc-err" hidden></p>' +
         '</form>';
       wireProviderForm(body, null, true);
@@ -1160,7 +1164,7 @@
       '<form class="prov-card stack" id="profile-form" style="margin-top:1rem">' +
       '<h3><svg class="ic"><use href="#i-edit"/></svg> Details and exact location</h3>' +
       clinicFormFields(c) +
-      '<button class="btn btn-primary" type="submit">Save clinic details</button>' +
+      '<button class="btn btn-primary" type="submit">Save listing details</button>' +
       '<p class="ok-msg err" id="pf-err" hidden></p>' +
       '</form>' +
 

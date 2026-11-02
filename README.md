@@ -12,8 +12,11 @@ Jua kabla ya kwenda.
 | `assets/styles.css` | The design system — colours, type, layout, light and dark themes, plus the per-category card layouts. |
 | `assets/data.js` | The category catalogue (ids, icons, colours, types) and the sample listings used when no database is connected. |
 | `assets/store.js` | The data layer. One API, two backends: local demo (`localStorage`) and Firebase (Firestore + Auth). Picks Firebase automatically as soon as `assets/firebase-config.js` holds a real config. |
-| `assets/firebase-config.js` | Empty placeholder. Paste your Firebase web config here to go live. |
+| `assets/firebase-config.js` | The Firebase web config (public identifiers only — never a secret). |
 | `assets/app.js` | Routing, GPS search, sign-in, provider console, team console. |
+| `assets/logo.svg` | The brand mark — a map pin holding a six-colour compass, one wedge per category, with the belt ribbon behind it. Used in the header and as the favicon. |
+| `manifest.webmanifest` | Lets visitors install the site to their phone’s home screen. |
+| `assets/icon-192.png`, `assets/icon-512.png`, `assets/apple-touch-icon.png`, `assets/og.png` | PNG icons rendered from the logo: home-screen icons, the iOS touch icon, and the picture shown when the link is shared. |
 | `firestore.rules` | **The real access control.** Deploy these to Firebase. |
 
 No build step and no dependencies: the site runs from any static host.
