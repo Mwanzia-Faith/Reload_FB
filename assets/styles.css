@@ -192,6 +192,8 @@ label{display:flex;flex-direction:column;gap:.35rem;font-size:.86rem;font-weight
 .hero>*{min-width:0}
 @media(max-width:860px){.hero{grid-template-columns:1fr;gap:1.8rem;padding-top:.6rem}}
 .hero h1{letter-spacing:-.035em}
+/* the slogan: uppercase, tracked out, carrying the six category colours */
+.slogan{font-family:var(--display);font-weight:800;font-size:clamp(.95rem,1.7vw,1.2rem);letter-spacing:.16em;text-transform:uppercase;margin-top:.85rem;width:fit-content;background:linear-gradient(115deg,#E8135F 0%,#E8590C 24%,#B45309 44%,#0F766E 64%,#1D4ED8 82%,#7E22CE 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sw{font-family:var(--display);font-weight:600;color:var(--orange);font-size:.98rem;margin-top:.5rem}
 .hero .lead{font-size:1.06rem;margin-top:.9rem}
 .hero .row{margin-top:1.5rem}
