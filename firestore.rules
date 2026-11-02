@@ -28,10 +28,10 @@ service cloud.firestore {
     }
 
     /* fields a clinic may change on its own record */
-    function clinicFieldsOk() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['name', 'area', 'address', 'lat', 'lng', 'phone', 'hours',
-                  'services', 'note', 'registrationNo', 'licenceRef', 'updatedAt']);
+    function clinicFieldsOk() {        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['category', 'type', 'name', 'area', 'address', 'lat', 'lng',
+                  'phone', 'hours', 'services', 'note', 'registrationNo',
+                  'licenceRef', 'updatedAt']);
     }
 
     /* ---------- clinics ---------- */

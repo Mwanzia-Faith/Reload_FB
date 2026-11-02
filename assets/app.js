@@ -7,7 +7,16 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var DATA = window.FB_DATA;
+  var CATS = DATA.categories || [];
   var EMAIL = 'frontbelttechnologiesltd@gmail.com';
+
+  function catById(id) {
+    for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i];
+    return null;
+  }
+  /* a listing with no category predates the categories — it is a health place */
+  function catOf(c) { return catById(c && c.category) || catById('health') || CATS[0]; }
+  function isHealth(c) { return !!(catOf(c) || {}).health; }
 
   /* Contact form delivery.
      Empty  -> the button opens the visitor's own email app (no server needed,
@@ -32,7 +41,11 @@
   var TEAM_CODE = 'ILOVEFB';
   var dataErr = null;
   var lastLoaded = null;
+  var samplesOn = false;   /* visitor asked to preview sample listings */
+  var activeCat = null;    /* category id being browsed, or null for all */
   var modalOpen = false;
+  var pdMap = null;        /* map inside the place-detail sheet */
+  var pdMode = 'driving';
   var watchId = null;
 
   var map = null, mapLayer = null, mapReady = false, mapLoading = null;
@@ -105,6 +118,9 @@
      3–6 days             -> "Status unknown" (drops in the list)
      7+ days              -> hidden from the public site          */
   function statusOf(c) {
+    /* only Health carries a daily status. Everything else is found by
+       where it is, not by whether it reported in this morning. */
+    if (!isHealth(c)) return { key: 'na', text: '', days: 0 };
     if (!c.lastStatusAt) return { key: 'unknown', text: 'Status unknown', days: 99 };
     var days = dayDiff(c.lastStatusAt);
     if (days <= 0 && (c.status === 'open' || c.status === 'closed')) {
@@ -118,10 +134,14 @@
   }
 
   function publicClinics() {
-    return all.filter(function (c) {
+    var live = all.filter(function (c) {
       if (!c.published) return false;
       return statusOf(c).key !== 'hidden';
     });
+    /* an empty directory is honest, but a visitor should still be able to
+       see what the categories look like — on request, never mixed in */
+    if (!live.length && samplesOn) return fallbackRows();
+    return live;
   }
 
   function clinicForMe() {
@@ -150,6 +170,7 @@
     $('modal-body').innerHTML = '';
     modalOpen = false;
     document.body.style.overflow = '';
+    if (pdMap) { try { pdMap.remove(); } catch (x) {} pdMap = null; }
   }
   function confirmDialog(o) {
     return new Promise(function (resolve) {
@@ -169,11 +190,98 @@
     });
   }
 
+  /* ---------------- place detail: the “Start” sheet ----------------
+     Tap any listing and it opens here with the map, the facts, and a
+     Start button that hands over to Google Maps for turn-by-turn. */
+  function openPlace(id) {
+    var c = all.filter(function (x) { return x.id === id; })[0];
+    if (!c && samplesOn) c = fallbackRows().filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    var k = catOf(c);
+    var dist = (meGeo && isFinite(c.lat) && isFinite(c.lng))
+      ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
+    var saved = savedIds.indexOf(c.id) > -1;
+    var s = statusOf(c);
+
+    var rows = '';
+    if (c.type) rows += '<dt>Type</dt><dd>' + esc(c.type) + '</dd>';
+    if (c.area) rows += '<dt>Area</dt><dd>' + esc(c.area) + '</dd>';
+    if (c.address) rows += '<dt>Address</dt><dd>' + esc(c.address) + '</dd>';
+    if (dist != null) rows += '<dt>From you</dt><dd>' + esc(fmtDist(dist)) + ' away</dd>';
+    if (c.hours) rows += '<dt>Hours</dt><dd>' + esc(c.hours) + '</dd>';
+    if (c.phone) rows += '<dt>Phone</dt><dd>' + esc(c.phone) + '</dd>';
+    if (k.health && (s.key === 'open' || s.key === 'closed' || s.key === 'stale' || s.key === 'unknown')) {
+      rows += '<dt>Status</dt><dd>' + esc(s.text) + '</dd>';
+      if (s.key === 'open') rows += '<dt>Wait</dt><dd>' + (c.waitMinutes ? 'about ' + esc(c.waitMinutes) + ' min' : 'not reported') + '</dd>';
+    }
+    if ((c.services || []).length) rows += '<dt>' + (k.health ? 'Services' : 'Offers') + '</dt><dd>' + esc(c.services.join(', ')) + '</dd>';
+    if (c.sample) rows += '<dt>Note</dt><dd>Sample listing — a demonstration, not a real place.</dd>';
+
+    pdMode = 'driving';
+    var html =
+      '<div class="pd-head" style="--cc:' + esc(k.color) + '">' +
+      '<span class="picon"><svg class="ic"><use href="#' + esc(k.icon) + '"/></svg></span>' +
+      '<span class="pmeta"><span class="ptype">' + esc(c.type || k.label) + '</span>' +
+      '<h3>' + esc(c.name) + '</h3>' +
+      (c.trust && c.trust !== 'Listed' ? '<span class="badge b-' + esc(c.trust) + '">' + esc(c.trust) + '</span>' : '') +
+      '</span></div>' +
+      '<dl class="pd-kv">' + rows + '</dl>' +
+      (isFinite(c.lat) ? '<div id="pd-map" aria-label="Map preview of ' + esc(c.name) + '"></div>' : '') +
+      '<div class="modes" id="pd-modes">' +
+      '<button type="button" data-mode="driving" aria-pressed="true">Drive</button>' +
+      '<button type="button" data-mode="walking" aria-pressed="false">Walk</button>' +
+      '<button type="button" data-mode="transit" aria-pressed="false">Transit</button>' +
+      '</div>' +
+      '<div class="pd-actions">' +
+      '<a class="btn btn-primary" id="pd-start" href="' + esc(dirURL(c, 'driving')) + '" target="_blank" rel="noopener">' +
+      '<svg class="ic"><use href="#i-nav"/></svg> Start</a>' +
+      (c.phone ? '<a class="btn btn-ghost" href="tel:' + esc(String(c.phone).replace(/\s+/g, '')) + '"><svg class="ic"><use href="#i-phone"/></svg> Call</a>' : '') +
+      '<button class="btn btn-ghost" type="button" data-save="' + esc(c.id) + '"><svg class="ic"><use href="#i-heart"/></svg> ' + (saved ? 'Saved' : 'Save') + '</button>' +
+      '</div>' +
+      (dist == null ? '<p class="hint">Share your location and the Start button begins from where you are standing.</p>' : '');
+
+    openModal(k.label + ' · ' + (c.type || 'listing'), html, 'place');
+
+    var modes = $('pd-modes');
+    if (modes) modes.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-mode]');
+      if (!b) return;
+      pdMode = b.getAttribute('data-mode');
+      modes.querySelectorAll('[data-mode]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      var st = $('pd-start');
+      if (st) st.href = dirURL(c, pdMode);
+    });
+
+    if (isFinite(c.lat)) {
+      loadLeaflet().then(function () {
+        var box = $('pd-map');
+        if (!box || !window.L) return;
+        try {
+          pdMap = L.map('pd-map', { scrollWheelZoom: false }).setView([c.lat, c.lng], 15);
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(pdMap);
+          var pts = [[c.lat, c.lng]];
+          L.circleMarker([c.lat, c.lng], { radius: 9, color: '#fff', weight: 2, fillColor: k.color, fillOpacity: 1 })
+            .bindPopup('<strong>' + esc(c.name) + '</strong>' + esc(c.area || ''))
+            .addTo(pdMap);
+          if (meGeo) {
+            L.circleMarker([meGeo.lat, meGeo.lng], { radius: 7, color: '#fff', weight: 3, fillColor: '#E8135F', fillOpacity: 1 })
+              .bindPopup('<strong>You are here</strong>').addTo(pdMap);
+            pts.push([meGeo.lat, meGeo.lng]);
+          }
+          pdMap.fitBounds(pts, { padding: [34, 34], maxZoom: 16 });
+          setTimeout(function () { if (pdMap) pdMap.invalidateSize(); }, 170);
+        } catch (x) { if (pdMap) { try { pdMap.remove(); } catch (y) {} pdMap = null; } }
+      }).catch(function () { /* no map, the Start button still works */ });
+    }
+  }
+
   /* ================================================================
      ROUTING
      ================================================================ */
   var ROUTES = {
-    home: 'view-home', find: 'view-find', trust: 'view-trust', clinics: 'view-clinics',
+    home: 'view-home', find: 'view-find', cat: 'view-find', trust: 'view-trust', clinics: 'view-clinics',
     faq: 'view-faq', contact: 'view-contact', signin: 'view-signin',
     account: 'view-account', provider: 'view-provider', team: 'view-team', admin: 'view-admin'
   };
@@ -193,12 +301,24 @@
     team: 'Team access',
     admin: 'Team console'
   };
-  function pageTitle(r) { return TITLES[r] || TITLES.home; }
-  var NAV_FOR = { home: 'home', find: 'find', trust: 'trust', clinics: 'clinics', faq: 'faq', contact: 'contact' };
+  function pageTitle(r) {
+    if (r === 'cat') {
+      var c = catById(currentCat());
+      if (c) return c.label + ' near you';
+    }
+    return TITLES[r] || TITLES.home;
+  }
+  var NAV_FOR = { home: 'home', find: 'find', cat: 'find', trust: 'trust', clinics: 'clinics', faq: 'faq', contact: 'contact' };
 
   function currentRoute() {
     var h = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
-    return ROUTES[h] ? h : 'home';
+    if (ROUTES[h]) return h;
+    if (h.indexOf('c/') === 0 && catById(h.slice(2))) return 'cat';
+    return 'home';
+  }
+  function currentCat() {
+    var h = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
+    return h.indexOf('c/') === 0 && catById(h.slice(2)) ? h.slice(2) : null;
   }
 
   function render() {
@@ -216,7 +336,8 @@
     }
     if (r === 'team' && isTeam()) { location.hash = '#/admin'; return; }
 
-    Object.keys(ROUTES).forEach(function (k) { $(ROUTES[k]).hidden = (k !== r); });
+    var viewId = ROUTES[r];
+    Object.keys(ROUTES).forEach(function (k) { $(ROUTES[k]).hidden = (ROUTES[k] !== viewId); });
 
     document.title = pageTitle(r) + ' · Front Belt';
     var meta = document.querySelector('meta[name="robots"]');
@@ -239,7 +360,7 @@
 
     if (r !== 'signin') { /* leave fields alone */ }
 
-    if (r === 'find') { renderFind(); }
+    if (r === 'find' || r === 'cat') { setCatState(r === 'cat' ? currentCat() : null); renderFind(); }
     else if (r === 'home') { renderHome(); }
     else if (r === 'signin') { renderAuth(); }
     else if (r === 'account') { renderAccount(); }
@@ -253,7 +374,7 @@
   /* re-render whatever is on screen after data changes */
   function renderCurrent() {
     var r = currentRoute();
-    if (r === 'find') { renderFind(); return; }
+    if (r === 'find' || r === 'cat') { renderFind(); return; }
     if (r === 'home') { renderHome(); return; }
     if (r === 'account') { renderAccount(); return; }
     if (r === 'team') { renderTeam(); return; }
@@ -284,10 +405,11 @@
     if (!el) return;
     if (dataErr) {
       var samplesOnly = all.length && all.every(function (c) { return c.sample; });
-      el.textContent = samplesOnly ? 'Offline · showing sample clinics' : 'Offline · showing last known';
+      el.textContent = samplesOnly ? 'Offline · showing sample listings' : 'Offline · showing last known';
       el.className = 'chip warn';
       return;
     }
+    if (samplesOn && !all.length) { el.textContent = 'Sample listings · preview'; el.className = 'chip seed'; return; }
     if (FB.mode === 'demo') { el.textContent = 'Demo data · this browser'; el.className = 'chip seed'; return; }
     el.textContent = 'Live · checked ' + clock(lastLoaded || new Date());
     el.className = 'chip live';
@@ -300,7 +422,7 @@
       dataErr = err;
       if (!all.length) all = fallbackRows();
       setStamp();
-      setFtrMode('Database not reachable — sample clinics shown.');
+      setFtrMode('Database not reachable — sample listings shown.');
       if (window.console) console.warn('Clinic data:', err.message);
       renderCurrent();
       return;
@@ -309,6 +431,7 @@
     dataErr = null;
     lastLoaded = new Date();
     all = rows.filter(function (c) { return c && c.name; });
+    if (all.length) samplesOn = false;   /* real data replaces the preview */
     setStamp();
     setFtrMode('Live database.');
     renderCurrent();
@@ -325,7 +448,7 @@
       if (!all.length) all = fallbackRows();
       setStamp();
       renderCurrent();
-      setFtrMode('Database not connected yet — sample clinics shown.');
+      setFtrMode('Database not connected yet — sample listings shown.');
     }, 9000);
   }
   watchFirstLoad();
@@ -358,13 +481,27 @@
      ================================================================ */
   function renderHome() {
     var list = publicClinics();
-    var open = list.filter(function (c) { return statusOf(c).key === 'open'; }).length;
+    var open = list.filter(function (c) { return isHealth(c) && statusOf(c).key === 'open'; }).length;
     var trusted = list.filter(function (c) { return c.trust === 'Trusted' || c.trust === 'Verified' || c.trust === 'Certified'; }).length;
     var areas = {};
     list.forEach(function (c) { if (c.area) areas[c.area] = 1; });
+
+    var grid = $('cat-grid');
+    if (grid) {
+      grid.innerHTML = CATS.map(function (k) {
+        var n = list.filter(function (c) { return catOf(c).id === k.id; }).length;
+        return '<a class="catcard" href="#/c/' + esc(k.id) + '" style="--cc:' + esc(k.color) + '">' +
+          '<span class="cat-ic"><svg class="ic"><use href="#' + esc(k.icon) + '"/></svg></span>' +
+          '<span class="cat-txt"><h3>' + esc(k.label) + '</h3><p>' + esc(k.tag) + '</p></span>' +
+          '<span class="cat-count">' + n + '</span>' +
+          '<svg class="ic rolearrow"><use href="#i-arrow"/></svg>' +
+          '</a>';
+      }).join('');
+    }
+
     $('home-stats').innerHTML =
-      stat(list.length, 'clinics listed') +
-      stat(open, 'open right now') +
+      stat(list.length, 'places listed') +
+      stat(open, 'clinics open now') +
       stat(trusted, 'with a checked badge') +
       stat(Object.keys(areas).length, 'Nairobi areas');
   }
@@ -390,7 +527,7 @@
       ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
     var saved = savedIds.indexOf(c.id) > -1;
     var busyLabel = c.busy >= 70 ? 'busy' : c.busy >= 40 ? 'steady' : 'quiet';
-    return '<article class="card' + (isPick ? ' near' : '') + '">' +
+    return '<article class="card' + (isPick ? ' near' : '') + '" data-open="' + esc(c.id) + '" tabindex="0" role="button" aria-label="Open ' + esc(c.name) + '">' +
       '<div class="top"><h3>' + esc(c.name) + '</h3>' +
       '<span class="badge b-' + esc(c.trust || 'Listed') + '">' + esc(c.trust || 'Listed') + '</span></div>' +
       (isPick ? '<span class="ribbon"><svg class="ic"><use href="#i-pin"/></svg>Closest open clinic</span>' : '') +
@@ -402,20 +539,115 @@
       '</div>' +
       (s.key === 'open' && c.busy ? '<div class="bar"><i style="width:' + Math.min(100, Math.max(4, c.busy)) + '%"></i></div>' : '') +
       (c.services && c.services.length ? '<div class="meta"><span>' + esc(c.services.slice(0, 2).join(' · ')) + '</span></div>' : '') +
-      '<div class="card-foot"><small>' + (c.sample ? 'Sample listing' : 'Updated ' + esc(ago(c.lastStatusAt))) + '</small>' +
-      '<button class="savebtn" type="button" data-save="' + esc(c.id) + '" aria-pressed="' + saved + '" title="Save this clinic" aria-label="Save ' + esc(c.name) + '">' +
-      '<svg class="ic"><use href="#i-heart"/></svg></button></div>' +
+      '<div class="card-foot">' +
+      '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
+      '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' +
+      '<span class="row" style="gap:.5rem">' +
+      '<small>' + (c.sample ? 'Sample listing' : 'Updated ' + esc(ago(c.lastStatusAt))) + '</small>' +
+      '<button class="savebtn" type="button" data-save="' + esc(c.id) + '" aria-pressed="' + saved + '" title="Save this place" aria-label="Save ' + esc(c.name) + '">' +
+      '<svg class="ic"><use href="#i-heart"/></svg></button></span>' +
+      '</div>' +
       '</article>';
+  }
+
+  /* Google Maps opens with the destination pinned and, when the visitor
+     shared a location, their position as the origin — the app finds the
+     place, Maps does the turn-by-turn and the “Start” button drives it. */
+  function dirURL(c, mode) {
+    var dest = (isFinite(c.lat) && isFinite(c.lng))
+      ? c.lat + ',' + c.lng
+      : encodeURIComponent((c.name || '') + ' ' + (c.address || '') + ' ' + (c.area || ''));
+    var u = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest) +
+      '&travelmode=' + (mode || 'driving');
+    if (meGeo && isFinite(c.lat)) u += '&origin=' + meGeo.lat + ',' + meGeo.lng;
+    return u;
+  }
+
+  function cardFor(c, isPick) {
+    return isHealth(c) ? cardHTML(c, isPick) : placeCardHTML(c);
+  }
+
+  /* every category except Health: found by where it is and how far —
+     type, tags, hours and a directions button, no wait time */
+  function placeCardHTML(c) {
+    var k = catOf(c);
+    var dist = (meGeo && isFinite(c.lat) && isFinite(c.lng))
+      ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
+    var saved = savedIds.indexOf(c.id) > -1;
+    var tags = (c.services || []).slice(0, 3).join(' · ');
+    return '<article class="card pcard" data-open="' + esc(c.id) + '" tabindex="0" role="button" aria-label="Open ' + esc(c.name) + '">' +
+      '<div class="ptop">' +
+      '<span class="picon"><svg class="ic"><use href="#' + esc(k.icon) + '"/></svg></span>' +
+      '<span class="pmeta"><span class="ptype">' + esc(c.type || k.label) + '</span>' +
+      '<h3>' + esc(c.name) + '</h3></span>' +
+      (c.trust && c.trust !== 'Listed' ? '<span class="badge b-' + esc(c.trust) + '">' + esc(c.trust) + '</span>' : '') +
+      '</div>' +
+      '<div class="pbody">' +
+      '<div class="meta">' +
+      '<span>' + esc(c.area) + '</span>' +
+      (dist != null ? '<span class="dist">' + esc(fmtDist(dist)) + ' away</span>' : '') +
+      (c.hours ? '<span>' + esc(c.hours) + '</span>' : '') +
+      '</div>' +
+      (tags ? '<div class="meta"><span>' + esc(tags) + '</span></div>' : '') +
+      '</div>' +
+      '<div class="card-foot">' +
+      '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
+      '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' +
+      '<button class="savebtn" type="button" data-save="' + esc(c.id) + '" aria-pressed="' + saved + '" title="Save this place" aria-label="Save ' + esc(c.name) + '">' +
+      '<svg class="ic"><use href="#i-heart"/></svg></button>' +
+      '</div>' +
+      '</article>';
+  }  /* the same view serves “#/find” (every category) and “#/c/food” (one) */
+  function setCatState(id) {
+    activeCat = id && catById(id) ? id : null;
+    var k = activeCat ? catById(activeCat) : null;
+    var view = $('view-find');
+    if (!view) return;
+    if (k) {
+      view.setAttribute('data-cat', k.id);
+      view.style.setProperty('--cc', k.color);
+      $('find-eyebrow').innerHTML = '<svg class="ic"><use href="#' + esc(k.icon) + '"/></svg> ' + esc(k.label);
+      $('find-title').textContent = k.label + ' near you';
+      $('find-lead').textContent = k.health
+        ? 'Share your location and the nearest clinics and pharmacies come first, with today\u2019s status, wait time and directions.'
+        : 'Share your location and the nearest ' + k.label.toLowerCase() + ' listings come first \u2014 where it is, how far it is, and directions from where you are standing.';
+      $('cat-back').hidden = false;
+      $('cards').className = 'cards cat-' + k.id;
+    } else {
+      view.setAttribute('data-cat', '');
+      view.style.removeProperty('--cc');
+      $('find-eyebrow').innerHTML = '<svg class="ic"><use href="#i-grid"/></svg> Explore';
+      $('find-title').textContent = 'What do you need, near you?';
+      $('find-lead').textContent = 'You do not need to know the area name. Share your location and Front Belt puts the closest ones first, with the real distance from where you are standing.';
+      $('cat-back').hidden = true;
+      $('cards').className = 'cards';
+    }
+    renderChips();
+  }
+
+  function renderChips() {
+    var box = $('cat-chips');
+    if (!box) return;
+    var html = '<a href="#/find"' + (!activeCat ? ' aria-current="true"' : '') + ' style="--cc:#E8135F">' +
+      '<svg class="ic"><use href="#i-grid"/></svg> All</a>';
+    html += CATS.map(function (k) {
+      return '<a href="#/c/' + k.id + '"' + (activeCat === k.id ? ' aria-current="true"' : '') +
+        ' style="--cc:' + esc(k.color) + '"><svg class="ic"><use href="#' + esc(k.icon) + '"/></svg> ' + esc(k.label) + '</a>';
+    }).join('');
+    box.innerHTML = html;
   }
 
   function renderFind() {
     fillAreas();
+    renderChips();
+    var k = activeCat ? catById(activeCat) : null;
     var q = ($('q').value || '').trim().toLowerCase();
     var area = $('area').value;
     var lvl = $('lvl').value;
 
     var list = publicClinics().filter(function (c) {
-      return (!q || (c.name + ' ' + c.area + ' ' + (c.services || []).join(' ')).toLowerCase().indexOf(q) > -1) &&
+      if (activeCat && catOf(c).id !== activeCat) return false;
+      return (!q || (c.name + ' ' + c.area + ' ' + (c.type || '') + ' ' + (c.services || []).join(' ')).toLowerCase().indexOf(q) > -1) &&
         (!area || c.area === area) &&
         (!lvl || c.trust === lvl);
     });
@@ -425,8 +657,9 @@
     });
 
     list.sort(function (a, b) {
-      var ua = statusOf(a).key === 'unknown' ? 1 : 0;
-      var ub = statusOf(b).key === 'unknown' ? 1 : 0;
+      /* stale health listings drop; everything else is judged on distance */
+      var ua = isHealth(a) && statusOf(a).key === 'unknown' ? 1 : 0;
+      var ub = isHealth(b) && statusOf(b).key === 'unknown' ? 1 : 0;
       if (ua !== ub) return ua - ub;
       if (a._dist != null && b._dist != null) return a._dist - b._dist;
       if (a._dist != null) return -1;
@@ -436,22 +669,38 @@
 
     var pick = null;
     if (meGeo) {
-      var pool = list.filter(function (c) { return statusOf(c).key === 'open'; });
+      var pool = list.filter(function (c) { return isHealth(c) && statusOf(c).key === 'open'; });
       if (!pool.length) pool = list;
+
       var best = Infinity;
       pool.forEach(function (c) { if (c._dist != null && c._dist < best) { best = c._dist; pick = c; } });
     }
 
-    $('rescount').textContent = list.length + (list.length === 1 ? ' clinic' : ' clinics') +
+    $('rescount').textContent = list.length + (list.length === 1 ? ' place' : ' places') +
       (meGeo ? ' · nearest first' : ' · share your location to sort by distance');
 
-    $('cards').innerHTML = list.length
-      ? list.map(function (c) { return cardHTML(c, pick && pick.id === c.id && !q && !area && !lvl); }).join('')
-      : '<div class="empty">No clinics match. Try a different area or trust level' +
-        (meGeo ? '' : ', or tap “Use my location”') + '.</div>';
+    var emptyHTML;
+    if (!list.length && !all.length && !samplesOn && !dataErr) {
+      emptyHTML = '<div class="empty">' +
+        (k ? 'No ' + esc(k.label.toLowerCase()) + ' listings yet.' : 'Nothing listed yet.') +
+        ' Be the first to add one, or look around with the sample places.' +
+        '<div class="row" style="justify-content:center;margin-top:.9rem">' +
+        '<button class="btn btn-ghost btn-sm" type="button" data-samples>Preview sample listings</button>' +
+        '<a class="btn btn-primary btn-sm" href="#/clinics">List my business</a>' +
+        '</div></div>';
+    } else if (!list.length) {
+      emptyHTML = '<div class="empty">No places match. Try a different area or search' +
+        (meGeo ? '' : ', or tap \u201cUse my location\u201d') + '.</div>';
+    } else {
+      emptyHTML = list.map(function (c) {
+        var isPick = pick && pick.id === c.id && !q && !area && !lvl && isHealth(c);
+        return cardFor(c, isPick);
+      }).join('');
+    }
+    $('cards').innerHTML = emptyHTML;
 
     if (meGeo && pick) {
-      $('geo-title').textContent = 'Closest open clinic: ' + pick.name;
+      $('geo-title').textContent = (isHealth(pick) && statusOf(pick).key === 'open' ? 'Closest open clinic: ' : 'Closest to you: ') + pick.name;
       $('geo-sub').textContent = 'In ' + pick.area + ', ' + fmtDist(pick._dist) + ' away. The list is sorted nearest first.';
     }
 
@@ -510,7 +759,7 @@
     var btn = $('geo-btn');
     btn.disabled = false;
     btn.innerHTML = '<svg class="ic"><use href="#i-crosshair"/></svg> Try my location again';
-    $('geo-title').textContent = 'Find the nearest clinic to you';
+    $('geo-title').textContent = 'Find the nearest place to you';
     $('geo-sub').textContent = 'No location, no problem: search by name or choose an area.';
     var msg = err && err.code === 1
       ? 'Location is blocked. Allow it in your browser, or pick your area below.'
@@ -565,11 +814,15 @@
     publicClinics().forEach(function (c) {
       if (!isFinite(c.lat) || !isFinite(c.lng)) return;
       var s = statusOf(c);
-      var col = s.key === 'open' ? '#0F8A4F' : s.key === 'closed' ? '#8A6F7A' : '#B45309';
+      var col = isHealth(c)
+        ? (s.key === 'open' ? '#0F8A4F' : s.key === 'closed' ? '#8A6F7A' : '#B45309')
+        : catOf(c).color;
       var d = meGeo ? fmtDist(distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng)) : '';
       L.circleMarker([c.lat, c.lng], { radius: 8, color: '#fff', weight: 2, fillColor: col, fillOpacity: 1 })
         .bindPopup('<strong>' + esc(c.name) + '</strong>' + esc(c.area) + (d ? ' · ' + esc(d) + ' away' : '') +
-          '<br>' + esc(s.text) + '<br><span style="font-size:13px;color:#6E5560">' + esc(c.trust || 'Listed') + '</span>')
+          '<br>' + esc(isHealth(c) ? s.text : (c.type || catOf(c).label)) +
+          '<br><span style="font-size:13px;color:#6E5560">' + esc(c.trust || 'Listed') + '</span>' +
+          '<br><a href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener">Directions</a>')
         .addTo(mapLayer);
       pts.push([c.lat, c.lng]);
     });
@@ -689,14 +942,14 @@
     if (!me) return;
     $('acct-hello').textContent = 'Hello, ' + firstName(me.name || me.email);
     var list = publicClinics();
-    var open = list.filter(function (c) { return statusOf(c).key === 'open'; }).length;
-    $('acct-stats').innerHTML = stat(savedIds.length, 'saved clinics') +
-      stat(list.length, 'clinics listed') + stat(open, 'open right now');
+    var open = list.filter(function (c) { return isHealth(c) && statusOf(c).key === 'open'; }).length;
+    $('acct-stats').innerHTML = stat(savedIds.length, 'saved places') +
+      stat(list.length, 'places listed') + stat(open, 'clinics open right now');
 
     var mine = publicClinics().filter(function (c) { return savedIds.indexOf(c.id) > -1; });
     $('saved-cards').innerHTML = mine.length
-      ? mine.map(function (c) { return cardHTML(c, false); }).join('')
-      : '<div class="empty">Nothing saved yet. Tap the heart on any clinic in the clinic finder and it will wait for you here.</div>';
+      ? mine.map(function (c) { return cardFor(c, false); }).join('')
+      : '<div class="empty">Nothing saved yet. Tap the heart on any listing and it will wait for you here.</div>';
   }
 
   /* ================================================================
@@ -716,9 +969,24 @@
       var on = (c.services || []).indexOf(s) > -1;
       return '<label class="chipcheck"><input type="checkbox" value="' + esc(s) + '"' + (on ? ' checked' : '') + '> ' + esc(s) + '</label>';
     }).join('');
+    var cur = catOf(c);
+    var catOpts = CATS.map(function (k) {
+      return '<option value="' + esc(k.id) + '"' + (k.id === cur.id ? ' selected' : '') + '>' + esc(k.label) + '</option>';
+    }).join('');
+    var typeOpts = (cur.types || []).map(function (t) {
+      return '<option' + (t === c.type ? ' selected' : '') + '>' + esc(t) + '</option>';
+    }).join('');
+    var svcBlock =
+      '<div id="pf-svc"' + (cur.health ? '' : ' hidden') + '><strong class="small">Services offered</strong><div class="chips">' + svc + '</div></div>' +
+      '<div id="pf-tags-wrap"' + (cur.health ? ' hidden' : '') + '><label>What you offer (comma separated)' +
+      '<input class="field" id="pf-tags" value="' + esc((c.services || []).join(', ')) + '" placeholder="e.g. Fresh bread, Cakes, Delivery"></label></div>';
     return '' +
       '<div class="grid2">' +
-      '<label>Clinic name<input class="field" id="pf-name" value="' + esc(c.name || '') + '" required></label>' +
+      '<label>Category<select class="field" id="pf-cat">' + catOpts + '</select></label>' +
+      '<label>Type<select class="field" id="pf-type"><option value="">Choose a type</option>' + typeOpts + '</select></label>' +
+      '</div>' +
+      '<div class="grid2">' +
+      '<label>Name<input class="field" id="pf-name" value="' + esc(c.name || '') + '" required></label>' +
       '<label>Area<select class="field" id="pf-area"><option value="">Choose an area</option>' + areaOpts + '</select></label>' +
       '</div>' +
       '<label>Address or landmark<input class="field" id="pf-address" value="' + esc(c.address || '') + '" placeholder="e.g. Ground floor, Ngong Road"></label>' +
@@ -731,15 +999,23 @@
       '<label>Longitude<input class="field" id="pf-lng" type="number" step="any" value="' + esc(c.lng != null ? c.lng : '') + '" placeholder="36.7836" required></label>' +
       '<label>&nbsp;<button class="btn btn-ghost btn-sm" type="button" id="pf-capture"><svg class="ic"><use href="#i-crosshair"/></svg> Use my current location</button></label>' +
       '</div>' +
-      '<p class="hint">Stand at the clinic entrance and tap the button: your phone gives the coordinates, so patients nearby find you. You can also paste them from Google Maps (right-click the spot → copy coordinates).</p>' +
-      '<div><strong class="small">Services offered</strong><div class="chips">' + svc + '</div></div>';
+      '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also paste them from Google Maps (right-click the spot → copy coordinates).</p>' +
+      svcBlock;
   }
 
   function readClinicForm(root, extra) {
-    var services = Array.prototype.slice.call(root.querySelectorAll('.chipcheck input:checked')).map(function (i) { return i.value; });
+    var tagsWrap = root.querySelector('#pf-tags-wrap');
+    var tagsEl = tagsWrap && !tagsWrap.hidden ? root.querySelector('#pf-tags') : null;
+    var services = tagsEl
+      ? tagsEl.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean)
+      : Array.prototype.slice.call(root.querySelectorAll('.chipcheck input:checked')).map(function (i) { return i.value; });
     var areaSel = root.querySelector('#pf-area');
     var area = areaSel ? areaSel.value : '';
+    var catSel = root.querySelector('#pf-cat');
+    var typeSel = root.querySelector('#pf-type');
     var o = {
+      category: catSel ? catSel.value : 'health',
+      type: typeSel ? typeSel.value : '',
       name: root.querySelector('#pf-name').value.trim(),
       area: area,
       address: root.querySelector('#pf-address').value.trim(),
@@ -805,23 +1081,33 @@
     }
 
     $('prov-title').textContent = c.name;
-    $('prov-sub').textContent = (c.sample ? 'Sample listing · ' : '') + c.area + ' · ' + (c.published ? 'live on the public site' : 'hidden from the public site');
+    $('prov-sub').textContent = (c.sample ? 'Sample listing · ' : '') + (c.type ? c.type + ' · ' : '') + c.area +
+      ' · ' + (c.published ? 'live on the public site' : 'hidden from the public site');
     $('prov-view-link').href = '#/find';
 
     var s = statusOf(c);
+    var k = catOf(c);
     var busyLevel = c.busy >= 70 ? 85 : c.busy >= 40 ? 50 : 20;
     var pending = null; /* filled by request fetch below */
 
     var trustSteps = ['Listed', 'Verified', 'Trusted', 'Certified'];
     var reached = trustSteps.indexOf(c.trust || 'Listed');
 
+    /* only Health has a daily status; the others show category and hours */
+    var statusStat = k.health
+      ? '<div class="stat ' + (s.key === 'open' ? 'ok' : (s.key === 'stale' || s.key === 'unknown' || s.key === 'hidden') ? 'warn' : '') + '"><b>' +
+        (s.key === 'open' ? 'Open' : s.key === 'closed' ? 'Closed' : 'Needs update') + '</b><span>Public status</span></div>'
+      : '<div class="stat"><b>' + esc(c.type || k.label) + '</b><span>Category</span></div>';
+    var lastStat = k.health
+      ? '<div class="stat"><b>' + (c.lastStatusAt ? esc(ago(c.lastStatusAt)) : 'No update yet') + '</b><span>Last update</span></div>'
+      : '<div class="stat"><b>' + esc(c.hours || 'Not set') + '</b><span>Opening hours</span></div>';
+
     body.innerHTML =
       '<div class="statrow">' +
       '<div class="stat"><b>' + esc(c.trust || 'Listed') + '</b><span>Trust level</span></div>' +
-      '<div class="stat ' + (s.key === 'open' ? 'ok' : s.key === 'open' ? '' : 'warn') + '"><b>' +
-      (s.key === 'open' ? 'Open' : s.key === 'closed' ? 'Closed' : 'Needs update') + '</b><span>Public status</span></div>' +
+      statusStat +
       '<div class="stat"><b>' + (c.published ? 'Live' : 'Hidden') + '</b><span>Listing</span></div>' +
-      '<div class="stat"><b>' + (c.lastStatusAt ? esc(ago(c.lastStatusAt)) : 'No update yet') + '</b><span>Last update</span></div>' +
+      lastStat +
       '</div>' +
 
       (c.lastStatusAt && (s.key === 'stale' || s.key === 'unknown')
@@ -872,7 +1158,7 @@
       '</div></div>' +
 
       '<form class="prov-card stack" id="profile-form" style="margin-top:1rem">' +
-      '<h3><svg class="ic"><use href="#i-edit"/></svg> Clinic details and exact location</h3>' +
+      '<h3><svg class="ic"><use href="#i-edit"/></svg> Details and exact location</h3>' +
       clinicFormFields(c) +
       '<button class="btn btn-primary" type="submit">Save clinic details</button>' +
       '<p class="ok-msg err" id="pf-err" hidden></p>' +
@@ -882,6 +1168,15 @@
       '<h3><svg class="ic"><use href="#i-chart"/></svg> Recent updates</h3>' +
       '<div class="timeline" id="p-history"><p class="hint">Loading…</p></div>' +
       '</section>';
+
+    /* non-health listings have no daily status to keep */
+    if (!k.health) {
+      var stForm = body.querySelector('#status-form');
+      if (stForm) stForm.remove();
+      Array.prototype.slice.call(body.querySelectorAll('section.prov-card')).forEach(function (sec) {
+        if (sec.querySelector('#p-history')) sec.remove();
+      });
+    }
 
     if ($('pf-area')) $('pf-area').value = c.area || '';
     provClinicId = c.id;
@@ -924,6 +1219,22 @@
           root.querySelector('#pf-lat').value = lat.toFixed(6);
           root.querySelector('#pf-lng').value = lng.toFixed(6);
         });
+      });
+    }
+
+    /* changing the category swaps the type list and the services field */
+    var catSel = root.querySelector('#pf-cat');
+    if (catSel) {
+      catSel.addEventListener('change', function () {
+        var k = catById(catSel.value) || catById('health');
+        var typeSel = root.querySelector('#pf-type');
+        if (typeSel) {
+          typeSel.innerHTML = '<option value="">Choose a type</option>' +
+            (k.types || []).map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('');
+        }
+        var svcBox = root.querySelector('#pf-svc'), tagsBox = root.querySelector('#pf-tags-wrap');
+        if (svcBox) svcBox.hidden = !k.health;
+        if (tagsBox) tagsBox.hidden = !!k.health;
       });
     }
 
@@ -1138,9 +1449,9 @@
     var open = all.filter(function (c) { return statusOf(c).key === 'open'; });
     var attention = all.filter(function (c) { var s = statusOf(c); return s.key === 'stale' || s.key === 'unknown' || s.key === 'hidden'; });
     $('admin-stats').innerHTML =
-      stat(all.length, 'clinics total') +
+      stat(all.length, 'listings total') +
       stat(published.length, 'published') +
-      stat(open.length, 'open today') +
+      stat(open.length, 'clinics open') +
       '<div class="stat warn"><b>' + attention.length + '</b><span>need attention</span></div>';
 
     var q = (adminFilter.q || '').toLowerCase();
@@ -1161,31 +1472,39 @@
 
     $('admin-table').innerHTML = rows.length
       ? '<div class="tablewrap"><table class="tbl"><thead><tr>' +
-      '<th>Clinic</th><th>Trust</th><th>Status</th><th>Last update</th><th>Listing</th><th></th>' +
+      '<th>Listing</th><th>Trust</th><th>Status / type</th><th>Update / hours</th><th>Listing state</th><th></th>' +
       '</tr></thead><tbody>' + rows.map(adminRow).join('') + '</tbody></table></div>' +
-      '<p class="hint" style="margin-top:.6rem">' + rows.length + ' of ' + all.length + ' clinics shown. Trust changes reach the public site immediately.</p>'
-      : '<div class="empty">No clinics match that filter.</div>';
+      '<p class="hint" style="margin-top:.6rem">' + rows.length + ' of ' + all.length + ' listings shown. Trust changes reach the public site immediately.</p>'
+      : '<div class="empty">No listings match that filter.</div>';
 
     renderRequests();
   }
 
   function adminRow(c) {
     var s = statusOf(c);
+    var k = catOf(c);
     var sLabel = s.key === 'open' ? 'Open' : s.key === 'closed' ? 'Closed' : s.key === 'stale' ? 'Not updated' : s.key === 'hidden' ? 'Hiding' : 'Unknown';
+    var statusCell = k.health
+      ? '<td data-l="Status"><span class="pill ' + s.key + '"><span class="dot"></span>' + sLabel + '</span></td>' +
+        '<td data-l="Last update"><span class="sub">' + esc(ago(c.lastStatusAt)) + '</span></td>'
+      : '<td data-l="Type"><span class="chip" style="background:color-mix(in srgb,' + esc(k.color) + ' 14%,var(--surface));color:' + esc(k.color) + '">' + esc(c.type || k.label) + '</span></td>' +
+        '<td data-l="Hours"><span class="sub">' + esc(c.hours || '—') + '</span></td>';
+    var statusBtn = k.health
+      ? '<button class="iconbtn" type="button" data-status="' + esc(c.id) + '" title="Update today\'s status" aria-label="Update status"><svg class="ic"><use href="#i-clock"/></svg></button>'
+      : '';
     return '<tr class="' + (c.published ? '' : 'unpub') + '">' +
-      '<td data-l="Clinic"><div class="name">' + esc(c.name) + '</div>' +
-      '<div class="sub">' + esc(c.area) + (c.sample ? ' · sample' : '') + ' · ' + esc(Number(c.lat).toFixed(4)) + ', ' + esc(Number(c.lng).toFixed(4)) + '</div></td>' +
+      '<td data-l="Listing"><div class="name">' + esc(c.name) + '</div>' +
+      '<div class="sub">' + esc(k.label) + ' · ' + esc(c.area) + (c.sample ? ' · sample' : '') + ' · ' + esc(Number(c.lat).toFixed(4)) + ', ' + esc(Number(c.lng).toFixed(4)) + '</div></td>' +
       '<td data-l="Trust"><select data-trust="' + esc(c.id) + '" aria-label="Trust level for ' + esc(c.name) + '">' +
       DATA.levels.map(function (l) { return '<option' + (l === (c.trust || 'Listed') ? ' selected' : '') + '>' + l + '</option>'; }).join('') +
       '</select></td>' +
-      '<td data-l="Status"><span class="pill ' + s.key + '"><span class="dot"></span>' + sLabel + '</span></td>' +
-      '<td data-l="Last update"><span class="sub">' + esc(ago(c.lastStatusAt)) + '</span></td>' +
+      statusCell +
       '<td data-l="Listing"><span class="chip ' + (c.published ? 'live' : 'warn') + '">' + (c.published ? 'Live' : 'Hidden') + '</span></td>' +
       '<td class="acts-cell"><div class="acts">' +
-      '<button class="iconbtn" type="button" data-status="' + esc(c.id) + '" title="Update today\'s status" aria-label="Update status"><svg class="ic"><use href="#i-clock"/></svg></button>' +
-      '<button class="iconbtn" type="button" data-edit="' + esc(c.id) + '" title="Edit clinic" aria-label="Edit clinic"><svg class="ic"><use href="#i-edit"/></svg></button>' +
+      statusBtn +
+      '<button class="iconbtn" type="button" data-edit="' + esc(c.id) + '" title="Edit listing" aria-label="Edit listing"><svg class="ic"><use href="#i-edit"/></svg></button>' +
       '<button class="iconbtn" type="button" data-pub="' + esc(c.id) + '" title="' + (c.published ? 'Remove from public listing' : 'Publish') + '" aria-label="' + (c.published ? 'Unpublish' : 'Publish') + '"><svg class="ic"><use href="#i-eye"/></svg></button>' +
-      '<button class="iconbtn" type="button" data-del="' + esc(c.id) + '" title="Delete clinic" aria-label="Delete clinic"><svg class="ic"><use href="#i-trash"/></svg></button>' +
+      '<button class="iconbtn" type="button" data-del="' + esc(c.id) + '" title="Delete listing" aria-label="Delete listing"><svg class="ic"><use href="#i-trash"/></svg></button>' +
       '</div></td></tr>';
   }
 
@@ -1320,11 +1639,26 @@
       var on = (c.services || []).indexOf(s) > -1;
       return '<label class="chipcheck"><input type="checkbox" value="' + esc(s) + '"' + (on ? ' checked' : '') + '> ' + esc(s) + '</label>';
     }).join('');
+    var cur = catOf(c);
+    var catOpts = CATS.map(function (kk) {
+      return '<option value="' + esc(kk.id) + '"' + (kk.id === cur.id ? ' selected' : '') + '>' + esc(kk.label) + '</option>';
+    }).join('');
+    var typeOpts = (cur.types || []).map(function (t) {
+      return '<option' + (t === c.type ? ' selected' : '') + '>' + esc(t) + '</option>';
+    }).join('');
+    var svcBlock =
+      '<div id="ed-svc"' + (cur.health ? '' : ' hidden') + '><strong class="small">Services</strong><div class="chips">' + svc + '</div></div>' +
+      '<div id="ed-tags-wrap"' + (cur.health ? ' hidden' : '') + '><label>What they offer (comma separated)' +
+      '<input class="field" id="ed-tags" value="' + esc((c.services || []).join(', ')) + '" placeholder="e.g. Fresh bread, Cakes"></label></div>';
 
-    openModal(isNew ? 'Add a clinic' : 'Edit clinic',
+    openModal(isNew ? 'Add a listing' : 'Edit listing',
       '<form class="stack" id="ed-form" novalidate>' +
       '<div class="grid2">' +
-      '<label>Clinic name<input class="field" id="ed-name" value="' + esc(c.name || '') + '" required></label>' +
+      '<label>Category<select class="field" id="ed-cat">' + catOpts + '</select></label>' +
+      '<label>Type<select class="field" id="ed-type"><option value="">Choose a type</option>' + typeOpts + '</select></label>' +
+      '</div>' +
+      '<div class="grid2">' +
+      '<label>Name<input class="field" id="ed-name" value="' + esc(c.name || '') + '" required></label>' +
       '<label>Area<select class="field" id="ed-area"><option value="">Choose an area</option>' + areaOpts + '</select></label>' +
       '</div>' +
       '<label>Address or landmark<input class="field" id="ed-address" value="' + esc(c.address || '') + '"></label>' +
@@ -1338,8 +1672,8 @@
       '<label>&nbsp;<button class="btn btn-ghost btn-sm" type="button" id="ed-capture"><svg class="ic"><use href="#i-crosshair"/></svg> Use my location</button></label>' +
       '</div>' +
       '<div id="ed-map"></div>' +
-      '<p class="hint">Tap the map or drag the pin to the clinic\'s gate. The coordinates are what distance search uses, so they should be the actual entrance, not the estate centre.</p>' +
-      '<div><strong class="small">Services</strong><div class="chips">' + svc + '</div></div>' +
+      '<p class="hint">Tap the map or drag the pin to the entrance. The coordinates are what distance search uses, so they should be the actual door, not the estate centre.</p>' +
+      svcBlock +
       '<div class="grid2">' +
       '<label>Trust level<select class="field" id="ed-trust">' +
       DATA.levels.map(function (l) { return '<option' + (l === (c.trust || 'Listed') ? ' selected' : '') + '>' + l + '</option>'; }).join('') +
@@ -1358,6 +1692,19 @@
       '</form>');
 
     var latEl = $('ed-lat'), lngEl = $('ed-lng');
+
+    var edCat = $('ed-cat');
+    if (edCat) edCat.addEventListener('change', function () {
+      var kk = catById(edCat.value) || catById('health');
+      var typeSel = $('ed-type');
+      if (typeSel) {
+        typeSel.innerHTML = '<option value="">Choose a type</option>' +
+          (kk.types || []).map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('');
+      }
+      var svcBox = $('ed-svc'), tagsBox = $('ed-tags-wrap');
+      if (svcBox) svcBox.hidden = !kk.health;
+      if (tagsBox) tagsBox.hidden = !!kk.health;
+    });
 
     $('ed-capture').addEventListener('click', function () {
       capture(function (lat, lng) {
@@ -1392,8 +1739,12 @@
       e.preventDefault();
       var err = $('ed-err');
       err.hidden = true;
+      var tagsWrap = $('ed-tags-wrap');
+      var tagsEl = tagsWrap && !tagsWrap.hidden ? $('ed-tags') : null;
       var payload = {
         id: c.id,
+        category: $('ed-cat') ? $('ed-cat').value : (c.category || 'health'),
+        type: $('ed-type') ? $('ed-type').value : (c.type || ''),
         name: $('ed-name').value.trim(),
         area: $('ed-area').value,
         address: $('ed-address').value.trim(),
@@ -1401,7 +1752,9 @@
         hours: $('ed-hours').value.trim(),
         lat: Number(latEl.value),
         lng: Number(lngEl.value),
-        services: Array.prototype.slice.call(document.querySelectorAll('.chipcheck input:checked')).map(function (i) { return i.value; }),
+        services: tagsEl
+          ? tagsEl.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean)
+          : Array.prototype.slice.call(document.querySelectorAll('.chipcheck input:checked')).map(function (i) { return i.value; }),
         trust: $('ed-trust').value,
         published: $('ed-pub').value === '1',
         registrationNo: $('ed-reg').value.trim(),
@@ -1495,6 +1848,22 @@
   document.addEventListener('click', function (e) {
     var t;
 
+    if ((t = e.target.closest('[data-samples]'))) {
+      samplesOn = true;
+      renderCurrent();
+      toast('Showing sample listings so you can see how each category looks.');
+      return;
+    }
+
+    /* the Directions link opens Maps on its own — do not also open the sheet */
+    if (e.target.closest('[data-dir]')) return;
+
+    if ((t = e.target.closest('[data-open]'))) {
+      if (e.target.closest('[data-save]') || e.target.closest('a')) return;
+      openPlace(t.getAttribute('data-open'));
+      return;
+    }
+
     if ((t = e.target.closest('[data-geo]'))) {
       e.preventDefault();
       locate();
@@ -1565,7 +1934,14 @@
     if (e.target.closest('[data-close]') || e.target === $('modal')) { closeModal(); }
   });
 
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+    var el = document.activeElement;
+    if ((e.key === 'Enter' || e.key === ' ') && el && el.closest && el.closest('[data-open]')) {
+      e.preventDefault();
+      openPlace(el.getAttribute('data-open'));
+    }
+  });
 
   ['q', 'area', 'lvl'].forEach(function (id) {
     $(id).addEventListener('input', renderFind);

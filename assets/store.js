@@ -329,6 +329,8 @@
     saveClinic: function (data) {
       var payload = {
         name: String(data.name || '').trim(),
+        category: String(data.category || 'health').trim() || 'health',
+        type: String(data.type || '').trim(),
         area: String(data.area || '').trim(),
         address: String(data.address || '').trim(),
         lat: Number(data.lat),
@@ -340,7 +342,7 @@
         registrationNo: String(data.registrationNo || '').trim(),
         licenceRef: String(data.licenceRef || '').trim()
       };
-      if (!payload.name) return Promise.reject(new Error('Give the clinic a name.'));
+      if (!payload.name) return Promise.reject(new Error('Give the listing a name.'));
       if (!payload.area) return Promise.reject(new Error('Choose the area.'));
       if (!isFinite(payload.lat) || payload.lat < -90 || payload.lat > 90) return Promise.reject(new Error('Latitude must be between -90 and 90.'));
       if (!isFinite(payload.lng) || payload.lng < -180 || payload.lng > 180) return Promise.reject(new Error('Longitude must be between -180 and 180.'));

@@ -1,6 +1,6 @@
 # Front Belt
 
-Official website for **Front Belt**, a clinic directory for Nairobi that shows which clinics are open today, how busy they are, and how much of their information has been checked.
+Official website for **Front Belt**, a place finder for Nairobi. Six categories — **Health** (clinics and pharmacies), **Food**, **Beauty**, **Tech & Money**, **Books** and **Home & Living** — each with its own icon and layout. Everything is found by where it is and how far it is; only Health shows today's status and wait time.
 
 Jua kabla ya kwenda.
 
@@ -8,9 +8,9 @@ Jua kabla ya kwenda.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Every view: home, clinic finder, trust framework, clinic sign-up, FAQ, contact, sign-in, patient dashboard, provider console, team console, team access. |
-| `assets/styles.css` | The design system — colours, type, layout, light and dark themes. |
-| `assets/data.js` | The sample clinics used when no database is connected. |
+| `index.html` | Every view: home with the category grid, the explorer (all categories or one, themed), trust framework, listing sign-up, FAQ, contact, sign-in, patient dashboard, provider console, team console, team access. |
+| `assets/styles.css` | The design system — colours, type, layout, light and dark themes, plus the per-category card layouts. |
+| `assets/data.js` | The category catalogue (ids, icons, colours, types) and the sample listings used when no database is connected. |
 | `assets/store.js` | The data layer. One API, two backends: local demo (`localStorage`) and Firebase (Firestore + Auth). Picks Firebase automatically as soon as `assets/firebase-config.js` holds a real config. |
 | `assets/firebase-config.js` | Empty placeholder. Paste your Firebase web config here to go live. |
 | `assets/app.js` | Routing, GPS search, sign-in, provider console, team console. |
@@ -42,9 +42,9 @@ The first thing the site asks is who you are, and everything after that follows 
 
 | Who | Where they land | What they can do |
 | --- | --- | --- |
-| **Patient** (`#/find`) | Clinic finder | Search by distance, filter, save clinics, see today's status |
-| **Clinic** (`#/provider`) | Provider console | Put their clinic on the map with real coordinates, post the daily status, apply for a higher trust level, hide their listing |
-| **Front Belt team** (`#/admin`) | Team console | Enlist clinics, edit coordinates, set trust levels, publish or remove listings, approve upgrade requests, spot clinics that stopped updating |
+| **Patient** (`#/find`) | Explorer | Browse every category or one, search by distance, filter, save listings, see today's status for Health |
+| **Clinic / business** (`#/provider`) | Provider console | Put the listing on the map with real coordinates, choose its category and type, post the daily status (Health), apply for a higher trust level, hide the listing |
+| **Front Belt team** (`#/admin`) | Team console | Enlist listings in any category, edit coordinates, set trust levels, publish or remove listings, approve upgrade requests, spot health listings that stopped updating |
 
 Sign-in returns each account to its own console, so nobody has to remember a URL.
 
@@ -91,7 +91,7 @@ window.FIREBASE_CONFIG = {
 ```
 
 5. **Create your own team account**: sign in once on the site (it will be created as a patient), then open **Firestore → users → your uid** and change `role` to `admin`.
-6. **Deploy `firestore.rules`** — Firestore → Rules → paste the contents of `firestore.rules` → **Publish**. Without this step, the rules that ship with a new project block everything and the site will look empty.
+6. **Deploy `firestore.rules`** — Firestore → Rules → paste the contents of `firestore.rules` → **Publish**. Without this step, the rules that ship with a new project block everything and the site will look empty. Republish whenever `firestore.rules` changes: the current file allows the `category` and `type` fields, and an older copy would reject them.
 
 After that, the rules are what protect you:
 
@@ -104,6 +104,23 @@ After that, the rules are what protect you:
 Because the team role is granted in the Firebase console, it can never be obtained from the website.
 
 > Firebase's free Spark plan is enough to start. Note that Cloud Storage is not used here; clinics are documents, not files.
+
+## Categories and directions
+
+The home page shows the six categories with live counts. Each opens its own themed view (`#/c/food`, `#/c/beauty`, …) — a different accent colour, icon and card layout per category, driven by CSS classes rather than separate pages:
+
+| Category | What it holds | Layout |
+| --- | --- | --- |
+| **Health** | Clinics, pharmacies, dental, labs | The original card: status pill, wait time, busyness bar, trust badge |
+| **Food** | Bakeries, pizza, chicken, restaurants | Cards with a warm accent bar across the top |
+| **Beauty** | Salons, kinyozi, spa, nails | Soft rounded cards with a circular icon |
+| **Tech & Money** | Phone shops, electricals, Airtel and M-Pesa agents | Dense single-column list rows |
+| **Books** | Bookshops, libraries, stationery | Cards with a coloured shelf edge |
+| **Home & Living** | Furniture, showrooms, home items | Larger showroom-style tiles |
+
+Every listing except Health shows type, tags, hours and distance — no wait time, by design.
+
+**Directions.** Each card carries a **Directions** button, and tapping a card opens a detail sheet with a small map, Drive/Walk/Transit modes and a **Start** button. All of them open Google Maps with the destination pinned and the visitor's position as the origin (once they have shared a location), so the actual turn-by-turn navigation happens in Maps — the site finds the place, Maps leads you there.
 
 ## How distance and location search works
 
@@ -151,7 +168,7 @@ Notes on this choice: Web3Forms' free tier is 250 submissions a month, it remove
 
 ## Status
 
-Early access. Clinics marked *Sample* are demonstrations, not real clinics. The contact form opens the visitor's email app with the details filled in, addressed to `frontbelttechnologiesltd@gmail.com`.
+Early access. Listings marked *Sample* are demonstrations, not real places — an empty category offers a **Preview sample listings** button so the layouts can be seen without adding real data first. The contact form opens the visitor's email app with the details filled in, addressed to `frontbelttechnologiesltd@gmail.com`.
 
 Location search works today. Clinic status, trust levels and accounts are stored in your browser (demo mode) until a Firebase config is added, at which point they become shared and live.
 
