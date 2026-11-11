@@ -1,26 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Front Belt">
   <defs>
     <linearGradient id="belt" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#E8135F"/>
-      <stop offset=".17" stop-color="#E8590C"/>
-      <stop offset=".34" stop-color="#B45309"/>
-      <stop offset=".5" stop-color="#0F766E"/>
-      <stop offset=".67" stop-color="#1D4ED8"/>
-      <stop offset=".84" stop-color="#7E22CE"/>
-      <stop offset="1" stop-color="#A21CAF"/>
+      <stop offset="0" stop-color="#0E7490"/>
+      <stop offset=".35" stop-color="#0891B2"/>
+      <stop offset=".7" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#7C3AED"/>
     </linearGradient>
   </defs>
   <path d="M4 50c14 7 42 6 56-10" fill="none" stroke="url(#belt)" stroke-width="3.4" stroke-linecap="round"/>
   <path d="M32 3C19.3 3 9 12.9 9 25.2 9 41.4 32 61 32 61s23-19.6 23-35.8C55 12.9 44.7 3 32 3z"
         fill="#1B1016" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="1.6"/>
   <g stroke="#FFFFFF" stroke-width="1.25" stroke-linejoin="round">
-    <path d="M32 25 32 11A14 14 0 0 1 42.95 16.27Z" fill="#E8135F"/>
+    <path d="M32 25 32 11A14 14 0 0 1 42.95 16.27Z" fill="#0E7490"/>
     <path d="M32 25 42.95 16.27A14 14 0 0 1 45.65 28.12Z" fill="#E8590C"/>
     <path d="M32 25 45.65 28.12A14 14 0 0 1 38.07 37.61Z" fill="#B45309"/>
-    <path d="M32 25 38.07 37.61A14 14 0 0 1 25.93 37.61Z" fill="#0F766E"/>
-    <path d="M32 25 25.93 37.61A14 14 0 0 1 18.35 28.12Z" fill="#1D4ED8"/>
-    <path d="M32 25 18.35 28.12A14 14 0 0 1 21.05 16.27Z" fill="#7E22CE"/>
-    <path d="M32 25 21.05 16.27A14 14 0 0 1 32 11Z" fill="#A21CAF"/>
+    <path d="M32 25 38.07 37.61A14 14 0 0 1 25.93 37.61Z" fill="#15803D"/>
+    <path d="M32 25 25.93 37.61A14 14 0 0 1 18.35 28.12Z" fill="#2563EB"/>
+    <path d="M32 25 18.35 28.12A14 14 0 0 1 21.05 16.27Z" fill="#7C3AED"/>
+    <path d="M32 25 21.05 16.27A14 14 0 0 1 32 11Z" fill="#0891B2"/>
   </g>
   <circle cx="32" cy="25" r="4.8" fill="#FFFFFF"/>
 </svg>

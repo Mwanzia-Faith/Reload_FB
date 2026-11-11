@@ -310,7 +310,7 @@
             .bindPopup('<strong>' + esc(c.name) + '</strong>' + esc(c.area || ''))
             .addTo(pdMap);
           if (meGeo) {
-            L.circleMarker([meGeo.lat, meGeo.lng], { radius: 7, color: '#fff', weight: 3, fillColor: '#E8135F', fillOpacity: 1 })
+            L.circleMarker([meGeo.lat, meGeo.lng], { radius: 7, color: '#fff', weight: 3, fillColor: '#2563EB', fillOpacity: 1 })
               .bindPopup('<strong>You are here</strong>').addTo(pdMap);
             pts.push([meGeo.lat, meGeo.lng]);
           }
@@ -680,7 +680,7 @@
   function renderChips() {
     var box = $('cat-chips');
     if (!box) return;
-    var html = '<a href="#/find"' + (!activeCat ? ' aria-current="true"' : '') + ' style="--cc:#E8135F">' +
+    var html = '<a href="#/find"' + (!activeCat ? ' aria-current="true"' : '') + ' style="--cc:#0E7490">' +
       '<svg class="ic"><use href="#i-grid"/></svg> All</a>';
     html += CATS.map(function (k) {
       return '<a href="#/c/' + k.id + '"' + (activeCat === k.id ? ' aria-current="true"' : '') +
@@ -883,9 +883,9 @@
     if (meGeo) {
       L.circle([meGeo.lat, meGeo.lng], {
         radius: Math.max(60, Math.min(meGeo.acc || 80, 400)),
-        color: '#E8135F', fillColor: '#E8135F', fillOpacity: .12, weight: 1
+        color: '#2563EB', fillColor: '#2563EB', fillOpacity: .12, weight: 1
       }).addTo(mapLayer);
-      L.circleMarker([meGeo.lat, meGeo.lng], { radius: 7, color: '#fff', weight: 3, fillColor: '#E8135F', fillOpacity: 1 })
+      L.circleMarker([meGeo.lat, meGeo.lng], { radius: 7, color: '#fff', weight: 3, fillColor: '#2563EB', fillOpacity: 1 })
         .bindPopup('<strong>You are here</strong>±' + Math.max(10, Math.round(meGeo.acc || 0)) + ' m')
         .addTo(mapLayer);
       pts.push([meGeo.lat, meGeo.lng]);

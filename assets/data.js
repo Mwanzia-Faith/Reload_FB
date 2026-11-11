@@ -52,7 +52,7 @@ window.FB_DATA = {
   categories: [
     {
       id: "health", label: "Health", tag: "Clinics, pharmacies, dental and labs",
-      icon: "i-clinic", color: "#E8135F", health: true,
+      icon: "i-clinic", color: "#0E7490", health: true,
       types: ["Clinic", "Pharmacy", "Hospital", "Dental clinic", "Laboratory", "Physiotherapy", "Optical"]
     },
     {
@@ -62,17 +62,17 @@ window.FB_DATA = {
     },
     {
       id: "beauty", label: "Beauty", tag: "Salons, kinyozi, spa and nails",
-      icon: "i-beauty", color: "#7E22CE", health: false,
+      icon: "i-beauty", color: "#7C3AED", health: false,
       types: ["Salon", "Kinyozi", "Spa", "Nail parlour", "Barber", "Makeup studio"]
     },
     {
       id: "tech", label: "Tech & Money", tag: "Phones, M-Pesa agents, banks and microfinance",
-      icon: "i-tech", color: "#1D4ED8", health: false,
+      icon: "i-tech", color: "#2563EB", health: false,
       types: ["Phone shop", "Electrical shop", "Phone accessories", "Airtel agent", "M-Pesa agent", "Airtime & bundles", "Bank", "Microfinance", "Sacco"]
     },
     {
       id: "books", label: "Books", tag: "Bookshops, libraries and stationery",
-      icon: "i-books", color: "#0F766E", health: false,
+      icon: "i-books", color: "#15803D", health: false,
       types: ["Bookshop", "Library", "Stationery", "Printing & photocopy"]
     },
     {
@@ -82,7 +82,7 @@ window.FB_DATA = {
     },
     {
       id: "stay", label: "Accommodation", tag: "Hotels, lodges, hostels and guest houses",
-      icon: "i-stay", color: "#A21CAF", health: false,
+      icon: "i-stay", color: "#0891B2", health: false,
       types: ["Hotel", "Lodge", "Guest house", "Hostel", "Serviced apartment", "Conference venue"]
     }
   ],
