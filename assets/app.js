@@ -18,6 +18,39 @@
   function catOf(c) { return catById(c && c.category) || catById('health') || CATS[0]; }
   function isHealth(c) { return !!(catOf(c) || {}).health; }
 
+  /* ---------------- review workflow ----------------
+     A partner submits -> received -> in review -> approved or denied.
+     Nothing reaches the public site until the team has approved it.
+     Listings made before this workflow, and listings the team enters
+     itself, carry no state and count as approved. */
+  var REVIEW_LABEL = {
+    pending: 'Received', in_review: 'In review', approved: 'Approved', denied: 'Not approved'
+  };
+  function reviewState(c) { return (c && c.reviewState) || 'approved'; }
+  function approved(c) { return reviewState(c) === 'approved'; }
+  function isAwaiting(c) { var s = reviewState(c); return s === 'pending' || s === 'in_review'; }
+
+  /* WhatsApp and OpenStreetMap links — the phone the partner gave us,
+     normalised to the international form wa.me expects. */
+  function waNumber(p) {
+    var d = String(p || '').replace(/[^0-9]/g, '');
+    if (!d) return '';
+    if (d.indexOf('254') === 0) return d;
+    if (d.charAt(0) === '0') return '254' + d.slice(1);
+    if (d.length === 9) return '254' + d;
+    return d;
+  }
+  function waURL(c) {
+    var n = waNumber(c && c.phone);
+    if (!n) return '';
+    return 'https://wa.me/' + n + '?text=' +
+      encodeURIComponent('Hello ' + (c.name || '') + ', I found you on Front Belt.');
+  }
+  function osmURL(c) {
+    if (!isFinite(c.lat) || !isFinite(c.lng)) return '';
+    return 'https://www.openstreetmap.org/?mlat=' + c.lat + '&mlon=' + c.lng + '#map=17/' + c.lat + '/' + c.lng;
+  }
+
   /* Contact form delivery.
      Empty  -> the button opens the visitor's own email app (no server needed,
                but it fails silently where no email app is set up).
@@ -26,6 +59,11 @@
                minute at https://web3forms.com (the key is emailed to you —
                which also proves the inbox receives mail). See README.md. */
   var CONTACT_KEY = '';
+
+  /* Front Belt's own WhatsApp line, international format without the plus —
+     for example '254712345678'. Empty means the contact page asks people to
+     email instead of showing a link that goes nowhere. */
+  var WA_NUMBER = '';
 
   var all = [];            /* every clinic this visitor is allowed to see */
   var me = null;           /* signed-in profile, or null */
@@ -137,6 +175,7 @@
   function publicClinics() {
     var live = all.filter(function (c) {
       if (!c.published) return false;
+      if (!approved(c)) return false;       /* still in the review queue */
       return statusOf(c).key !== 'hidden';
     });
     /* an empty directory is honest, but a visitor should still be able to
@@ -152,7 +191,7 @@
 
   function routeForRole(u) {
     if (!u) return '#/signin';
-    return u.role === 'admin' ? '#/admin' : u.role === 'provider' ? '#/provider' : '#/account';
+    return u.role === 'admin' ? '#/admin' : u.role === 'provider' ? '#/partner' : '#/account';
   }
 
   function isTeam() { return !!(me && me.role === 'admin'); }
@@ -216,6 +255,8 @@
       if (s.key === 'open') rows += '<dt>Wait</dt><dd>' + (c.waitMinutes ? 'about ' + esc(c.waitMinutes) + ' min' : 'not reported') + '</dd>';
     }
     if ((c.services || []).length) rows += '<dt>' + (k.health ? 'Services' : 'Offers') + '</dt><dd>' + esc(c.services.join(', ')) + '</dd>';
+    if (!c.sample && c.verifiedAt) rows += '<dt>Confirmed</dt><dd>' + esc(ago(c.verifiedAt)) + '</dd>';
+    if (!c.sample && c.source === 'openstreetmap') rows += '<dt>Source</dt><dd>OpenStreetMap contributors</dd>';
     if (c.sample) rows += '<dt>Note</dt><dd>Sample listing — a demonstration, not a real place.</dd>';
 
     pdMode = 'driving';
@@ -237,9 +278,11 @@
       '<a class="btn btn-primary" id="pd-start" href="' + esc(dirURL(c, 'driving')) + '" target="_blank" rel="noopener">' +
       '<svg class="ic"><use href="#i-nav"/></svg> Start</a>' +
       (c.phone ? '<a class="btn btn-ghost" href="tel:' + esc(String(c.phone).replace(/\s+/g, '')) + '"><svg class="ic"><use href="#i-phone"/></svg> Call</a>' : '') +
+      (waURL(c) ? '<a class="btn btn-ghost" href="' + esc(waURL(c)) + '" target="_blank" rel="noopener"><svg class="ic"><use href="#i-whatsapp"/></svg> WhatsApp</a>' : '') +
       '<button class="btn btn-ghost" type="button" data-save="' + esc(c.id) + '"><svg class="ic"><use href="#i-heart"/></svg> ' + (saved ? 'Saved' : 'Save') + '</button>' +
       '</div>' +
-      (dist == null ? '<p class="hint">Share your location and the Start button begins from where you are standing.</p>' : '');
+      (dist == null ? '<p class="hint">Share your location and the Start button begins from where you are standing.</p>' : '') +
+      (osmURL(c) ? '<p class="hint">Start opens whichever map app your phone has. <a href="' + esc(osmURL(c)) + '" target="_blank" rel="noopener">See this place on OpenStreetMap</a>.</p>' : '');
 
     openModal(k.label + ' · ' + (c.type || 'listing'), html, 'place');
 
@@ -282,23 +325,27 @@
      ROUTING
      ================================================================ */
   var ROUTES = {
-    home: 'view-home', find: 'view-find', cat: 'view-find', trust: 'view-trust', clinics: 'view-clinics',
+    home: 'view-home', find: 'view-find', cat: 'view-find', trust: 'view-trust',
+    partners: 'view-partners', clinics: 'view-partners',
     faq: 'view-faq', contact: 'view-contact', signin: 'view-signin',
-    account: 'view-account', provider: 'view-provider', team: 'view-team', admin: 'view-admin'
+    account: 'view-account', partner: 'view-provider', provider: 'view-provider',
+    team: 'view-team', admin: 'view-admin'
   };
   /* routes that are nobody else's business — never linked in the nav or footer */
-  var PRIVATE_ROUTES = ['team', 'admin', 'provider', 'account'];
+  var PRIVATE_ROUTES = ['team', 'admin', 'partner', 'provider', 'account'];
 
   var TITLES = {
-    home: 'Trusted clinic directory for Nairobi',
-    find: 'Find a clinic near you',
+    home: 'Connect, compare and access what is near you',
+    find: 'Find what you need near you',
     trust: 'How the trust levels work',
-    clinics: 'For clinic owners',
+    partners: 'List your business on Front Belt',
+    clinics: 'List your business on Front Belt',
     faq: 'Questions and answers',
     contact: 'Talk to the team',
     signin: 'Sign in',
     account: 'Your dashboard',
-    provider: 'Provider console',
+    partner: 'Partner console',
+    provider: 'Partner console',
     team: 'Team access',
     admin: 'Team console'
   };
@@ -309,7 +356,7 @@
     }
     return TITLES[r] || TITLES.home;
   }
-  var NAV_FOR = { home: 'home', find: 'find', cat: 'find', trust: 'trust', clinics: 'clinics', faq: 'faq', contact: 'contact' };
+  var NAV_FOR = { home: 'home', find: 'find', cat: 'find', trust: 'trust', partners: 'partners', clinics: 'partners', faq: 'faq', contact: 'contact' };
 
   function currentRoute() {
     var h = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
@@ -325,7 +372,7 @@
   function render() {
     var r = currentRoute();
     if (r === 'account' && !me) { location.hash = '#/signin'; return; }
-    if (r === 'provider' && !me) { location.hash = '#/signin'; return; }
+    if ((r === 'partner' || r === 'provider') && !me) { location.hash = '#/signin'; return; }
     /* The team console has its own door: not signed in at all, or signed in as
        an ordinary account, never lands on it. */
     if (r === 'admin' && !isTeam()) {
@@ -365,7 +412,7 @@
     else if (r === 'home') { renderHome(); }
     else if (r === 'signin') { renderAuth(); }
     else if (r === 'account') { renderAccount(); }
-    else if (r === 'provider') { renderProvider(); }
+    else if (r === 'partner' || r === 'provider') { renderProvider(); }
     else if (r === 'team') { renderTeam(); }
     else if (r === 'admin') { renderAdmin(); }
 
@@ -379,10 +426,10 @@
     if (r === 'home') { renderHome(); return; }
     if (r === 'account') { renderAccount(); return; }
     if (r === 'team') { renderTeam(); return; }
-    if (r === 'provider' || r === 'admin') {
+    if (r === 'partner' || r === 'provider' || r === 'admin') {
       var a = document.activeElement;
-      if (modalOpen || (a && a.closest && a.closest('#prov-body, #admin-table, #admin-requests'))) return;
-      if (r === 'provider') renderProvider(); else renderAdmin();
+      if (modalOpen || (a && a.closest && a.closest('#prov-body, #admin-table, #admin-requests, #admin-approvals'))) return;
+      if (r === 'admin') renderAdmin(); else renderProvider();
     }
   }
 
@@ -459,7 +506,7 @@
     savedIds = (u && u.saved) || [];
     syncAccountBtn();
     var r = currentRoute();
-    if (r === 'account' || r === 'provider' || r === 'admin' || r === 'team') render();
+    if (r === 'account' || r === 'partner' || r === 'provider' || r === 'admin' || r === 'team') render();
   });
 
   function syncAccountBtn() {
@@ -494,7 +541,7 @@
         return '<a class="catcard" href="#/c/' + esc(k.id) + '" style="--cc:' + esc(k.color) + '">' +
           '<span class="cat-ic"><svg class="ic"><use href="#' + esc(k.icon) + '"/></svg></span>' +
           '<span class="cat-txt"><h3>' + esc(k.label) + '</h3><p>' + esc(k.tag) + '</p></span>' +
-          '<span class="cat-count">' + n + '</span>' +
+          (n ? '<span class="cat-count">' + n + '</span>' : '') +
           '<svg class="ic rolearrow"><use href="#i-arrow"/></svg>' +
           '</a>';
       }).join('');
@@ -502,7 +549,7 @@
 
     $('home-stats').innerHTML =
       stat(list.length, 'places listed') +
-      stat(open, 'clinics open now') +
+      stat(CATS.length, 'categories') +
       stat(trusted, 'with a checked badge') +
       stat(Object.keys(areas).length, 'Nairobi areas');
   }
@@ -545,6 +592,7 @@
       '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' +
       '<span class="row" style="gap:.5rem">' +
       '<small>' + (c.sample ? 'Sample listing' : 'Updated ' + esc(ago(c.lastStatusAt))) + '</small>' +
+      (waURL(c) ? '<a class="savebtn" href="' + esc(waURL(c)) + '" target="_blank" rel="noopener" title="Message on WhatsApp" aria-label="WhatsApp ' + esc(c.name) + '"><svg class="ic"><use href="#i-whatsapp"/></svg></a>' : '') +
       '<button class="savebtn" type="button" data-save="' + esc(c.id) + '" aria-pressed="' + saved + '" title="Save this place" aria-label="Save ' + esc(c.name) + '">' +
       '<svg class="ic"><use href="#i-heart"/></svg></button></span>' +
       '</div>' +
@@ -594,8 +642,10 @@
       '<div class="card-foot">' +
       '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
       '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' +
+      '<span class="row" style="gap:.4rem">' +
+      (waURL(c) ? '<a class="savebtn" href="' + esc(waURL(c)) + '" target="_blank" rel="noopener" title="Message on WhatsApp" aria-label="WhatsApp ' + esc(c.name) + '"><svg class="ic"><use href="#i-whatsapp"/></svg></a>' : '') +
       '<button class="savebtn" type="button" data-save="' + esc(c.id) + '" aria-pressed="' + saved + '" title="Save this place" aria-label="Save ' + esc(c.name) + '">' +
-      '<svg class="ic"><use href="#i-heart"/></svg></button>' +
+      '<svg class="ic"><use href="#i-heart"/></svg></button></span>' +
       '</div>' +
       '</article>';
   }  /* the same view serves “#/find” (every category) and “#/c/food” (one) */
@@ -682,13 +732,12 @@
       (meGeo ? ' · nearest first' : ' · share your location to sort by distance');
 
     var emptyHTML;
-    if (!list.length && !all.length && !samplesOn && !dataErr) {
-      emptyHTML = '<div class="empty">' +
+    if (!list.length && !all.length && !samplesOn && !dataErr) {        emptyHTML = '<div class="empty">' +
         (k ? 'No ' + esc(k.label.toLowerCase()) + ' listings yet.' : 'Nothing listed yet.') +
         ' Be the first to add one, or look around with the sample places.' +
         '<div class="row" style="justify-content:center;margin-top:.9rem">' +
         '<button class="btn btn-ghost btn-sm" type="button" data-samples>Preview sample listings</button>' +
-        '<a class="btn btn-primary btn-sm" href="#/clinics">List my business</a>' +
+        '<a class="btn btn-primary btn-sm" href="#/partners">List my business</a>' +
         '</div></div>';
     } else if (!list.length) {
       emptyHTML = '<div class="empty">No places match. Try a different area or search' +
@@ -948,7 +997,7 @@
     var list = publicClinics();
     var open = list.filter(function (c) { return isHealth(c) && statusOf(c).key === 'open'; }).length;
     $('acct-stats').innerHTML = stat(savedIds.length, 'saved places') +
-      stat(list.length, 'places listed') + stat(open, 'clinics open right now');
+      stat(list.length, 'places listed') + stat(open, 'open right now');
 
     var mine = publicClinics().filter(function (c) { return savedIds.indexOf(c.id) > -1; });
     $('saved-cards').innerHTML = mine.length
@@ -1049,16 +1098,62 @@
     }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   }
 
+  /* ---------------- the review tracker ----------------
+     The same three steps the team sees, on the partner's side, so the wait
+     is never a mystery and a rejection is a to-do list. */
+  function trackerHTML(c) {
+    var s = reviewState(c);
+    var decided = s === 'approved' || s === 'denied';
+    var rows = [
+      { label: 'Received', when: c.submittedAt, on: true },
+      { label: 'In review', when: c.reviewStartedAt, on: s === 'in_review' || decided },
+      { label: s === 'denied' ? 'Not approved' : 'Approved', when: c.reviewedAt, on: decided, bad: s === 'denied' }
+    ];
+    return '<section class="prov-card stack reviewcard">' +
+      '<h3><svg class="ic"><use href="#i-doc"/></svg> Review status <span class="rvchip rv-' + esc(s) + '">' + esc(REVIEW_LABEL[s] || s) + '</span></h3>' +
+      '<ol class="tracker">' + rows.map(function (r) {
+        return '<li class="' + (r.on ? 'on' : '') + (r.bad ? ' bad' : '') + '">' +
+          '<span class="tk-dot"></span>' +
+          '<span class="tk-txt"><strong>' + esc(r.label) + '</strong>' +
+          '<small>' + (r.on && r.when ? esc(ago(r.when)) : r.on ? 'done' : 'waiting') + '</small></span></li>';
+      }).join('') + '</ol>' +
+      '<p class="hint">Reviewed by a person on the Front Belt team, not a script. We aim to answer within ' + esc(DATA.reviewWindow || '2 working days') + '.</p>' +
+      '</section>';
+  }
+
+  function waitingPanel(c) {
+    return '<div class="panel" style="margin-top:1rem">' +
+      '<h3><svg class="ic"><use href="#i-clock"/></svg> While you wait</h3>' +
+      '<ul>' +
+      '<li>Your listing is <strong>not visible to the public yet</strong> — nothing shows until we approve it.</li>' +
+      '<li>Listing is free during early access. There is nothing to pay.</li>' +
+      '<li>If we need to ask you something, we use the phone number you gave us.</li>' +
+      '<li>You can still fix a typo below; your listing stays in the queue.</li>' +
+      '</ul></div>';
+  }
+
+  function deniedPanel(c) {
+    var checks = c.deniedChecks || [];
+    return '<div class="panel denycard" style="margin-top:1rem">' +
+      '<h3><svg class="ic"><use href="#i-warn"/></svg> Why it was not approved</h3>' +
+      '<p class="muted">' + (c.deniedReason ? esc(c.deniedReason) : 'One or more requirements were not met.') + '</p>' +
+      (checks.length
+        ? '<ul class="denylist">' + checks.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'
+        : '') +
+      '<p class="hint">Fix these in the form below and resubmit. Everything you already typed is kept.</p>' +
+      '</div>';
+  }
+
   function renderProvider() {
     var body = $('prov-body');
     if (!me) return;
     if (me.role !== 'provider' && me.role !== 'admin') {
-      $('prov-title').textContent = 'Provider console';
+      $('prov-title').textContent = 'Partner console';
       $('prov-sub').textContent = '';
-      body.innerHTML = gate('This account is a patient account',
-        'A provider account is what opens the clinic console. Create one with the email of the clinic you manage, and we will link your listing to it.',
-        '<div class="row"><a class="btn btn-primary" href="#/signin" data-signin-role="provider">Create a provider account</a>' +
-        '<a class="btn btn-ghost" href="#/contact">Talk to the team</a></div>');
+      body.innerHTML = gate('This is a personal account',
+        'A partner account is what opens the listing console. Create one with the email of the business you manage and we will link your listing to it.',
+        '<div class="row"><a class="btn btn-primary" href="#/signin" data-signin-role="provider">Create a partner account</a>' +
+        '<a class="btn btn-ghost" href="#/partners">What partners get</a></div>');
       return;
     }
 
@@ -1066,16 +1161,24 @@
     if (!c && me.role === 'admin') {
       $('prov-title').textContent = 'You are signed in as the Front Belt team';
       $('prov-sub').textContent = '';
-      body.innerHTML = gate('Team accounts do not own a clinic listing',
-        'Clinic operations — enlisting, trust levels, publishing and removal — live in the team console. A provider account is what opens a clinic console.',
+      body.innerHTML = gate('Team accounts do not own a listing',
+        'Directory operations — reviewing submissions, trust levels, publishing and removal — live in the team console. A partner account is what opens a partner console.',
         '<div class="row"><a class="btn btn-primary" href="#/admin"><svg class="ic"><use href="#i-chart"/></svg> Open team console</a>' +
         '<a class="btn btn-ghost" href="#/find">See the public site</a></div>');
       return;
     }
     if (!c) {
       $('prov-title').textContent = 'Add your listing';
-      $('prov-sub').textContent = 'Takes about three minutes. The team approves it before it appears publicly.';
-      body.innerHTML = '<form class="prov-card stack" id="new-clinic" novalidate>' +
+      $('prov-sub').textContent = 'Takes about three minutes. The Front Belt team reviews it before it appears publicly.';
+      body.innerHTML =
+        '<div class="panel" style="margin-bottom:1rem">' +
+        '<h3><svg class="ic"><use href="#i-doc"/></svg> What happens after you send it</h3>' +
+        '<ol class="tracker compact">' +
+        '<li class="on"><span class="tk-dot"></span><span class="tk-txt"><strong>Received</strong><small>the moment you send it</small></span></li>' +
+        '<li><span class="tk-dot"></span><span class="tk-txt"><strong>In review</strong><small>a person checks the pin, phone, name and category</small></span></li>' +
+        '<li><span class="tk-dot"></span><span class="tk-txt"><strong>Approved — or told exactly why not</strong><small>we aim for ' + esc(DATA.reviewWindow || '2 working days') + '</small></span></li>' +
+        '</ol></div>' +
+        '<form class="prov-card stack" id="new-clinic" novalidate>' +
         clinicFormFields({ area: '' }) +
         '<button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-plus"/></svg> Send my listing for review</button>' +
         '<p class="ok-msg err" id="nc-err" hidden></p>' +
@@ -1084,9 +1187,33 @@
       return;
     }
 
+    /* not yet approved: the partner sees where it stands, and can fix it */
+    if (!approved(c)) {
+      var rs = reviewState(c);
+      var denied = rs === 'denied';
+      $('prov-title').textContent = denied ? 'Your listing needs a fix' : 'Your listing is with us';
+      $('prov-sub').textContent = (c.name || 'Your listing') + (c.type ? ' · ' + c.type : '') + (c.area ? ' · ' + c.area : '');
+      $('prov-view-link').hidden = true;
+      body.innerHTML = trackerHTML(c) +
+        (denied ? deniedPanel(c) : waitingPanel(c)) +
+        '<form class="prov-card stack" id="profile-form" style="margin-top:1rem">' +
+        '<h3><svg class="ic"><use href="#i-edit"/></svg> Your details</h3>' +
+        clinicFormFields(c) +
+        '<button class="btn btn-primary" type="submit">' +
+        (denied ? '<svg class="ic"><use href="#i-refresh"/></svg> Fix and resubmit' : 'Save changes') +
+        '</button>' +
+        '<p class="ok-msg err" id="pf-err" hidden></p>' +
+        '</form>';
+      if ($('pf-area')) $('pf-area').value = c.area || '';
+      provClinicId = c.id;
+      wireProviderForm(body, c, false);
+      return;
+    }
+
     $('prov-title').textContent = c.name;
     $('prov-sub').textContent = (c.sample ? 'Sample listing · ' : '') + (c.type ? c.type + ' · ' : '') + c.area +
       ' · ' + (c.published ? 'live on the public site' : 'hidden from the public site');
+    $('prov-view-link').hidden = false;
     $('prov-view-link').href = '#/find';
 
     var s = statusOf(c);
@@ -1106,8 +1233,8 @@
       ? '<div class="stat"><b>' + (c.lastStatusAt ? esc(ago(c.lastStatusAt)) : 'No update yet') + '</b><span>Last update</span></div>'
       : '<div class="stat"><b>' + esc(c.hours || 'Not set') + '</b><span>Opening hours</span></div>';
 
-    body.innerHTML =
-      '<div class="statrow">' +
+    body.innerHTML = trackerHTML(c) +
+      '<div class="statrow" style="margin-top:1rem">' +
       '<div class="stat"><b>' + esc(c.trust || 'Listed') + '</b><span>Trust level</span></div>' +
       statusStat +
       '<div class="stat"><b>' + (c.published ? 'Live' : 'Hidden') + '</b><span>Listing</span></div>' +
@@ -1122,7 +1249,7 @@
       '<div class="two">' +
       '<form class="prov-card stack" id="status-form">' +
       '<h3><svg class="ic"><use href="#i-clock"/></svg> Today\'s status</h3>' +
-      '<p class="hint">This is what patients see first. It takes under a minute.</p>' +
+      '<p class="hint">This is what people see first. It takes under a minute.</p>' +
       '<div class="statuspick" id="st-pick">' +
       '<button type="button" data-st="open" aria-pressed="' + (c.status === 'open') + '"><svg class="ic"><use href="#i-check"/></svg> Open now</button>' +
       '<button type="button" data-st="closed" aria-pressed="' + (c.status === 'closed') + '"><svg class="ic"><use href="#i-close"/></svg> Closed today</button>' +
@@ -1135,7 +1262,7 @@
       '<option value="85"' + (busyLevel === 85 ? ' selected' : '') + '>Busy</option>' +
       '</select></label>' +
       '</div>' +
-      '<label>Note for patients (optional)<input class="field" id="st-note" maxlength="120" value="' + esc(c.note || '') + '" placeholder="e.g. Doctor in until 1 pm"></label>' +
+      '<label>Note for customers (optional)<input class="field" id="st-note" maxlength="120" value="' + esc(c.note || '') + '" placeholder="e.g. Doctor in until 1 pm"></label>' +
       '<button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-refresh"/></svg> Save today\'s status</button>' +
       '</form>' +
 
@@ -1143,8 +1270,8 @@
       '<section class="prov-card stack">' +
       '<h3><svg class="ic"><use href="#i-eye"/></svg> Your listing</h3>' +
       '<p class="hint">' + (c.published
-        ? 'Your clinic is visible to patients. Hiding it takes effect immediately and keeps your data.'
-        : 'Your clinic is hidden. Ask the team to relist it when you are ready.') + '</p>' +
+        ? 'Your business is visible to people searching nearby. Hiding it takes effect immediately and keeps your data.'
+        : 'Your listing is hidden. Ask the team to relist it when you are ready.') + '</p>' +
       (c.published
         ? '<button class="btn btn-ghost btn-sm" type="button" data-hide="' + esc(c.id) + '"><svg class="ic"><use href="#i-eye"/></svg> Hide my listing</button>'
         : '<button class="btn btn-ghost btn-sm" type="button" data-relist="' + esc(c.id) + '"><svg class="ic"><use href="#i-refresh"/></svg> Ask to be relisted</button>') +
@@ -1256,7 +1383,7 @@
           note: root.querySelector('#st-note').value
         }).then(function () {
           btn.disabled = false;
-          toast('Status saved. Patients see it now.');
+          toast('Status saved. People see it now.');
         }).catch(function (err) {
           btn.disabled = false;
           toast(err.message);
@@ -1274,19 +1401,24 @@
         var btn = form.querySelector('[type="submit"]');
         btn.disabled = true;
         var payload = Object.assign({}, data);
+        var resubmitting = !isNew && reviewState(clinic) === 'denied';
         if (isNew) {
           payload.ownerUid = me.uid;
           payload.published = false;
           payload.trust = 'Listed';
           payload.status = 'unknown';
+          payload.reviewState = 'pending';
         } else {
           payload.id = clinic.id;
+          if (resubmitting) payload.reviewState = 'pending';
         }
         FB.saveClinic(payload).then(function () {
           btn.disabled = false;
           if (errBox) errBox.hidden = true;
-          toast(isNew ? 'Clinic sent for review. We will publish it once checked.' : 'Clinic details saved.');
-          if (isNew) renderProvider();
+          toast(isNew ? 'Sent. The Front Belt team will review it — you can follow the status here.'
+            : resubmitting ? 'Sent back for review. We will tell you as soon as it is decided.'
+              : 'Listing details saved.');
+          renderProvider();
         }).catch(function (err) {
           btn.disabled = false;
           toast(err.message);
@@ -1444,24 +1576,30 @@
       $('admin-stats').innerHTML = '';
       $('admin-requests').innerHTML = '';
       $('admin-table').innerHTML = gate('Team access only',
-        'This console is for the Front Belt team: it enlists clinics, sets trust levels and removes listings. If you run a clinic, your console is under “Provider console”.',
-        '<div class="row"><a class="btn btn-primary" href="#/provider">Go to my clinic console</a><a class="btn btn-ghost" href="#/contact">Talk to the team</a></div>');
+        'This console is for the Front Belt team: it reviews submissions, sets trust levels and removes listings. If you run a business, your console is under “Partner console”.',
+        '<div class="row"><a class="btn btn-primary" href="#/partner">Go to my partner console</a><a class="btn btn-ghost" href="#/contact">Talk to the team</a></div>');
       return;
     }
 
     var published = all.filter(function (c) { return c.published; });
     var open = all.filter(function (c) { return statusOf(c).key === 'open'; });
     var attention = all.filter(function (c) { var s = statusOf(c); return s.key === 'stale' || s.key === 'unknown' || s.key === 'hidden'; });
+    var awaiting = all.filter(function (c) { return isAwaiting(c); });
     $('admin-stats').innerHTML =
+      '<div class="stat' + (awaiting.length ? ' warn' : '') + '"><b>' + awaiting.length + '</b><span>awaiting review</span></div>' +
       stat(all.length, 'listings total') +
       stat(published.length, 'published') +
-      stat(open.length, 'clinics open') +
+      stat(open.length, 'open now') +
       '<div class="stat warn"><b>' + attention.length + '</b><span>need attention</span></div>';
+
+    paintApprovals();
+    paintImport();
 
     var q = (adminFilter.q || '').toLowerCase();
     var rows = all.filter(function (c) {
       if (q && (c.name + ' ' + c.area).toLowerCase().indexOf(q) < 0) return false;
       var s = statusOf(c);
+      if (adminFilter.f === 'awaiting') return isAwaiting(c);
       if (adminFilter.f === 'open') return s.key === 'open';
       if (adminFilter.f === 'stale') return s.key === 'stale' || s.key === 'unknown' || s.key === 'hidden';
       if (adminFilter.f === 'hidden') return !c.published;
@@ -1514,6 +1652,237 @@
 
   function renderRequests() {
     paintAdminRequests();
+  }
+
+  /* ================================================================
+     THE REVIEW QUEUE — what the team works through
+     ================================================================ */
+  function paintApprovals() {
+    var box = $('admin-approvals');
+    if (!box || !me || me.role !== 'admin') return;
+    var rank = { pending: 0, in_review: 1, denied: 2 };
+    var queue = all.filter(function (c) { return rank[reviewState(c)] != null; })
+      .sort(function (a, b) {
+        var d = rank[reviewState(a)] - rank[reviewState(b)];
+        if (d) return d;
+        return String(a.submittedAt || '').localeCompare(String(b.submittedAt || ''));
+      });
+    if (!queue.length) {
+      box.innerHTML = '<div class="panel" style="margin-bottom:1rem"><h3><svg class="ic"><use href="#i-check"/></svg> Review queue is clear</h3>' +
+        '<p class="muted small">Nothing is waiting for a decision. New partner submissions appear here the moment they are sent.</p></div>';
+      return;
+    }
+    box.innerHTML = '<div class="prov-card stack queuecard">' +
+      '<h3><svg class="ic"><use href="#i-doc"/></svg> ' + queue.length + ' listing' + (queue.length === 1 ? '' : 's') + ' in the review queue</h3>' +
+      '<p class="hint">Approve puts it live immediately. “Not approved” sends the partner the exact reasons you tick.</p>' +
+      queue.map(function (c) {
+        var s = reviewState(c);
+        return '<div class="qrow">' +
+          '<div class="qmain">' +
+          '<strong>' + esc(c.name || 'Untitled') + '</strong> <span class="rvchip rv-' + esc(s) + '">' + esc(REVIEW_LABEL[s]) + '</span>' +
+          '<div class="small muted">' + esc(catOf(c).label) + (c.type ? ' · ' + esc(c.type) : '') + ' · ' + esc(c.area || 'no area set') +
+          ' · ' + esc(Number(c.lat).toFixed(4)) + ', ' + esc(Number(c.lng).toFixed(4)) + '</div>' +
+          '<div class="small muted">' + (c.phone ? esc(c.phone) : 'no phone given') + ' · sent ' + esc(ago(c.submittedAt)) + '</div>' +
+          (c.deniedChecks && c.deniedChecks.length
+            ? '<div class="small deny-inline">Returned for: ' + esc(c.deniedChecks.join(' · ')) + '</div>' : '') +
+          '</div>' +
+          '<div class="acts">' +
+          (s === 'pending'
+            ? '<button class="btn btn-ghost btn-sm" type="button" data-review="' + esc(c.id) + '" data-do="in_review"><svg class="ic"><use href="#i-eye"/></svg> Start review</button>'
+            : '') +
+          '<button class="btn btn-primary btn-sm" type="button" data-review="' + esc(c.id) + '" data-do="approved"><svg class="ic"><use href="#i-check"/></svg> Approve</button>' +
+          '<button class="btn btn-ghost btn-sm" type="button" data-review="' + esc(c.id) + '" data-do="denied"><svg class="ic"><use href="#i-warn"/></svg> Not approved</button>' +
+          '</div></div>';
+      }).join('') + '</div>';
+  }
+
+  /* why a listing was turned down — the partner sees these words */
+  function openDenyModal(c) {
+    var checks = DATA.reviewChecks || [];
+    openModal('Why is this not approved?',
+      '<form class="stack" id="deny-form">' +
+      '<p class="hint">The partner sees exactly this — the reasons you tick and your note — so be specific enough for them to act on.</p>' +
+      '<div class="chips col">' + checks.map(function (x) {
+        return '<label class="chipcheck wide"><input type="checkbox" value="' + esc(x) + '"> ' + esc(x) + '</label>';
+      }).join('') + '</div>' +
+      '<label>Anything else they should know<textarea class="field" id="dn-note" rows="3" placeholder="e.g. The pin sits on the estate centre — please move it to your gate."></textarea></label>' +
+      '<button class="btn btn-primary" type="submit">Send the decision</button>' +
+      '<p class="ok-msg err" id="dn-err" hidden></p>' +
+      '</form>');
+
+    $('deny-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var picked = Array.prototype.slice.call(document.querySelectorAll('#deny-form input:checked'))
+        .map(function (i) { return i.value; });
+      var note = $('dn-note').value.trim();
+      if (!picked.length && !note) {
+        $('dn-err').textContent = 'Tick at least one reason, or write one.';
+        $('dn-err').hidden = false;
+        return;
+      }
+      var btn = $('deny-form').querySelector('[type="submit"]');
+      btn.disabled = true;
+      FB.reviewListing(c.id, 'denied', { checks: picked, reason: note }).then(function () {
+        closeModal();
+        toast('Decision sent — the partner sees it in their console.');
+        renderAdmin();
+      }).catch(function (err) {
+        btn.disabled = false;
+        $('dn-err').textContent = err.message;
+        $('dn-err').hidden = false;
+      });
+    });
+  }
+
+  /* ================================================================
+     OPEN MAP DATA — OpenStreetMap, not Google
+     Tiles and this import both come from the open map. Overpass is a
+     read-only public API; anything it returns is a DRAFT for a human
+     to confirm by phone, never a published listing.
+     ================================================================ */
+  var OVERPASS_TAGS = {
+    health: ['amenity~"^(clinic|pharmacy|hospital|doctors|dentist)$"', 'healthcare~"^(clinic|centre|doctor|pharmacy)$"'],
+    food: ['amenity~"^(restaurant|cafe|fast_food|bakery|food_court)$"', 'shop~"^(bakery|butcher|greengrocer)$"'],
+    beauty: ['shop~"^(hairdresser|beauty)$"', 'amenity~"^(spa)$"'],
+    tech: ['shop~"^(mobile_phone|electronics|computer)$"', 'amenity~"^(bank|mobile_money_agent|bureau_de_change|payment_centre)$"'],
+    books: ['shop~"^(books|stationery|newsagent)$"', 'amenity~"^(library)$"'],
+    home: ['shop~"^(furniture|hardware|houseware|doityourself|bed|kitchen)$"'],
+    stay: ['tourism~"^(hotel|hostel|guest_house|apartment|motel)$"']
+  };
+  var OSM_TYPE_HINT = [
+    ['clinic', 'Clinic'], ['pharmacy', 'Pharmacy'], ['hospital', 'Hospital'], ['dentist', 'Dental clinic'],
+    ['doctors', 'Clinic'], ['restaurant', 'Restaurant'], ['cafe', 'Café'], ['fast_food', 'Fast food'],
+    ['bakery', 'Bakery'], ['butcher', 'Butchery'], ['hairdresser', 'Salon'], ['beauty', 'Salon'],
+    ['spa', 'Spa'], ['mobile_phone', 'Phone shop'], ['electronics', 'Electrical shop'], ['bank', 'Bank'],
+    ['mobile_money_agent', 'M-Pesa agent'], ['books', 'Bookshop'], ['stationery', 'Stationery'],
+    ['library', 'Library'], ['furniture', 'Furniture store'], ['hardware', 'Hardware'],
+    ['houseware', 'Home décor'], ['hotel', 'Hotel'], ['hostel', 'Hostel'], ['guest_house', 'Guest house'],
+    ['apartment', 'Serviced apartment']
+  ];
+  var importResults = [];
+
+  function paintImport() {
+    var box = $('admin-import');
+    if (!box || !me || me.role !== 'admin') return;
+    if (box.getAttribute('data-painted') === '1') return;
+    box.setAttribute('data-painted', '1');
+    box.innerHTML = '<div class="prov-card stack importcard">' +
+      '<h3><svg class="ic"><use href="#i-globe"/></svg> Open map data — OpenStreetMap</h3>' +
+      '<p class="hint">Front Belt does not rent its map from Google. The tiles are OpenStreetMap, and this tool reads the same open database (Overpass API) to find businesses near an area that are <em>not</em> on Front Belt yet. Everything it finds arrives as a draft for a reviewer to confirm by phone — nothing is published automatically. Data &copy; OpenStreetMap contributors, ODbL.</p>' +
+      '<div class="grid3">' +
+      '<label>Category<select class="field" id="imp-cat">' + CATS.map(function (k) {
+        return '<option value="' + esc(k.id) + '">' + esc(k.label) + '</option>';
+      }).join('') + '</select></label>' +
+      '<label>Area<input class="field" id="imp-area" placeholder="e.g. Kilimani" value="Kilimani"></label>' +
+      '<label>Radius (km)<input class="field" id="imp-radius" type="number" min="0.5" max="5" step="0.5" value="1.5"></label>' +
+      '</div>' +
+      '<div class="row">' +
+      '<button class="btn btn-ghost btn-sm" type="button" id="imp-run"><svg class="ic"><use href="#i-search"/></svg> Search the open map</button>' +
+      '<button class="btn btn-ghost btn-sm" type="button" id="imp-mine"><svg class="ic"><use href="#i-pin"/></svg> Use my location instead</button>' +
+      '</div>' +
+      '<div id="imp-results"></div>' +
+      '</div>';
+  }
+
+  function impSetStatus(html) {
+    var r = $('imp-results');
+    if (r) r.innerHTML = html;
+  }
+
+  /* area name -> coordinates, through Nominatim (the open geocoder) */
+  function geocodeArea(name) {
+    return fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ke&q=' +
+      encodeURIComponent(name + ', Nairobi, Kenya'))
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!rows || !rows.length) throw new Error('We could not find “' + name + '” on the open map. Try another area name.');
+        return { lat: Number(rows[0].lat), lng: Number(rows[0].lon), label: name };
+      });
+  }
+
+  function runImport(centre) {
+    var cat = $('imp-cat').value;
+    var radius = Math.max(0.5, Math.min(5, Number($('imp-radius').value) || 1.5)) * 1000;
+    var tags = OVERPASS_TAGS[cat] || OVERPASS_TAGS.health;
+    var body = '[out:json][timeout:25];(' + tags.map(function (t) {
+      return 'node(around:' + radius + ',' + centre.lat + ',' + centre.lng + ')[' + t + '];' +
+        'way(around:' + radius + ',' + centre.lat + ',' + centre.lng + ')[' + t + '];';
+    }).join('') + ');out center 80;';
+
+    impSetStatus('<p class="hint"><span class="spin"></span> Reading the open map…</p>');
+    /* Overpass takes the query as a GET parameter, and its public servers are
+       often busy, so a second mirror is tried before giving up. */
+    var HOSTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+    function ask(i) {
+      if (i >= HOSTS.length) return Promise.reject(new Error('The open map is busy right now. Try again in a minute.'));
+      return fetch(HOSTS[i] + '?data=' + encodeURIComponent(body), { headers: { Accept: 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error('busy'); return r.json(); })
+        .catch(function () { return ask(i + 1); });
+    }
+    ask(0).then(function (res) {
+      var have = {};
+      all.forEach(function (c) { if (c.name) have[String(c.name).toLowerCase()] = 1; });
+      var seen = {};
+      importResults = (res.elements || []).map(function (el) {
+        var t = el.tags || {};
+        var name = t.name || t['name:en'] || '';
+        if (!name) return null;
+        var lat = el.lat != null ? el.lat : (el.center && el.center.lat);
+        var lng = el.lon != null ? el.lon : (el.center && el.center.lon);
+        if (!isFinite(lat) || !isFinite(lng)) return null;
+        if (have[name.toLowerCase()] || seen[name.toLowerCase()]) return null;
+        seen[name.toLowerCase()] = 1;
+        return {
+          id: 'osm/' + el.type + '/' + el.id,
+          name: name,
+          lat: lat, lng: lng,
+          phone: t.phone || t['contact:phone'] || t['contact:mobile'] || '',
+          hours: t.opening_hours || '',
+          address: [t['addr:street'], t['addr:suburb']].filter(Boolean).join(', '),
+          type: osmType(t),
+          dist: distanceKm(centre.lat, centre.lng, lat, lng)
+        };
+      }).filter(Boolean).sort(function (a, b) { return a.dist - b.dist; });
+
+      if (!importResults.length) {
+        impSetStatus('<p class="hint">Nothing new found there. Either the area is already covered or OpenStreetMap has nothing mapped in that radius — try a bigger radius.</p>');
+        return;
+      }
+      impSetStatus('<p class="hint">' + importResults.length + ' place' + (importResults.length === 1 ? '' : 's') +
+        ' found near ' + esc(centre.label || 'that point') + ' that are not on Front Belt yet. Add them as drafts, then phone to confirm before they go live.</p>' +
+        '<div class="row" style="margin:.6rem 0"><button class="btn btn-primary btn-sm" type="button" id="imp-add-all"><svg class="ic"><use href="#i-plus"/></svg> Add all ' + importResults.length + ' as drafts</button></div>' +
+        '<div class="importlist">' + importResults.map(function (r) {
+          return '<div class="improw"><div>' +
+            '<strong>' + esc(r.name) + '</strong>' +
+            '<div class="small muted">' + esc(r.type) + ' · ' + esc(fmtDist(r.dist)) + ' from the centre' +
+            (r.phone ? ' · ' + esc(r.phone) : ' · no phone in OSM') + (r.hours ? ' · ' + esc(r.hours) : '') + '</div>' +
+            '</div><button class="btn btn-ghost btn-sm" type="button" data-imp="' + esc(r.id) + '">Add as draft</button></div>';
+        }).join('') + '</div>');
+    }).catch(function (err) {
+      impSetStatus('<p class="hint">' + esc(err.message || 'The open map could not be reached.') + '</p>');
+    });
+  }
+
+  function osmType(t) {
+    var probe = t.amenity || t.shop || t.tourism || t.healthcare || t.office || '';
+    for (var i = 0; i < OSM_TYPE_HINT.length; i++) {
+      if (OSM_TYPE_HINT[i][0] === probe) return OSM_TYPE_HINT[i][1];
+    }
+    return 'Other';
+  }
+
+  /* an OSM find becomes a normal Front Belt draft — the same review queue */
+  function addOSMDraft(r) {
+    var cat = $('imp-cat').value;
+    var k = catById(cat) || CATS[0];
+    var type = (k.types || []).indexOf(r.type) > -1 ? r.type : (k.types || [])[0] || '';
+    return FB.saveClinic({
+      category: cat, type: type, name: r.name, area: ($('imp-area').value || '').trim(),
+      address: r.address, lat: r.lat, lng: r.lng, phone: r.phone, hours: r.hours,
+      services: [], note: 'Imported from OpenStreetMap — phone to confirm before publishing.',
+      reviewState: 'pending', published: false, trust: 'Listed',
+      ownerUid: null, source: 'openstreetmap', sourceRef: r.id
+    });
   }
 
   /* one subscription drives both consoles */
@@ -1583,6 +1952,74 @@
       FB.resolveRequest(t.getAttribute('data-decline'), 'declined', 'Did not meet the requirements for that level.')
         .then(function () { toast('Request declined.'); renderAdmin(); })
         .catch(function (err) { toast(err.message); });
+      return;
+    }
+
+    /* ---- the review queue ---- */
+    if ((t = e.target.closest('[data-review]'))) {
+      var rvId = t.getAttribute('data-review');
+      var rvDo = t.getAttribute('data-do');
+      var rvC = all.filter(function (x) { return x.id === rvId; })[0];
+      if (!rvC) { toast('That listing is no longer available.'); return; }
+      if (rvDo === 'denied') { openDenyModal(rvC); return; }
+      FB.reviewListing(rvId, rvDo).then(function () {
+        toast(rvDo === 'approved'
+          ? (rvC.name || 'The listing') + ' is approved and live.'
+          : 'Marked as in review.');
+        renderAdmin();
+      }).catch(function (err) { toast(err.message); });
+      return;
+    }
+
+    /* ---- open map data ---- */
+    if (e.target.closest('#imp-run')) {
+      var areaName = ($('imp-area').value || '').trim();
+      if (!areaName) { toast('Type an area name first, e.g. Kilimani.'); return; }
+      impSetStatus('<p class="hint"><span class="spin"></span> Finding ' + esc(areaName) + ' on the open map…</p>');
+      geocodeArea(areaName).then(runImport).catch(function (err) { impSetStatus('<p class="hint">' + esc(err.message) + '</p>'); });
+      return;
+    }
+    if (e.target.closest('#imp-mine')) {
+      toast('Reading your location…');
+      capture(function (lat, lng) { runImport({ lat: lat, lng: lng, label: 'your location' }); });
+      return;
+    }
+    if ((t = e.target.closest('[data-imp]'))) {
+      var impId = t.getAttribute('data-imp');
+      var found = importResults.filter(function (r) { return r.id === impId; })[0];
+      if (!found) return;
+      t.disabled = true;
+      addOSMDraft(found).then(function () {
+        t.textContent = 'Added';
+        importResults = importResults.filter(function (r) { return r.id !== impId; });
+        toast(found.name + ' added as a draft. Confirm it by phone, then approve.');
+      }).catch(function (err) {
+        t.disabled = false;
+        toast(err.message);
+      });
+      return;
+    }
+    if (e.target.closest('#imp-add-all')) {
+      var batch = importResults.slice();
+      if (!batch.length) return;
+      confirmDialog({
+        title: 'Add all ' + batch.length + ' as drafts?',
+        body: 'They arrive unapproved, in the review queue, marked as imported from OpenStreetMap. Nothing appears publicly until someone confirms it by phone and approves it.',
+        confirm: 'Add ' + batch.length + ' drafts'
+      }).then(function (yes) {
+        if (!yes) return;
+        var done = 0;
+        (function next() {
+          if (!batch.length) {
+            importResults = [];
+            toast(done + ' draft' + (done === 1 ? '' : 's') + ' added to the review queue.');
+            renderAdmin();
+            return;
+          }
+          addOSMDraft(batch.shift()).then(function () { done++; next(); })
+            .catch(function (err) { toast(err.message); });
+        })();
+      });
       return;
     }
 
@@ -1950,6 +2387,43 @@
   ['q', 'area', 'lvl'].forEach(function (id) {
     $(id).addEventListener('input', renderFind);
     $(id).addEventListener('change', renderFind);
+  });
+
+  /* the home search box hands its words to the explore view */
+  var heroForm = $('hero-search');
+  if (heroForm) heroForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var val = ($('hero-q').value || '').trim();
+    location.hash = '#/find';
+    setTimeout(function () {
+      if ($('q')) { $('q').value = val; renderFind(); }
+    }, 70);
+  });
+
+  /* the contact page shows a WhatsApp link only when a line is configured */
+  (function paintWhatsApp() {
+    var line = $('wa-line');
+    if (!line || !WA_NUMBER) return;
+    line.innerHTML = '<a href="https://wa.me/' + waNumber(WA_NUMBER) + '" target="_blank" rel="noopener">Message us on WhatsApp</a> — ' +
+      esc(WA_NUMBER) + ' during working hours.';
+  })();
+
+  /* the install prompt: the web app's bridge to the native apps */
+  var installEvent = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    installEvent = e;
+    var b = $('install-btn');
+    if (b) b.hidden = false;
+  });
+  var installBtn = $('install-btn');
+  if (installBtn) installBtn.addEventListener('click', function () {
+    if (!installEvent) {
+      toast('Open your browser menu and choose “Add to Home screen”.');
+      return;
+    }
+    installEvent.prompt();
+    installEvent.userChoice.then(function () { installEvent = null; installBtn.hidden = true; });
   });
 
   /* the button says what will actually happen */

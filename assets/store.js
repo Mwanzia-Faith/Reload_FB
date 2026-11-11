@@ -42,10 +42,14 @@
       o.updatedAt = o.lastStatusAt;
       o.createdAt = iso(60 * 24 * 30);
       o.published = true;
+      o.reviewState = 'approved';
+      o.submittedAt = o.createdAt;
+      o.reviewedAt = o.createdAt;
       o.ownerUid = null;
       o.registrationNo = '';
       o.licenceRef = '';
       o.note = '';
+      o.verifiedAt = o.createdAt;
       return o;
     });
     return { users: [], session: null, clinics: clinics, requests: [], updates: [] };
@@ -153,7 +157,7 @@
   /* ================================================================
      FIREBASE BACKEND
      ================================================================ */
-  var sdkP = null, fbUser = null, fbUnsub = null, fbPendingRole = 'patient';
+  var sdkP = null, fbUser = null, fbUnsubs = [], fbPendingRole = 'patient', clinicBuckets = {};
 
   function loadSdk() {
     if (sdkP) return sdkP;
@@ -192,22 +196,43 @@
     clinicCbs.forEach(function (cb) { try { cb(rows, err); } catch (e) { console.error(e); } });
   }
 
+  /* Three queries, merged by id:
+       live    published listings — everyone
+       mine    the signed-in person's own listings, whatever their state
+       hidden  unpublished listings — team only
+     Firestore only allows a query its rules can prove, so each listener
+     carries the filter its rule depends on. */
   function connectClinics() {
     if (MODE !== 'firebase') return;
-    if (fbUnsub) { try { fbUnsub(); } catch (e) {} fbUnsub = null; }
+    fbUnsubs.forEach(function (f) { try { f(); } catch (e) {} });
+    fbUnsubs = [];
+    clinicBuckets = {};
     loadSdk().then(function (S) {
       var col = S.dbLib.collection(S.db, 'clinics');
-      /* signed-out visitors may only read published clinics, so the query
-         has to say so — Firestore rejects queries it cannot prove are safe */
-      var q = fbUser
-        ? S.dbLib.query(col, S.dbLib.orderBy('name'))
-        : S.dbLib.query(col, S.dbLib.where('published', '==', true));
-      fbUnsub = S.dbLib.onSnapshot(q, function (snap) {
-        var rows = snap.docs.map(function (d) { var o = d.data(); o.id = d.id; return o; });
-        notifyClinics(rows, null);
-      }, function (err) {
-        notifyClinics(null, friendly(err));
-      });
+
+      function listen(key, q) {
+        fbUnsubs.push(S.dbLib.onSnapshot(q, function (snap) {
+          clinicBuckets[key] = snap.docs.map(function (d) { var o = d.data(); o.id = d.id; return o; });
+          var seen = {}, rows = [];
+          Object.keys(clinicBuckets).forEach(function (k) {
+            clinicBuckets[k].forEach(function (r) {
+              if (r && r.id && !seen[r.id]) { seen[r.id] = 1; rows.push(r); }
+            });
+          });
+          rows.sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || '')); });
+          notifyClinics(rows, null);
+        }, function (err) {
+          notifyClinics(null, friendly(err));
+        }));
+      }
+
+      listen('live', S.dbLib.query(col, S.dbLib.where('published', '==', true)));
+      if (fbUser) {
+        listen('mine', S.dbLib.query(col, S.dbLib.where('ownerUid', '==', fbUser.uid)));
+        if (fbUser.role === 'admin') {
+          listen('hidden', S.dbLib.query(col, S.dbLib.where('published', '==', false)));
+        }
+      }
     }).catch(function (err) { notifyClinics(null, friendly(err)); });
   }
 
@@ -342,6 +367,8 @@
         registrationNo: String(data.registrationNo || '').trim(),
         licenceRef: String(data.licenceRef || '').trim()
       };
+      /* a partner submitting or resubmitting puts the listing back in the queue */
+      if (data.reviewState) payload.reviewState = String(data.reviewState);
       if (!payload.name) return Promise.reject(new Error('Give the listing a name.'));
       if (!payload.area) return Promise.reject(new Error('Choose the area.'));
       if (!isFinite(payload.lat) || payload.lat < -90 || payload.lat > 90) return Promise.reject(new Error('Latitude must be between -90 and 90.'));
@@ -361,7 +388,11 @@
         }
         if (data.trust) payload.trust = data.trust;
         else payload.trust = 'Listed';
-        payload.published = !!data.published;
+        /* a listing entered by a partner starts in the queue; a listing
+           entered by the team is already reviewed */
+        payload.reviewState = data.reviewState || (data.ownerUid ? 'pending' : 'approved');
+        payload.published = payload.reviewState === 'approved' ? !!data.published : false;
+        payload.submittedAt = new Date().toISOString();
         payload.ownerUid = data.ownerUid || null;
         payload.status = data.status || 'unknown';
         payload.waitMinutes = data.waitMinutes == null ? null : data.waitMinutes;
@@ -382,7 +413,9 @@
         }
         var base = Object.assign(payload, {
           trust: data.trust || 'Listed',
-          published: !!data.published,
+          reviewState: data.reviewState || (data.ownerUid ? 'pending' : 'approved'),
+          submittedAt: new Date().toISOString(),
+          published: false,
           ownerUid: data.ownerUid || null,
           status: data.status || 'unknown',
           waitMinutes: data.waitMinutes == null ? null : data.waitMinutes,
@@ -400,6 +433,50 @@
 
     setPublished: function (id, val) {
       return setField(id, { published: !!val });
+    },
+
+    /* the review queue — team actions.
+       in_review: a reviewer has picked it up
+       approved:  goes live immediately
+       denied:    stays hidden and carries the reason the partner sees */
+    reviewListing: function (id, decision, opts) {
+      opts = opts || {};
+      var now = new Date().toISOString();
+      var patch = {
+        reviewState: decision,
+        reviewedAt: now,
+        updatedAt: now,
+        reviewerUid: (currentUser() || {}).uid || ''
+      };
+      if (decision === 'in_review') {
+        patch.reviewStartedAt = now;
+      } else if (decision === 'approved') {
+        patch.published = true;
+        patch.reviewedAt = now;
+        patch.deniedReason = '';
+        patch.deniedChecks = [];
+        patch.verifiedAt = now;
+      } else if (decision === 'denied') {
+        patch.published = false;
+        patch.deniedReason = String(opts.reason || '').trim();
+        patch.deniedChecks = Array.isArray(opts.checks) ? opts.checks : [];
+      }
+      return setField(id, patch);
+    },
+
+    /* the partner's side of a rejection: fix what was wrong, send it back */
+    resubmitListing: function (id, note) {
+      var now = new Date().toISOString();
+      return setField(id, {
+        reviewState: 'pending',
+        submittedAt: now,
+        reviewedAt: null,
+        reviewStartedAt: null,
+        deniedReason: '',
+        deniedChecks: [],
+        partnerNote: String(note || ''),
+        published: false
+      });
     },
 
     deleteClinic: function (id) {

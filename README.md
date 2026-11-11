@@ -1,6 +1,10 @@
 # Front Belt
 
-Official website for **Front Belt**, a place finder for Nairobi. Six categories — **Health** (clinics and pharmacies), **Food**, **Beauty**, **Tech & Money**, **Books** and **Home & Living** — each with its own icon and layout. Everything is found by where it is and how far it is; only Health shows today's status and wait time.
+Official website for **Front Belt**, a place finder for Nairobi. Seven categories — **Health** (clinics and pharmacies), **Food**, **Beauty**, **Tech & Money** (phones, M-Pesa, banks, microfinance), **Books**, **Home & Living** and **Accommodation** — each with its own icon and layout. Everything is found by where it is and how far it is; only Health shows today's status and wait time.
+
+**Connect, Compare & Access.**
+
+A business that lists here is a **partner**. Front Belt is the service; partners are the businesses. Nothing appears on the public site until the Front Belt team has reviewed and approved it — see *How a listing gets approved* below. The money model lives in [BUSINESS.md](BUSINESS.md).
 
 Jua kabla ya kwenda.
 
@@ -8,16 +12,17 @@ Jua kabla ya kwenda.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Every view: home with the category grid, the explorer (all categories or one, themed), trust framework, listing sign-up, FAQ, contact, sign-in, patient dashboard, provider console, team console, team access. |
+| `index.html` | Every view: the home page, the explorer (all categories or one, themed), trust framework, the partners page, FAQ, contact, sign-in, the personal dashboard, the partner console, the team console and team access. |
 | `assets/styles.css` | The design system — colours, type, layout, light and dark themes, plus the per-category card layouts. |
 | `assets/data.js` | The category catalogue (ids, icons, colours, types) and the sample listings used when no database is connected. |
 | `assets/store.js` | The data layer. One API, two backends: local demo (`localStorage`) and Firebase (Firestore + Auth). Picks Firebase automatically as soon as `assets/firebase-config.js` holds a real config. |
 | `assets/firebase-config.js` | The Firebase web config (public identifiers only — never a secret). |
-| `assets/app.js` | Routing, GPS search, sign-in, provider console, team console. |
-| `assets/logo.svg` | The brand mark — a map pin holding a six-colour compass, one wedge per category, with the belt ribbon behind it. Used in the header and as the favicon. |
+| `assets/app.js` | Routing, GPS search, sign-in, the partner console with the review tracker, the team console with the review queue, and the OpenStreetMap import. |
+| `assets/logo.svg` | The brand mark — a map pin holding a seven-colour compass, one wedge per category, with the belt ribbon behind it. Used in the header and as the favicon. |
 | `manifest.webmanifest` | Lets visitors install the site to their phone’s home screen. |
 | `assets/icon-192.png`, `assets/icon-512.png`, `assets/apple-touch-icon.png`, `assets/og.png` | PNG icons rendered from the logo: home-screen icons, the iOS touch icon, and the picture shown when the link is shared. |
-| `firestore.rules` | **The real access control.** Deploy these to Firebase. |
+| `firestore.rules` | **The real access control.** Deploy these to Firebase — they are what stop a partner approving its own listing. |
+| `BUSINESS.md` | The money: who pays, what they pay for, the cost base, break-even and the 90-day test. |
 
 No build step and no dependencies: the site runs from any static host.
 
@@ -45,11 +50,32 @@ The first thing the site asks is who you are, and everything after that follows 
 
 | Who | Where they land | What they can do |
 | --- | --- | --- |
-| **Patient** (`#/find`) | Explorer | Browse every category or one, search by distance, filter, save listings, see today's status for Health |
-| **Clinic / business** (`#/provider`) | Provider console | Put the listing on the map with real coordinates, choose its category and type, post the daily status (Health), apply for a higher trust level, hide the listing |
-| **Front Belt team** (`#/admin`) | Team console | Enlist listings in any category, edit coordinates, set trust levels, publish or remove listings, approve upgrade requests, spot health listings that stopped updating |
+| **Someone looking** (`#/find`) | Explorer | Browse every category or one, search by distance, filter, save listings, see today's status for Health |
+| **Partner** — the business (`#/partner`) | Partner console | Submit a listing for review, watch it move *received → in review → approved*, fix and resubmit if turned down, then edit details, post the daily status (Health), apply for a higher trust level, hide the listing |
+| **Front Belt team** (`#/admin`) | Team console | Work the review queue (approve, or not approved with reasons the partner sees), enlist listings in any category, edit coordinates, set trust levels, publish or remove listings, import drafts from OpenStreetMap |
 
 Sign-in returns each account to its own console, so nobody has to remember a URL.
+
+## How a listing gets approved
+
+```
+partner submits  →  received  →  in review  →  approved (live)  |  not approved (+ reasons)
+```
+
+1. A partner submits from **`#/partner`**. The record is created `published: false, reviewState: 'pending'` — it is invisible to the public immediately, and `firestore.rules` will not let it be created any other way.
+2. The partner's console shows the tracker and the promise: *we aim to answer within 2 working days*.
+3. The team opens **`#/admin`**. The review queue is the first thing on the page. **Start review** marks it `in_review`.
+4. **Approve** sets `published: true` and it appears in search at once. **Not approved** opens a checklist of requirements (pin on the door, phone reachable, name matches the signboard, duplicate, missing licence…) plus a free-text note. The partner sees exactly those words, fixes the listing and resubmits into the same queue.
+
+A partner can never approve itself, raise its own badge or publish itself — those fields are not in its allowed edit list in `firestore.rules`. After changing rules, **republish them** in Firebase (Firestore → Rules → Publish).
+
+## Where the map data comes from (not Google)
+
+- **Tiles:** OpenStreetMap, drawn with Leaflet. No Google Maps key, no bill.
+- **"Use my location":** the browser's own Geolocation API, on the device.
+- **Address lookup:** Nominatim, the open geocoder, used only when the team asks for it.
+- **New places:** the team console's *Open map data* panel queries the Overpass API for businesses near an area that are not yet listed, and adds them as **drafts in the review queue** — never published automatically. Attribution stays visible: *© OpenStreetMap contributors, ODbL*.
+- **Directions:** the Start button hands over to whatever map app the phone already has. It is a link, not a dependency; the detail sheet also links to the place on openstreetmap.org.
 
 ## Team access — keeping the console private
 

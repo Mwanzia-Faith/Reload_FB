@@ -1,7 +1,7 @@
 {
-  "name": "Front Belt · Find anything near you in Nairobi",
+  "name": "Front Belt · Connect, compare and access what is near you in Nairobi",
   "short_name": "Front Belt",
-  "description": "Clinics, food, beauty, tech and money, books and home — found by distance, with directions that start from where you are standing.",
+  "description": "Clinics, food, beauty, tech and money, books, home and accommodation — compared by distance, with prices, hours, wait times and directions from where you are standing.",
   "start_url": "./#/home",
   "scope": "./",
   "display": "standalone",

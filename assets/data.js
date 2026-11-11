@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------
    Front Belt — category catalogue, seed data, shared lists
 
-   Every listing belongs to one of six categories. Each category has
+   Every listing belongs to one of seven categories. Each category has
    its own icon, accent colour and set of types, and only Health
    carries the daily status / wait-time fields — the rest are found
    by where they are and how far they are.
@@ -29,7 +29,24 @@ window.FB_DATA = {
 
   levels: ["Listed", "Verified", "Trusted", "Certified"],
 
-  /* The six categories shown on the home page. `health` is the one that
+  /* Why a listing can be turned down. The reviewer ticks what applies and the
+     partner sees the same list, so a rejection is a to-do list, not a wall. */
+  reviewChecks: [
+    "Exact location missing — pin the door, not the estate",
+    "Phone number missing or unreachable",
+    "Business name does not match the signboard",
+    "Category or type is not clear",
+    "Opening hours missing",
+    "Duplicate of a listing already on Front Belt",
+    "Registration or licence document missing (health businesses)",
+    "Photos or documents could not be opened"
+  ],
+
+  /* How long the Front Belt team has to answer a new listing. Shown to the
+     partner while they wait, so the wait is never a mystery. */
+  reviewWindow: "2 working days",
+
+  /* The categories shown on the home page. `health` is the one that
      carries wait time and today's status; everything else is location,
      distance and directions. */
   categories: [
@@ -49,9 +66,9 @@ window.FB_DATA = {
       types: ["Salon", "Kinyozi", "Spa", "Nail parlour", "Barber", "Makeup studio"]
     },
     {
-      id: "tech", label: "Tech & Money", tag: "Phones, electricals, Airtel and M-Pesa agents",
+      id: "tech", label: "Tech & Money", tag: "Phones, M-Pesa agents, banks and microfinance",
       icon: "i-tech", color: "#1D4ED8", health: false,
-      types: ["Phone shop", "Electrical shop", "Phone accessories", "Airtel agent", "M-Pesa agent", "Airtime & bundles"]
+      types: ["Phone shop", "Electrical shop", "Phone accessories", "Airtel agent", "M-Pesa agent", "Airtime & bundles", "Bank", "Microfinance", "Sacco"]
     },
     {
       id: "books", label: "Books", tag: "Bookshops, libraries and stationery",
@@ -62,6 +79,11 @@ window.FB_DATA = {
       id: "home", label: "Home & Living", tag: "Furniture, showrooms and home items",
       icon: "i-home2", color: "#B45309", health: false,
       types: ["Furniture store", "Showroom", "Home décor", "Kitchenware", "Bedding & linen", "Hardware"]
+    },
+    {
+      id: "stay", label: "Accommodation", tag: "Hotels, lodges, hostels and guest houses",
+      icon: "i-stay", color: "#A21CAF", health: false,
+      types: ["Hotel", "Lodge", "Guest house", "Hostel", "Serviced apartment", "Conference venue"]
     }
   ],
 
@@ -105,6 +127,11 @@ window.FB_DATA = {
     { id: "h1", category: "home", type: "Furniture store", name: "Sample Home Comfort Furniture", area: "Karen", address: "Sample address, Karen", lat: -1.3350, lng: 36.7100, phone: "+254 700 000 051", trust: "Listed", hours: "Mon–Sat 9:00–18:00", services: ["Sofas", "Beds", "Dining sets"], sample: true },
     { id: "h2", category: "home", type: "Showroom", name: "Sample Showroom 54", area: "Lavington", address: "Sample address, Lavington", lat: -1.2764, lng: 36.7686, phone: "+254 700 000 052", trust: "Listed", hours: "Mon–Sat 10:00–18:00", services: ["Home showroom", "Decor", "Lighting"], sample: true },
     { id: "h3", category: "home", type: "Kitchenware", name: "Sample Kitchen & Table", area: "Kilimani", address: "Sample address, Kilimani", lat: -1.2921, lng: 36.7836, phone: "+254 700 000 053", trust: "Listed", hours: "Mon–Sat 9:00–19:00", services: ["Cookware", "Crockery", "Storage"], sample: true },
-    { id: "h4", category: "home", type: "Hardware", name: "Sample Builders Hardware", area: "Ruiru", address: "Sample address, Ruiru", lat: -1.2167, lng: 36.9500, phone: "+254 700 000 054", trust: "Listed", hours: "Mon–Sat 7:30–18:30", services: ["Paint", "Timber", "Tools"], sample: true }
+    { id: "h4", category: "home", type: "Hardware", name: "Sample Builders Hardware", area: "Ruiru", address: "Sample address, Ruiru", lat: -1.2167, lng: 36.9500, phone: "+254 700 000 054", trust: "Listed", hours: "Mon–Sat 7:30–18:30", services: ["Paint", "Timber", "Tools"], sample: true },
+
+    /* ---------------- Accommodation ---------------- */
+    { id: "a1", category: "stay", type: "Hotel", name: "Sample City Stay Hotel", area: "CBD", address: "Sample address, CBD", lat: -1.2864, lng: 36.8172, phone: "+254 700 000 061", trust: "Listed", hours: "Reception 24 hours", services: ["Rooms from KES 4,500", "Breakfast", "Parking"], sample: true },
+    { id: "a2", category: "stay", type: "Guest house", name: "Sample Garden Guest House", area: "Lavington", address: "Sample address, Lavington", lat: -1.2764, lng: 36.7686, phone: "+254 700 000 062", trust: "Listed", hours: "Reception 24 hours", services: ["Rooms from KES 2,800", "Wi-Fi", "Secure parking"], sample: true },
+    { id: "a3", category: "stay", type: "Hostel", name: "Sample Student Hostel", area: "Kasarani", address: "Sample address, Kasarani", lat: -1.2250, lng: 36.8900, phone: "+254 700 000 063", trust: "Listed", hours: "Mon–Sun 6:00–22:00", services: ["Beds from KES 900", "Shared kitchen", "Water included"], sample: true }
   ]
 };
