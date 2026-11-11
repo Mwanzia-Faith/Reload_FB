@@ -181,7 +181,7 @@ label{display:flex;flex-direction:column;gap:.35rem;font-size:.86rem;font-weight
 .tabbar{display:none}
 @media(max-width:760px){
   .tabbar{
-    display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:45;
+    display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:45;
     background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(14px);
     border-top:1px solid var(--line);padding:.35rem .3rem calc(.35rem + env(safe-area-inset-bottom,0px));
   }
@@ -742,3 +742,28 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 .chips.col{flex-direction:column;align-items:stretch;gap:.4rem}
 .chipcheck.wide{width:100%;border-radius:var(--r-sm);padding:.55rem .7rem;align-items:flex-start;line-height:1.35;text-align:left}
 .chipcheck.wide input{margin-top:.16rem;flex:none}
+
+/* ============================================================
+   About — the uniqueness page
+   ============================================================ */
+.aboutband{
+  display:flex;align-items:center;gap:1.5rem;margin-top:.3rem;
+  padding:1.4rem 1.5rem;border-radius:var(--r-xl);
+  background:linear-gradient(135deg,var(--surface),var(--surface-2));
+  border:1px solid var(--line);
+}
+.aboutband img{flex:none;width:96px;height:96px}
+.aboutband p{margin-top:.35rem;max-width:56ch}
+.aboutband .slogan{margin-top:0}
+@media(max-width:620px){
+  .aboutband{flex-direction:column;text-align:center;gap:.9rem;padding:1.3rem 1.1rem}
+  .aboutband .slogan{margin:0 auto}
+}
+/* three across on desktop, so six pillars sit as 3 × 2 rather than 4 + 2 */
+.aboutgrid{margin-top:.2rem;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.aboutgrid .hstep{padding:1.3rem 1.2rem 1.4rem}
+.aboutgrid .hstep h3{font-size:1.05rem}
+@media(max-width:760px){
+  .tabbar a{font-size:.62rem}
+  .tabbar a .ic{width:19px;height:19px}
+}

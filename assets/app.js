@@ -325,7 +325,7 @@
      ROUTING
      ================================================================ */
   var ROUTES = {
-    home: 'view-home', find: 'view-find', cat: 'view-find', trust: 'view-trust',
+    home: 'view-home', find: 'view-find', cat: 'view-find', trust: 'view-trust', about: 'view-about',
     partners: 'view-partners', clinics: 'view-partners',
     faq: 'view-faq', contact: 'view-contact', signin: 'view-signin',
     account: 'view-account', partner: 'view-provider', provider: 'view-provider',
@@ -338,6 +338,7 @@
     home: 'Connect, compare and access what is near you',
     find: 'Find what you need near you',
     trust: 'How the trust levels work',
+    about: 'What makes Front Belt different',
     partners: 'List your business on Front Belt',
     clinics: 'List your business on Front Belt',
     faq: 'Questions and answers',
@@ -356,7 +357,7 @@
     }
     return TITLES[r] || TITLES.home;
   }
-  var NAV_FOR = { home: 'home', find: 'find', cat: 'find', trust: 'trust', partners: 'partners', clinics: 'partners', faq: 'faq', contact: 'contact' };
+  var NAV_FOR = { home: 'home', find: 'find', cat: 'find', trust: 'trust', about: 'about', partners: 'partners', clinics: 'partners', faq: 'faq', contact: 'contact' };
 
   function currentRoute() {
     var h = (location.hash || '').replace(/^#\/?/, '').split('?')[0];

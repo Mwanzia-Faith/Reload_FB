@@ -12,7 +12,7 @@ Jua kabla ya kwenda.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Every view: the home page, the explorer (all categories or one, themed), trust framework, the partners page, FAQ, contact, sign-in, the personal dashboard, the partner console, the team console and team access. |
+| `index.html` | Every view: the home page, the explorer (all categories or one, themed), the About page (what makes Front Belt different), trust framework, the partners page, FAQ, contact, sign-in, the personal dashboard, the partner console, the team console and team access. |
 | `assets/styles.css` | The design system — colours, type, layout, light and dark themes, plus the per-category card layouts. |
 | `assets/data.js` | The category catalogue (ids, icons, colours, types) and the sample listings used when no database is connected. |
 | `assets/store.js` | The data layer. One API, two backends: local demo (`localStorage`) and Firebase (Firestore + Auth). Picks Firebase automatically as soon as `assets/firebase-config.js` holds a real config. |
