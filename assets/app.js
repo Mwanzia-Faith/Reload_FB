@@ -553,10 +553,85 @@
       stat(CATS.length, 'categories') +
       stat(trusted, 'with a checked badge') +
       stat(Object.keys(areas).length, 'Nairobi areas');
+
+    renderRegister();
   }
   function stat(v, label) {
     return '<div class="stat"><b>' + esc(v) + '</b><span>' + esc(label) + '</span></div>';
   }
+
+  /* the homepage register: the directory, as the council registers do it —
+     a plain sortable-looking table, searchable, newest confirmation first */
+  function renderRegister() {
+    var box = $('reg-rows');
+    if (!box) return;
+    var qIn = $('reg-q');
+    var q = (qIn && qIn.value || '').trim().toLowerCase();
+    var list = publicClinics().slice();
+
+    list.forEach(function (c) {
+      c._dist = (meGeo && isFinite(c.lat) && isFinite(c.lng))
+        ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
+    });
+    if (q) {
+      list = list.filter(function (c) {
+        return (c.name + ' ' + (c.area || '') + ' ' + (c.type || '') + ' ' + catOf(c).label)
+          .toLowerCase().indexOf(q) > -1;
+      });
+    }
+    var rank = ['Certified', 'Trusted', 'Verified', 'Listed'];
+    list.sort(function (a, b) {
+      var ra = rank.indexOf(a.trust || 'Listed'), rb = rank.indexOf(b.trust || 'Listed');
+      if (ra !== rb) return ra - rb;
+      if (a._dist != null && b._dist != null && a._dist !== b._dist) return a._dist - b._dist;
+      return String(a.name).localeCompare(String(b.name));
+    });
+
+    /* one from each category first, so the register shows the range of the
+       directory rather than six clinics in a row, then the rest by rank */
+    var LIMIT = 6, rows = [], used = {};
+    list.forEach(function (c) {
+      var k = catOf(c).id;
+      if (!used[k] && rows.length < LIMIT) { used[k] = 1; rows.push(c); }
+    });
+    list.forEach(function (c) {
+      if (rows.length < LIMIT && rows.indexOf(c) < 0) rows.push(c);
+    });
+    if (!rows.length) {
+      box.innerHTML = '<div class="reg-empty">' +
+        (q ? 'Nothing on this page matches that search.'
+           : 'Nothing has been confirmed yet. The register fills as partners are approved — until then, look at the sample listings to see how it works.') +
+        '<div class="row">' +
+        '<button class="btn btn-ghost btn-sm" type="button" data-samples>See sample listings</button>' +
+        '<a class="btn btn-primary btn-sm" href="#/partners">List your business</a>' +
+        '</div></div>';
+      return;
+    }
+
+    box.innerHTML = '<table class="regtbl">' +
+      '<thead><tr>' +
+      '<th>Listing</th><th>Category</th><th>Area</th><th>Distance</th><th>Status</th><th aria-label="Open"></th>' +
+      '</tr></thead><tbody>' +
+      rows.map(function (c) {
+        var k = catOf(c), s = statusOf(c);
+        var status = isHealth(c)
+          ? '<span class="pill ' + esc(s.key) + '"><span class="dot"></span>' + esc(String(s.text).split(' \u00b7 ')[0]) + '</span>'
+          : '<span class="rsub">' + esc(c.hours || 'Hours not given') + '</span>';
+        return '<tr>' +
+          '<td data-l="Listing"><div class="rname">' + esc(c.name) +
+            (c.sample ? ' <span class="rsub">(sample)</span>' : '') + '</div>' +
+            '<div class="rsub">' + esc(c.type || k.label) + '</div></td>' +
+          '<td data-l="Category"><span class="chip" style="background:color-mix(in srgb,' + esc(k.color) + ' 14%,transparent);color:' + esc(k.color) + '">' + esc(k.label) + '</span></td>' +
+          '<td data-l="Area">' + esc(c.area || '\u2014') + '</td>' +
+          '<td data-l="Distance">' + (c._dist != null ? esc(fmtDist(c._dist)) : '<span class="rsub">share location</span>') + '</td>' +
+          '<td data-l="Status">' + status + '</td>' +
+          '<td class="racts"><button class="btn btn-ghost btn-sm" type="button" data-open="' + esc(c.id) + '">Open</button></td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table>';
+  }
+  var regQ = $('reg-q');
+  if (regQ) regQ.addEventListener('input', renderRegister);
 
   /* ================================================================
      FIND
@@ -2417,14 +2492,23 @@
     var b = $('install-btn');
     if (b) b.hidden = false;
   });
-  var installBtn = $('install-btn');
-  if (installBtn) installBtn.addEventListener('click', function () {
+  function doInstall() {
     if (!installEvent) {
       toast('Open your browser menu and choose “Add to Home screen”.');
       return;
     }
     installEvent.prompt();
-    installEvent.userChoice.then(function () { installEvent = null; installBtn.hidden = true; });
+    installEvent.userChoice.then(function () {
+      installEvent = null;
+      var b = $('install-btn');
+      if (b) b.hidden = true;
+    });
+  }
+  var installBtn = $('install-btn');
+  if (installBtn) installBtn.addEventListener('click', doInstall);
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-install]');
+    if (t) { e.preventDefault(); doInstall(); }
   });
 
   /* the button says what will actually happen */

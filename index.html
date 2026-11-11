@@ -81,6 +81,17 @@
   <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.7"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1 5.1-2.1z"/></symbol>
 </svg>
 
+<div class="topbar">
+  <div class="topbar-in">
+    <span class="tb-note"><svg class="ic"><use href="#i-pin"/></svg> Nairobi only · free for everyone</span>
+    <div class="tb-actions">
+      <a href="#/trust"><svg class="ic"><use href="#i-shield"/></svg> How trust works</a>
+      <a href="#/contact"><svg class="ic"><use href="#i-mail"/></svg> Contact us</a>
+      <button class="tb-btn" type="button" data-install><svg class="ic"><use href="#i-download"/></svg> Get the app</button>
+    </div>
+  </div>
+</div>
+
 <header class="hdr">
   <div class="hdr-in">
     <a class="brand" href="#/home" aria-label="Front Belt home">
@@ -101,6 +112,7 @@
       <button class="iconbtn" data-theme-toggle aria-label="Switch light or dark theme" title="Light / dark">
         <svg class="ic"><use href="#i-moon"/></svg>
       </button>
+      <a class="btn btn-cta btn-sm hdr-cta" href="#/find"><svg class="ic"><use href="#i-nav"/></svg><span>Find near me</span></a>
       <a class="btn btn-primary btn-sm" id="account-btn" href="#/signin">
         <svg class="ic"><use href="#i-user"/></svg><span>Sign in</span>
       </a>
@@ -116,42 +128,91 @@
   <!-- ============================== HOME ============================== -->
   <section class="view" id="view-home" hidden>
     <div class="wrap">
-      <div class="hero">
-        <div class="hero-copy">
-          <span class="eyebrow"><svg class="ic"><use href="#i-pin"/></svg> Nairobi · free for everyone · early access</span>
-          <h1>Know before you go.<br><span class="grad-text">Seven categories, one search.</span></h1>
-          <p class="slogan">Connect, Compare &amp; Access</p>
-          <p class="sw">Jua kabla ya kwenda.</p>
-          <p class="lead">Clinics and pharmacies, restaurants, salons, phone shops and M-Pesa agents, bookshops, furniture and places to stay — compared by real distance, with hours, prices, wait times and directions that start where you are standing.</p>
-          <form class="herosearch" id="hero-search" role="search">
-            <label class="srch"><svg class="ic"><use href="#i-search"/></svg>
-              <input class="field" id="hero-q" type="search" placeholder="Pharmacy, kinyozi, lodge, bookshop…" aria-label="What do you need near you?">
-            </label>
-            <button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-nav"/></svg> Find near me</button>
-          </form>
-          <div class="row hero-foot">
-            <a class="btn btn-ghost" href="#/partners"><svg class="ic"><use href="#i-store"/></svg> List my business — free</a>
-            <button class="linkish" type="button" data-samples>Or see the sample listings</button>
-            <span class="tiny">No app to install · works on any phone</span>
+      <div class="hero2">
+        <div class="hero2-in">
+          <div class="hero2-panel">
+            <span class="hero2-tag"><svg class="ic"><use href="#i-pin"/></svg> Nairobi · seven categories · free for everyone</span>
+            <h1>Know before<br>you go.</h1>
+            <p class="hero2-slogan">Connect, Compare &amp; Access</p>
+            <p class="hero2-lead">Clinics, food, beauty, tech &amp; money, books, home and places to stay — compared by real distance, with hours, prices, wait times and directions from where you are standing.</p>
+            <form class="herosearch" id="hero-search" role="search">
+              <label class="srch"><svg class="ic"><use href="#i-search"/></svg>
+                <input class="field" id="hero-q" type="search" placeholder="Pharmacy, salon, lodge…" aria-label="What do you need near you?">
+              </label>
+              <button class="btn btn-cta" type="submit"><svg class="ic"><use href="#i-nav"/></svg> Find near me</button>
+            </form>
+            <div class="hero2-meta">
+              <span class="hero2-sw">Jua kabla ya kwenda.</span>
+              <button class="hero2-link" type="button" data-samples>See the sample listings</button>
+            </div>
           </div>
-        </div>
-        <div class="mock" aria-label="Example of a clinic status card">
-          <small class="mono">EXAMPLE CARD</small>
-          <div class="mock-top"><strong>Sample Family Clinic</strong><span class="badge b-Verified">Verified</span></div>
-          <span class="pill open"><span class="dot"></span>Open today · updated 8:05 am</span>
-          <div class="meta"><span>Wait: about 20 min</span><span>Busyness: moderate</span></div>
-          <div class="bar"><i style="width:55%"></i></div>
-          <small>Clinics update this card each morning. If they stop, we say so.</small>
+
+          <div class="hero2-art" aria-hidden="true">
+            <span class="art-ring"></span>
+            <img class="art-mark" src="assets/logo.svg" alt="">
+            <div class="art-card art-c1">
+              <span class="ac-type">Pharmacy · Kilimani</span>
+              <strong>Sample Health Point</strong>
+              <span class="ac-pill"><span class="dot"></span>Open · about 15 min wait</span>
+            </div>
+            <div class="art-card art-c2">
+              <span class="ac-type">Salon · Westlands</span>
+              <strong>Braids from KES 1,500</strong>
+              <span class="ac-dist"><svg class="ic"><use href="#i-pin"/></svg>1.2 km · 6 min drive</span>
+            </div>
+            <div class="art-dots">
+              <span style="--c:#0E7490"></span><span style="--c:#E8590C"></span><span style="--c:#7C3AED"></span>
+              <span style="--c:#2563EB"></span><span style="--c:#15803D"></span><span style="--c:#B45309"></span><span style="--c:#0891B2"></span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <section class="home-block" aria-labelledby="cat-h">
+      <div class="triple">
+        <a class="tcard" href="#/find">
+          <span class="tcard-ic"><svg class="ic"><use href="#i-crosshair"/></svg></span>
+          <h3>Find what is near me</h3>
+          <p>Share your location once and the closest places come first, with the real distance from where you stand.</p>
+          <span class="tcard-link">Open the explorer <svg class="ic"><use href="#i-arrow"/></svg></span>
+        </a>
+        <a class="tcard" href="#/about">
+          <span class="tcard-ic"><svg class="ic"><use href="#i-scale"/></svg></span>
+          <h3>Compare honestly</h3>
+          <p>Same fields for every listing — hours, prices, services and, for clinics, today&rsquo;s wait. No paid ranking in Health.</p>
+          <span class="tcard-link">Why we are different <svg class="ic"><use href="#i-arrow"/></svg></span>
+        </a>
+        <a class="tcard tcard-dark" href="#/partners">
+          <h3>Own a business?</h3>
+          <p>Add your listing in about three minutes. We review it, then it goes live to everyone searching near you.</p>
+          <span class="tcard-btn">List it free <svg class="ic"><use href="#i-arrow"/></svg></span>
+        </a>
+      </div>
+
+      <section class="home-block band-sky" aria-labelledby="cat-h">
         <div class="block-head">
-          <h2 id="cat-h">What are you looking for today?</h2>
+          <h2 id="cat-h">Seven categories, one search</h2>
           <p>Pick a category, or use the search above. Share your location and the closest ones come first.</p>
         </div>
         <div class="catgrid" id="cat-grid"></div>
         <div class="stats" id="home-stats"></div>
+      </section>
+
+      <section class="home-block" aria-labelledby="reg-h">
+        <div class="reg">
+          <div class="reg-head">
+            <div>
+              <span class="eyebrow"><svg class="ic"><use href="#i-doc"/></svg> The directory</span>
+              <h2 id="reg-h">Listings, as they are confirmed</h2>
+            </div>
+            <div class="reg-tools">
+              <label class="srch"><svg class="ic"><use href="#i-search"/></svg>
+                <input class="field" id="reg-q" type="search" placeholder="Search this list" aria-label="Search the listings on this page">
+              </label>
+              <a class="btn btn-ghost btn-sm" href="#/find">View all</a>
+            </div>
+          </div>
+          <div id="reg-rows"></div>
+        </div>
         <p class="note">We are in early access. Only Health shows today&rsquo;s status and wait time; everything else is found by where it is, how far it is and what it offers. Listings marked <em>Sample</em> are demonstrations placed at the centre of each Nairobi area, so you can see how distance search works.</p>
       </section>
 
@@ -687,10 +748,39 @@
 </main>
 
 <footer class="ftr">
-  <div class="wrap ftr-in">
+  <div class="wrap ftr-top">
+    <div class="ftr-brand">
+      <a class="brand" href="#/home" aria-label="Front Belt home">
+        <img src="assets/logo.svg" width="40" height="40" alt="">
+        <span>Front <span class="grad-text">Belt</span></span>
+      </a>
+      <p>Connect, Compare &amp; Access — a Nairobi-only place finder with seven categories, kept current by the businesses themselves.</p>
+    </div>
+    <nav class="ftr-col" aria-label="Categories">
+      <h4>Find</h4>
+      <a href="#/find">Everything near me</a>
+      <a href="#/c/health">Health</a>
+      <a href="#/c/food">Food</a>
+      <a href="#/c/beauty">Beauty</a>
+      <a href="#/c/stay">Accommodation</a>
+    </nav>
+    <nav class="ftr-col" aria-label="Front Belt">
+      <h4>Front Belt</h4>
+      <a href="#/about">About us</a>
+      <a href="#/trust">Trust levels</a>
+      <a href="#/faq">Questions</a>
+      <a href="#/contact">Contact</a>
+    </nav>
+    <nav class="ftr-col" aria-label="Partners">
+      <h4>For partners</h4>
+      <a href="#/partners">List your business</a>
+      <a href="#/partners#how">How approval works</a>
+      <a href="#/signin" data-signin-role="provider">Partner sign in</a>
+    </nav>
+  </div>
+  <div class="wrap ftr-bottom">
     <span>© Front Belt Technologies · Connect, Compare &amp; Access · Nairobi, Kenya</span>
     <span id="ftr-mode">Early access.</span>
-    <a href="#/contact">Talk to the team</a>
   </div>
 </footer>
 
