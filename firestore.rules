@@ -37,7 +37,7 @@ service cloud.firestore {
     function partnerFieldsOk() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['category', 'type', 'name', 'area', 'address', 'lat', 'lng',
-                  'phone', 'hours', 'services', 'note', 'registrationNo',
+                  'phone', 'hours', 'services', 'pricing', 'note', 'registrationNo',
                   'licenceRef', 'submittedAt', 'reviewState', 'partnerNote',
                   'deniedReason', 'deniedChecks', 'reviewedAt', 'reviewStartedAt',
                   'updatedAt']);

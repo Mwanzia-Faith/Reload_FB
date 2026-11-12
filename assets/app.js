@@ -27,6 +27,8 @@
     pending: 'Received', in_review: 'In review', approved: 'Approved', denied: 'Not approved'
   };
   function reviewState(c) { return (c && c.reviewState) || 'approved'; }
+  /* the paid plan a listing is on; the team sets it, everyone starts on Trial */
+  function planOf(c) { return (c && c.plan) || 'Trial'; }
   function approved(c) { return reviewState(c) === 'approved'; }
   function isAwaiting(c) { var s = reviewState(c); return s === 'pending' || s === 'in_review'; }
 
@@ -258,6 +260,7 @@
     if (c.address) rows += '<dt>Address</dt><dd>' + esc(c.address) + '</dd>';
     if (dist != null) rows += '<dt>From you</dt><dd>' + esc(fmtDist(dist)) + ' away · ' + esc(fmtTravel(dist)) + '</dd>';
     if (c.hours) rows += '<dt>Hours</dt><dd>' + esc(c.hours) + '</dd>';
+    if (c.pricing) rows += '<dt>Typical prices</dt><dd>' + esc(c.pricing) + '</dd>';
     if (c.phone) rows += '<dt>Phone</dt><dd>' + esc(c.phone) + '</dd>';
     if (k.health && (s.key === 'open' || s.key === 'closed' || s.key === 'stale' || s.key === 'unknown')) {
       rows += '<dt>Status</dt><dd>' + esc(s.text) + '</dd>';
@@ -268,6 +271,21 @@
     if (!c.sample && c.source === 'openstreetmap') rows += '<dt>Source</dt><dd>OpenStreetMap contributors</dd>';
     if (c.sample) rows += '<dt>Note</dt><dd>Sample listing — a demonstration, not a real place.</dd>';
 
+    /* the four things you compare, always shown together and labelled, so a
+       listing says the same thing here as it does on the card and in the belt
+       explanation: distance, travel time, cost, wait. */
+    var waitTxt = k.health
+      ? (s.key === 'open' ? (c.waitMinutes ? c.waitMinutes + ' min' : 'not reported')
+        : s.key === 'closed' ? 'closed today'
+        : s.key === 'stale' ? 'status out of date' : 'not reported')
+      : '—';
+    var cmpStrip = '<div class="cmp4">' +
+      '<div><span>Distance</span><strong>' + (dist != null ? esc(fmtDist(dist)) : 'share location') + '</strong></div>' +
+      '<div><span>Travel</span><strong>' + (dist != null ? esc(fmtTravel(dist)) : 'share location') + '</strong></div>' +
+      '<div><span>Cost</span><strong>' + (c.pricing ? esc(c.pricing) : 'not given') + '</strong></div>' +
+      '<div><span>Wait</span><strong>' + esc(waitTxt) + '</strong></div>' +
+      '</div>';
+
     pdMode = 'driving';
     var html =
       '<div class="pd-head" style="--cc:' + esc(k.color) + '">' +
@@ -276,6 +294,7 @@
       '<h3>' + esc(c.name) + '</h3>' +
       (c.trust && c.trust !== 'Listed' ? '<span class="badge b-' + esc(c.trust) + '">' + esc(c.trust) + '</span>' : '') +
       '</span></div>' +
+      cmpStrip +
       '<dl class="pd-kv">' + rows + '</dl>' +
       (isFinite(c.lat) ? '<div id="pd-map" aria-label="Map preview of ' + esc(c.name) + '"></div>' : '') +
       '<div class="modes" id="pd-modes">' +
@@ -674,6 +693,7 @@
       (s.key === 'open' ? '<span>Wait: ' + (c.waitMinutes ? 'about ' + esc(c.waitMinutes) + ' min' : 'not reported') + '</span>' : '') +
       '</div>' +
       (s.key === 'open' && c.busy ? '<div class="bar"><i style="width:' + Math.min(100, Math.max(4, c.busy)) + '%"></i></div>' : '') +
+      (c.pricing ? '<div class="meta"><span class="cost"><svg class="ic"><use href="#i-scale"/></svg>' + esc(c.pricing) + '</span></div>' : '') +
       (c.services && c.services.length ? '<div class="meta"><span>' + esc(c.services.slice(0, 2).join(' · ')) + '</span></div>' : '') +
       '<div class="card-foot">' +
       '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
@@ -725,6 +745,7 @@
       (dist != null ? '<span class="dist">' + esc(fmtDist(dist)) + ' away · ' + esc(fmtTravel(dist)) + '</span>' : '') +
       (c.hours ? '<span>' + esc(c.hours) + '</span>' : '') +
       '</div>' +
+      (c.pricing ? '<div class="meta"><span class="cost"><svg class="ic"><use href="#i-scale"/></svg>' + esc(c.pricing) + '</span></div>' : '') +
       (tags ? '<div class="meta"><span>' + esc(tags) + '</span></div>' : '') +
       '</div>' +
       '<div class="card-foot">' +
@@ -1141,7 +1162,9 @@
       '<label>&nbsp;<button class="btn btn-ghost btn-sm" type="button" id="pf-capture"><svg class="ic"><use href="#i-crosshair"/></svg> Use my current location</button></label>' +
       '</div>' +
       '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also paste them from Google Maps (right-click the spot → copy coordinates).</p>' +
-      svcBlock;
+      svcBlock +
+      '<label>Typical prices<input class="field" id="pf-pricing" value="' + esc(c.pricing || '') + '" placeholder="e.g. Consultation KES 1,000 · Braids from KES 1,500"></label>' +
+      '<p class="hint">This is the cost people compare you on, so write it the way you would say it at the door — &ldquo;from KES 500&rdquo;, &ldquo;KES 1,000&ndash;1,500&rdquo; or &ldquo;free&rdquo;. It appears on your listing and your share card. Change it any time.</p>';
   }
 
   function readClinicForm(root, extra) {
@@ -1162,6 +1185,7 @@
       address: root.querySelector('#pf-address').value.trim(),
       phone: root.querySelector('#pf-phone').value.trim(),
       hours: root.querySelector('#pf-hours').value.trim(),
+      pricing: (root.querySelector('#pf-pricing') || { value: '' }).value.trim(),
       lat: Number(root.querySelector('#pf-lat').value),
       lng: Number(root.querySelector('#pf-lng').value),
       services: services
@@ -1207,6 +1231,157 @@
       }).join('') + '</ol>' +
       '<p class="hint">Reviewed by a person on the Front Belt team, not a script. We aim to answer within ' + esc(DATA.reviewWindow || '2 working days') + '.</p>' +
       '</section>';
+  }
+
+  /* ================================================================
+     THE PARTNER CARD
+     A Premier listing gets a share card drawn from its own record:
+     name, type, area, prices, phone, the category colour. Nothing to
+     design and nothing to upload — open the console, download it.
+     ================================================================ */
+  var cardClinic = null;
+
+  function premierCard(c) {
+    if (planOf(c) !== 'Premier') {
+      return '<section class="prov-card stack cardstudio locked">' +
+        '<h3><svg class="ic"><use href="#i-doc"/></svg> Your share card</h3>' +
+        '<p class="muted small">On <strong>Premier</strong> we build a card from your listing automatically &mdash; your name, prices, phone and area on one image you can post on WhatsApp or Instagram, or print for the door. It redraws itself whenever you change a detail.</p>' +
+        '<div class="row" style="gap:.5rem"><a class="btn btn-ghost btn-sm" href="#/plans">See what Premier adds</a></div>' +
+        '</section>';
+    }
+    cardClinic = c;
+    setTimeout(paintPartnerCard, 0);
+    return '<section class="prov-card stack cardstudio">' +
+      '<h3><svg class="ic"><use href="#i-doc"/></svg> Your Premier card <span class="chip live">Premier</span></h3>' +
+      '<p class="muted small">Made from your listing, so it always matches what people see here. Download it and post it wherever your customers already are.</p>' +
+      '<canvas id="pcard" width="1000" height="620" aria-label="Share card for ' + esc(c.name) + '"></canvas>' +
+      '<div class="row" style="gap:.5rem">' +
+      '<button class="btn btn-primary btn-sm" type="button" id="pcard-dl"><svg class="ic"><use href="#i-download"/></svg> Download the card</button>' +
+      '<a class="btn btn-ghost btn-sm" href="#/plans">Plan &amp; prices</a>' +
+      '</div></section>';
+  }
+
+  function drawPartnerCard(cv, c) {
+    var g = cv.getContext('2d');
+    if (!g) return;
+    var W = cv.width, H = cv.height, k = catOf(c), pad = 48;
+    var grad = g.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#12305A'); grad.addColorStop(.6, '#0F4A76'); grad.addColorStop(1, '#0B6E8A');
+    g.fillStyle = grad; g.fillRect(0, 0, W, H);
+
+    /* rings that echo the pin in the logo */
+    g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = 2;
+    [240, 360, 480].forEach(function (r) { g.beginPath(); g.arc(W - 110, H - 80, r, 0, Math.PI * 2); g.stroke(); });
+    /* the category stripe down the left edge */
+    g.fillStyle = k.color; g.fillRect(0, 0, 12, H);
+
+    g.textBaseline = 'alphabetic';
+    function setFont(px, wt) { g.font = (wt || 700) + ' ' + px + 'px Outfit, "Segoe UI", system-ui, sans-serif'; }
+
+    /* brand */
+    setFont(30, 800); g.fillStyle = '#FFFFFF'; g.fillText('FRONT BELT', pad, 78);
+    setFont(15, 600); g.fillStyle = '#7FD3E4';
+    g.fillText('CONNECT  ·  COMPARE  ·  ACCESS', pad, 104);
+
+    /* the belt: a strap of holes, one of them the one that fits */
+    for (var i = 0; i < 10; i++) {
+      g.beginPath(); g.arc(pad + 6 + i * 18, 132, 3.4, 0, Math.PI * 2);
+      g.fillStyle = i === 7 ? '#7FD3E4' : 'rgba(255,255,255,.32)'; g.fill();
+    }
+
+    /* plan + trust, top right. `top` is the top edge of the pill. */
+    function pill(text, right, top, bg, fg) {
+      setFont(14, 800);
+      var label = String(text).toUpperCase();
+      var w = g.measureText(label).width + 32, h = 32, r = 16, x = right - w;
+      g.fillStyle = bg;
+      g.beginPath();
+      if (g.roundRect) { g.roundRect(x, top, w, h, r); } else { g.rect(x, top, w, h); }
+      g.fill();
+      g.fillStyle = fg;
+      g.textBaseline = 'middle';
+      g.fillText(label, x + 16, top + h / 2 + 1);
+      g.textBaseline = 'alphabetic';
+      return w;
+    }
+    var right = W - pad;
+    var pw = pill('Premier', right, 40, '#7FD3E4', '#0C2346');
+    if (c.trust && c.trust !== 'Listed') {
+      pill(c.trust, right - pw - 12, 40, 'rgba(255,255,255,.18)', '#FFFFFF');
+    }
+
+    /* wraps text to a set width, up to maxLines, and returns how many it used */
+    function block(text, x, y, maxW, lineH, maxLines) {
+      var words = String(text).split(/\s+/), line = '', lines = [];
+      words.forEach(function (w) {
+        var t = line ? line + ' ' + w : w;
+        if (g.measureText(t).width > maxW && line) { lines.push(line); line = w; } else { line = t; }
+      });
+      if (line) lines.push(line);
+      lines = lines.slice(0, maxLines || 2);
+      lines.forEach(function (l, i) { g.fillText(l, x, y + i * lineH); });
+      return lines.length;
+    }
+
+    /* the business */
+    var maxW = W - pad * 2 - 40;
+    setFont(56, 800); g.fillStyle = '#FFFFFF';
+    var used = block(c.name || 'Your business', pad, 244, maxW, 62, 2);
+    var y = 244 + (used - 1) * 62;
+
+    setFont(22, 600); g.fillStyle = '#C6D9EA';
+    var sub = [c.type || k.label, c.area].filter(Boolean).join('  ·  ');
+    g.fillText(sub, pad, y + 44);
+
+    /* divider */
+    g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(pad, y + 76); g.lineTo(pad + maxW, y + 76); g.stroke();
+
+    /* cost and hours — the two things people ask at the door */
+    var cmpY = y + 112, half = pad + maxW * 0.52;
+    setFont(12, 800); g.fillStyle = 'rgba(255,255,255,.55)';
+    g.fillText('COST', pad, cmpY);
+    setFont(21, 700); g.fillStyle = '#FFFFFF';
+    block(c.pricing || 'Ask us', pad, cmpY + 30, maxW * 0.46, 26, 2);
+
+    setFont(12, 800); g.fillStyle = 'rgba(255,255,255,.55)';
+    g.fillText('HOURS', half, cmpY);
+    setFont(21, 700); g.fillStyle = '#FFFFFF';
+    block(c.hours || 'Ask us', half, cmpY + 30, maxW * 0.44, 26, 2);
+
+    /* the promise, above the footer */
+    setFont(22, 700); g.fillStyle = '#7FD3E4';
+    g.fillText('Know before you go.', pad, H - 92);
+
+    /* footer */
+    setFont(16, 600); g.fillStyle = 'rgba(255,255,255,.62)';
+    g.fillText('Find us on Front Belt · Kenya', pad, H - 32);
+    setFont(18, 800); g.fillStyle = '#FFFFFF';
+    var phone = c.phone || '';
+    if (phone) { var pw = g.measureText(phone).width; g.fillText(phone, right - pw, H - 32); }
+  }
+
+  function paintPartnerCard() {
+    var cv = $('pcard'), c = cardClinic;
+    if (!cv || !c) return;
+    drawPartnerCard(cv, c);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () { drawPartnerCard(cv, c); });
+    }
+    var btn = $('pcard-dl');
+    if (btn) btn.addEventListener('click', function () {
+      if (!cv.toBlob) return toast('This browser cannot make the image. Try on a computer.');
+      cv.toBlob(function (blob) {
+        if (!blob) return toast('Could not make the image. Try again.');
+        var slug = String(c.name || 'card').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'front-belt-' + slug + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+        toast('Card downloaded.');
+      }, 'image/png');
+    });
   }
 
   /* the free month and the plan, in the partner's own console */
@@ -1347,7 +1522,7 @@
       ? '<div class="stat"><b>' + (c.lastStatusAt ? esc(ago(c.lastStatusAt)) : 'No update yet') + '</b><span>Last update</span></div>'
       : '<div class="stat"><b>' + esc(c.hours || 'Not set') + '</b><span>Opening hours</span></div>';
 
-    body.innerHTML = trackerHTML(c) + planCard(c) +
+    body.innerHTML = trackerHTML(c) + planCard(c) + premierCard(c) +
       '<div class="statrow" style="margin-top:1rem">' +
       '<div class="stat"><b>' + esc(c.trust || 'Listed') + '</b><span>Trust level</span></div>' +
       statusStat +
@@ -1728,7 +1903,7 @@
 
     $('admin-table').innerHTML = rows.length
       ? '<div class="tablewrap"><table class="tbl"><thead><tr>' +
-      '<th>Listing</th><th>Trust</th><th>Status / type</th><th>Update / hours</th><th>Listing state</th><th></th>' +
+      '<th>Listing</th><th>Trust</th><th>Status / type</th><th>Update / hours</th><th>State / plan</th><th></th>' +
       '</tr></thead><tbody>' + rows.map(adminRow).join('') + '</tbody></table></div>' +
       '<p class="hint" style="margin-top:.6rem">' + rows.length + ' of ' + all.length + ' listings shown. Trust changes reach the public site immediately.</p>'
       : '<div class="empty">No listings match that filter.</div>';
@@ -1755,7 +1930,12 @@
       DATA.levels.map(function (l) { return '<option' + (l === (c.trust || 'Listed') ? ' selected' : '') + '>' + l + '</option>'; }).join('') +
       '</select></td>' +
       statusCell +
-      '<td data-l="Listing"><span class="chip ' + (c.published ? 'live' : 'warn') + '">' + (c.published ? 'Live' : 'Hidden') + '</span></td>' +
+      '<td data-l="State / plan"><span class="chip ' + (c.published ? 'live' : 'warn') + '">' + (c.published ? 'Live' : 'Hidden') + '</span>' +
+      '<select data-plan="' + esc(c.id) + '" aria-label="Plan for ' + esc(c.name) + '" style="margin-top:.4rem;display:block">' +
+      ['Trial', 'Basic', 'Premier'].map(function (pl) {
+        return '<option' + (pl === planOf(c) ? ' selected' : '') + '>' + pl + '</option>';
+      }).join('') +
+      '</select></td>' +
       '<td class="acts-cell"><div class="acts">' +
       statusBtn +
       '<button class="iconbtn" type="button" data-edit="' + esc(c.id) + '" title="Edit listing" aria-label="Edit listing"><svg class="ic"><use href="#i-edit"/></svg></button>' +
@@ -2041,6 +2221,17 @@
   FB.onRequests(function (reqs) {
     lastReqs = reqs || [];
     paintRequests();
+  });
+
+  /* the plan dropdown fires change, not click */
+  document.addEventListener('change', function (e) {
+    var sel = e.target.closest('[data-plan]');
+    if (!sel) return;
+    var id = sel.getAttribute('data-plan'), plan = sel.value;
+    FB.setPlan(id, plan).then(function () {
+      toast(plan === 'Premier' ? 'Premier set — its share card is ready.' : 'Plan set to ' + plan + '.');
+      renderAdmin();
+    }).catch(function (err) { toast(err.message); });
   });
 
   /* admin actions */

@@ -1057,3 +1057,21 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 .origin-line a{color:var(--pink);font-weight:700;text-decoration:none;white-space:nowrap}
 .origin-line a:hover{text-decoration:underline}
 @media(max-width:620px){.origin{padding:1.3rem 1.15rem;border-radius:20px}}
+
+/* ---------- the four numbers you compare, stated on every listing ---------- */
+.cmp4{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.2rem 0 1rem}
+@media(max-width:560px){.cmp4{grid-template-columns:1fr 1fr}}
+.cmp4 > div{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:.55rem .62rem;min-width:0}
+.cmp4 span{display:block;font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.cmp4 strong{display:block;font-family:var(--display);font-size:.92rem;letter-spacing:-.01em;margin-top:.15rem;overflow-wrap:anywhere}
+
+/* the price a partner sets, shown on their card */
+.card .meta .cost{
+  display:inline-flex;align-items:center;gap:.3rem;background:var(--soft);color:var(--pink);
+  border-radius:999px;padding:.14rem .55rem;font-weight:700;
+}
+.card .meta .cost .ic{width:14px;height:14px}
+
+/* the Premier share card in the partner console */
+.cardstudio canvas{width:100%;max-width:520px;border-radius:16px;display:block;background:#12305A;box-shadow:var(--sh-2)}
+.cardstudio .chip.live{margin-left:.4rem}

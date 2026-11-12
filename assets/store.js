@@ -363,6 +363,7 @@
         phone: String(data.phone || '').trim(),
         hours: String(data.hours || '').trim(),
         services: Array.isArray(data.services) ? data.services : [],
+        pricing: String(data.pricing || '').trim(),
         note: String(data.note || '').trim(),
         registrationNo: String(data.registrationNo || '').trim(),
         licenceRef: String(data.licenceRef || '').trim()
@@ -433,6 +434,12 @@
 
     setPublished: function (id, val) {
       return setField(id, { published: !!val });
+    },
+
+    /* the partner's plan: Trial, Basic or Premier. A team action — a partner
+       can never set this on their own record (see firestore.rules). */
+    setPlan: function (id, plan) {
+      return setField(id, { plan: String(plan || 'Trial'), planUpdatedAt: new Date().toISOString() });
     },
 
     /* the review queue — team actions.
