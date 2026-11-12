@@ -144,6 +144,15 @@
     }
     return km < 10 ? km.toFixed(1) + ' km' : Math.round(km) + ' km';
   }
+  /* A rough drive time from the straight-line distance. Nairobi traffic
+     averages about 20 km/h, so 3 km is roughly 9 minutes. Always shown with
+     a ≈ and never described as live traffic — it is a guide, not a promise. */
+  function fmtTravel(km) {
+    if (km == null || !isFinite(km) || km < 0) return '';
+    var mins = Math.max(3, Math.round(km / 20 * 60));
+    if (mins >= 95) return '≈ ' + Math.round(mins / 60) + ' hr drive';
+    return '≈ ' + mins + ' min drive';
+  }
   function firstName(s) {
     s = String(s || '').trim();
     if (!s) return 'You';
@@ -247,7 +256,7 @@
     if (c.type) rows += '<dt>Type</dt><dd>' + esc(c.type) + '</dd>';
     if (c.area) rows += '<dt>Area</dt><dd>' + esc(c.area) + '</dd>';
     if (c.address) rows += '<dt>Address</dt><dd>' + esc(c.address) + '</dd>';
-    if (dist != null) rows += '<dt>From you</dt><dd>' + esc(fmtDist(dist)) + ' away</dd>';
+    if (dist != null) rows += '<dt>From you</dt><dd>' + esc(fmtDist(dist)) + ' away · ' + esc(fmtTravel(dist)) + '</dd>';
     if (c.hours) rows += '<dt>Hours</dt><dd>' + esc(c.hours) + '</dd>';
     if (c.phone) rows += '<dt>Phone</dt><dd>' + esc(c.phone) + '</dd>';
     if (k.health && (s.key === 'open' || s.key === 'closed' || s.key === 'stale' || s.key === 'unknown')) {
@@ -624,7 +633,9 @@
             '<div class="rsub">' + esc(c.type || k.label) + '</div></td>' +
           '<td data-l="Category"><span class="chip" style="background:color-mix(in srgb,' + esc(k.color) + ' 14%,transparent);color:' + esc(k.color) + '">' + esc(k.label) + '</span></td>' +
           '<td data-l="Area">' + esc(c.area || '\u2014') + '</td>' +
-          '<td data-l="Distance">' + (c._dist != null ? esc(fmtDist(c._dist)) : '<span class="rsub">share location</span>') + '</td>' +
+          '<td data-l="Distance">' + (c._dist != null
+            ? esc(fmtDist(c._dist)) + ' <span class="rsub">' + esc(fmtTravel(c._dist)) + '</span>'
+            : '<span class="rsub">share location</span>') + '</td>' +
           '<td data-l="Status">' + status + '</td>' +
           '<td class="racts"><button class="btn btn-ghost btn-sm" type="button" data-open="' + esc(c.id) + '">Open</button></td>' +
           '</tr>';
@@ -659,7 +670,7 @@
       '<span class="pill ' + s.key + '"><span class="dot"></span>' + esc(s.text) + '</span>' +
       '<div class="meta">' +
       '<span>' + esc(c.area) + '</span>' +
-      (dist != null ? '<span class="dist">' + esc(fmtDist(dist)) + ' away</span>' : '') +
+      (dist != null ? '<span class="dist">' + esc(fmtDist(dist)) + ' away · ' + esc(fmtTravel(dist)) + '</span>' : '') +
       (s.key === 'open' ? '<span>Wait: ' + (c.waitMinutes ? 'about ' + esc(c.waitMinutes) + ' min' : 'not reported') + '</span>' : '') +
       '</div>' +
       (s.key === 'open' && c.busy ? '<div class="bar"><i style="width:' + Math.min(100, Math.max(4, c.busy)) + '%"></i></div>' : '') +
@@ -711,7 +722,7 @@
       '<div class="pbody">' +
       '<div class="meta">' +
       '<span>' + esc(c.area) + '</span>' +
-      (dist != null ? '<span class="dist">' + esc(fmtDist(dist)) + ' away</span>' : '') +
+      (dist != null ? '<span class="dist">' + esc(fmtDist(dist)) + ' away · ' + esc(fmtTravel(dist)) + '</span>' : '') +
       (c.hours ? '<span>' + esc(c.hours) + '</span>' : '') +
       '</div>' +
       (tags ? '<div class="meta"><span>' + esc(tags) + '</span></div>' : '') +
