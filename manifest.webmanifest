@@ -1,7 +1,7 @@
 {
-  "name": "Front Belt · Connect, compare and access what is near you in Nairobi",
+  "name": "Front Belt",
   "short_name": "Front Belt",
-  "description": "Clinics, food, beauty, tech and money, books, home and accommodation — compared by distance, with prices, hours, wait times and directions from where you are standing.",
+  "description": "A real-time service intelligence platform for Kenya: which providers are open today, how busy they are, how far they are, and how much Front Belt has checked.",
   "start_url": "./#/home",
   "scope": "./",
   "display": "standalone",

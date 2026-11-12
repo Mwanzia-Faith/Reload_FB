@@ -37,15 +37,20 @@ Optional early income that does not distort the directory:
 | **Done-for-you setup** | KES 1,000 once | You photograph the shop, pin the door, enter hours and services. A *service* fee, not a badge fee. |
 | **Sponsored category slot** | KES 500 / week | One clearly-labelled "Sponsored" card at the top of a category in one area. Capped at one per category. |
 
-### Phase 2 — from ~300 verified partners: partner subscriptions
+### Phase 2 — partner subscriptions: one free month, then Basic or Premier
 
-| Tier | Price / month | What it includes |
-| --- | --- | --- |
-| **Free** | 0 | Listing, hours, phone, WhatsApp, directions, one photo. Always free. |
-| **Growth** | KES 1,500 | 6 photos, price list / menu, offer of the month, priority within the category *below* verified partners, monthly insights (views, calls, direction taps). |
-| **Pro** | KES 4,500 | Everything in Growth + featured in its area, WhatsApp click-to-chat attribution, "reply within X" response badge, quarterly performance review. |
+Every approved listing gets **one month free**, counted from the approval date. Before it ends we remind the partner; after it, a listing with no plan is **hidden from search** (data kept, never deleted). If they are not subscribing at all, *Not interested* in the console tells the team to close the account properly.
 
-Why these prices: they sit under a week of boosted Instagram posts, and a single extra customer a month covers them for a salon or pharmacy. Priced in KES, charged by M-PESA, cancellable any month.
+| Plan | 6 months | 1 year | What it includes |
+| --- | --- | --- | --- |
+| **Basic** | KES 3,000 (≈US$35) | KES 6,000 (≈US$70) | Exact pin, phone, WhatsApp, directions, hours, up to 3 photos, daily status for clinics, earned trust badge, monthly views / calls / direction-tap summary. Reviewed within 2 working days. |
+| **Premier** | KES 3,500 (≈US$41) | KES 7,000 (≈US$82) | Everything in Basic plus 15 photos, full menu or price list, "offer of the month" card, up to 3 branches, 1-working-day review, full insights with a quarterly call, priority WhatsApp support. |
+
+The 12-month price is two six-month periods on one invoice — no discount, so do not advertise one. Charge in KES (M-PESA prompt or paybill) and invoice in USD for partners paying from outside Kenya.
+
+Why these prices: they sit under a week of boosted Instagram posts, and a single extra customer a month covers them for a salon or pharmacy. Priced in KES, charged by M-PESA, cancellable when the term ends.
+
+**What a paid plan never buys:** a trust badge, a better position in Health results, or a review outcome. Premier sells content and service (photos, menu, offer card, branches, faster review, insights), not rank.
 
 ### Phase 3 — transaction income (only where Front Belt owns the transaction)
 

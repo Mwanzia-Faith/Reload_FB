@@ -326,7 +326,7 @@
      ================================================================ */
   var ROUTES = {
     home: 'view-home', find: 'view-find', cat: 'view-find', trust: 'view-trust', about: 'view-about',
-    partners: 'view-partners', clinics: 'view-partners',
+    partners: 'view-partners', plans: 'view-plans', clinics: 'view-partners',
     faq: 'view-faq', contact: 'view-contact', signin: 'view-signin',
     account: 'view-account', partner: 'view-provider', provider: 'view-provider',
     team: 'view-team', admin: 'view-admin'
@@ -340,6 +340,7 @@
     trust: 'How the trust levels work',
     about: 'What makes Front Belt different',
     partners: 'List your business on Front Belt',
+    plans: 'Plans, prices and the free month',
     clinics: 'List your business on Front Belt',
     faq: 'Questions and answers',
     contact: 'Talk to the team',
@@ -357,7 +358,7 @@
     }
     return TITLES[r] || TITLES.home;
   }
-  var NAV_FOR = { home: 'home', find: 'find', cat: 'find', trust: 'trust', about: 'about', partners: 'partners', clinics: 'partners', faq: 'faq', contact: 'contact' };
+  var NAV_FOR = { home: 'home', find: 'find', cat: 'find', trust: 'trust', about: 'about', partners: 'partners', plans: 'partners', clinics: 'partners', faq: 'faq', contact: 'contact' };
 
   function currentRoute() {
     var h = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
@@ -552,7 +553,7 @@
       stat(list.length, 'places listed') +
       stat(CATS.length, 'categories') +
       stat(trusted, 'with a checked badge') +
-      stat(Object.keys(areas).length, 'Nairobi areas');
+      stat(Object.keys(areas).length, 'areas covered');
 
     renderRegister();
   }
@@ -1197,6 +1198,32 @@
       '</section>';
   }
 
+  /* the free month and the plan, in the partner's own console */
+  function planCard(c) {
+    var start = c.reviewedAt || c.submittedAt;
+    var began = start ? new Date(start).getTime() : NaN;
+    var ends = isFinite(began) ? began + 30 * 864e5 : null;
+    var left = ends ? Math.ceil((ends - Date.now()) / 864e5) : null;
+    var when = ends ? new Date(ends).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    var line, cls = '';
+    if (left == null) {
+      line = 'Your free month starts the day this listing is approved.';
+    } else if (left > 0) {
+      line = 'Free month: ' + left + ' day' + (left === 1 ? '' : 's') + ' left, until ' + when + '.';
+      if (left <= 7) cls = ' due';
+    } else {
+      line = 'The free month ended on ' + when + '. Choose a plan to keep this listing visible in search.';
+      cls = ' due';
+    }
+    return '<section class="prov-card stack plancard' + cls + '">' +
+      '<h3><svg class="ic"><use href="#i-chart"/></svg> Plan &amp; free trial</h3>' +
+      '<p class="muted small">' + esc(line) + '</p>' +
+      '<div class="row" style="gap:.5rem">' +
+      '<a class="btn btn-primary btn-sm" href="#/plans"><svg class="ic"><use href="#i-doc"/></svg> Plans &amp; prices</a>' +
+      '<a class="btn btn-ghost btn-sm" href="#/contact">Not interested</a>' +
+      '</div></section>';
+  }
+
   function waitingPanel(c) {
     return '<div class="panel" style="margin-top:1rem">' +
       '<h3><svg class="ic"><use href="#i-clock"/></svg> While you wait</h3>' +
@@ -1309,7 +1336,7 @@
       ? '<div class="stat"><b>' + (c.lastStatusAt ? esc(ago(c.lastStatusAt)) : 'No update yet') + '</b><span>Last update</span></div>'
       : '<div class="stat"><b>' + esc(c.hours || 'Not set') + '</b><span>Opening hours</span></div>';
 
-    body.innerHTML = trackerHTML(c) +
+    body.innerHTML = trackerHTML(c) + planCard(c) +
       '<div class="statrow" style="margin-top:1rem">' +
       '<div class="stat"><b>' + esc(c.trust || 'Listed') + '</b><span>Trust level</span></div>' +
       statusStat +
@@ -2510,6 +2537,32 @@
     var t = e.target.closest('[data-install]');
     if (t) { e.preventDefault(); doInstall(); }
   });
+
+  /* ================================================================
+     WHERE THE MONEY LANDS
+     Fill these five values once and every page, invoice and reminder
+     quotes Front Belt's own account — never an individual's number.
+     ================================================================ */
+  var PAY = {
+    paybill: '',      /* e.g. '4103529' */
+    till: '',         /* Buy Goods till, if used instead of a paybill */
+    payee: '',        /* the name on the account, e.g. 'Front Belt Technologies' */
+    bankName: '',     /* e.g. 'Equity Bank' */
+    bankAcc: ''       /* the account number to pay into */
+  };
+  function paintPayLines() {
+    var box = $('pay-lines');
+    if (!box) return;
+    var rows = [];
+    if (PAY.paybill) rows.push('M-PESA Paybill <b>' + esc(PAY.paybill) + '</b>' + (PAY.payee ? ' · ' + esc(PAY.payee) : ''));
+    if (PAY.till) rows.push('Buy Goods Till <b>' + esc(PAY.till) + '</b>');
+    if (PAY.bankName && PAY.bankAcc) rows.push(esc(PAY.bankName) + ' <b>' + esc(PAY.bankAcc) + '</b>' + (PAY.payee ? ' · ' + esc(PAY.payee) : ''));
+    box.innerHTML = rows.length
+      ? '<p class="hint">Where the money goes:</p><ul class="ticks">' +
+        rows.map(function (r) { return '<li>' + r + '</li>'; }).join('') + '</ul>'
+      : '<p class="hint">The paybill and bank account are printed on every invoice and reminder, and your console shows them when a payment is due. Ask the team if you need them sooner.</p>';
+  }
+  paintPayLines();
 
   /* the button says what will actually happen */
   function paintContactButton() {
