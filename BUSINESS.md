@@ -44,9 +44,12 @@ Every approved listing gets **one month free**, counted from the approval date. 
 | Plan | 6 months | 1 year | What it includes |
 | --- | --- | --- | --- |
 | **Basic** | KES 3,000 (≈US$35) | KES 6,000 (≈US$70) | Exact pin, phone, WhatsApp, directions, hours, up to 3 photos, daily status for clinics, earned trust badge, monthly views / calls / direction-tap summary. Reviewed within 2 working days. |
-| **Premier** | KES 3,500 (≈US$41) | KES 7,000 (≈US$82) | Everything in Basic plus 15 photos, full menu or price list, "offer of the month" card, up to 3 branches, 1-working-day review, full insights with a quarterly call, priority WhatsApp support. |
+| **Premier** | KES 3,500 (≈US$41) | KES 7,000 (≈US$82) | Everything in Basic plus 15 photos, full menu or price list, "offer of the month" card, up to 3 branches, 1-working-day review, full insights with a quarterly call, priority WhatsApp support, and the option to add a website link. |
+| **Website link add-on** | — | KES 1,000 (≈US$12) | Premier only: a labelled "Website" button on the listing that opens the partner's own site in a new tab. Billed with the plan, per year, cancellable at renewal. Basic listings cannot add one. *(Price to confirm — placeholder in the code.)*
 
-The 12-month price is two six-month periods on one invoice — no discount, so do not advertise one. Charge in KES (M-PESA prompt or paybill) and invoice in USD for partners paying from outside Kenya.
+The 12-month price is two six-month periods on one invoice — no discount, so do not advertise one.
+
+**The daily nudge:** a partner opening the console with no status for today is asked once, with "Open now" / "Closed today" that save in one tap; they can set a reminder time and allow a phone notification. A true background push (app closed) needs a scheduled Cloud Function with FCM — not built yet. Charge in KES (M-PESA prompt or paybill) and invoice in USD for partners paying from outside Kenya.
 
 Why these prices: they sit under a week of boosted Instagram posts, and a single extra customer a month covers them for a salon or pharmacy. Priced in KES, charged by M-PESA, cancellable when the term ends.
 

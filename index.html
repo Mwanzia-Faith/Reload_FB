@@ -56,6 +56,7 @@
   <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7 20v-6M12 20V7M17 20v-9"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 5h4.5A1.5 1.5 0 0 1 20 6.5v11a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8.5 6.5 12l3.5 3.5"/><path d="M6.8 12H15"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.5V12l3.2 2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 2.2H4.4L6 16.5z"/><path d="M9.8 21.4a2.4 2.4 0 0 0 4.4 0"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.4 3.6h3l1.5 4-2 1.6a11.4 11.4 0 0 0 5.9 5.9l1.6-2 4 1.5v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.4 5.8a2 2 0 0 1 2-2.2z"/></symbol>
   <symbol id="i-crosshair" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.4"/><path d="M12 2.5v3.6M12 17.9v3.6M2.5 12h3.6M17.9 12h3.6"/><circle cx="12" cy="12" r="1.6"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13"/><path d="m13 7 5 5-5 5"/></symbol>
@@ -309,7 +310,7 @@
         <div class="appband">
           <div>
             <h3><svg class="ic"><use href="#i-download"/></svg> Keep Front Belt one tap away</h3>
-            <p class="muted small">Install it on your phone&rsquo;s home screen: it opens like an app, uses very little data, and works on any Android or iPhone. Native apps for Android, iPhone and Windows come next.</p>
+            <p class="muted small">Install it on your phone&rsquo;s home screen: it opens like an app, uses very little data, and runs in the browser on <strong>Android and iOS</strong>. Native apps for Android and iOS come next, then Windows and macOS.</p>
           </div>
           <button class="btn btn-ghost" type="button" id="install-btn" hidden><svg class="ic"><use href="#i-download"/></svg> Install the app</button>
         </div>
@@ -374,29 +375,30 @@
       <div class="viewhead">
         <span class="eyebrow"><svg class="ic"><use href="#i-shield"/></svg> Trust Intelligence Framework</span>
         <h1>Four levels, each earned</h1>
-        <p class="lead">Every clinic starts at Listed and moves up as we review more. Badges describe the documents and behaviour we checked. They do not rate the quality of medical care.</p>
+        <p class="lead">Every business on Front Belt &mdash; clinic, salon, bakery, phone shop, bookshop, hardware store, lodge &mdash; starts at Listed and moves up as we review more. A badge describes what we checked, in the way that category allows. It is not a rating of how good the business is.</p>
       </div>
 
       <div class="tiers">
         <div class="tier"><span class="lvl">Level 1</span><h3>Listed</h3><ul><li>Name, area and contact details collected</li><li>Not yet reviewed by us</li></ul></div>
-        <div class="tier"><span class="lvl">Level 2</span><h3>Verified</h3><ul><li>Registration and licence documents reviewed</li><li>Location and phone confirmed</li></ul></div>
-        <div class="tier hot"><span class="lvl">Level 3</span><h3>Trusted</h3><ul><li>Verified, plus daily updates kept up over time</li><li>Patient feedback reviewed</li></ul></div>
+        <div class="tier"><span class="lvl">Level 2</span><h3>Verified</h3><ul><li>Location, phone and hours confirmed</li><li>Where the category has one: registration and licence documents reviewed</li></ul></div>
+        <div class="tier hot"><span class="lvl">Level 3</span><h3>Trusted</h3><ul><li>Verified, plus the listing kept current over time</li><li>For Health only: daily status kept up. Feedback reviewed</li></ul></div>
         <div class="tier"><span class="lvl">Level 4</span><h3>Certified</h3><ul><li>Planned for later</li><li>Needs a partner, such as a professional body</li></ul></div>
       </div>
 
-      <h2>How a clinic moves up</h2>
+      <h2>How a business moves up</h2>
       <div class="steps">
-        <div class="step"><span class="stepn">1</span><h3>The clinic applies</h3><p>From its console, a clinic submits its registration number and licence reference for the level it wants.</p></div>
-        <div class="step"><span class="stepn">2</span><h3>We review</h3><p>A person on the Front Belt team checks the documents against the registration and licence records.</p></div>
+        <div class="step"><span class="stepn">1</span><h3>The business applies</h3><p>From its console, the partner asks for the level it wants. Health businesses attach their registration number and licence reference; every other category is checked on the pin, the phone number and the hours.</p></div>
+        <div class="step"><span class="stepn">2</span><h3>We review</h3><p>A person on the Front Belt team checks what that category can be checked on &mdash; documents where they exist, and the listing itself where they do not.</p></div>
         <div class="step"><span class="stepn">3</span><h3>The badge changes</h3><p>When the team sets the new level, the badge on the public site updates within seconds — no redeploy, no waiting.</p></div>
         <div class="step"><span class="stepn">4</span><h3>It can also come down</h3><p>If a licence lapses or updates stop, the level drops and the listing says why.</p></div>
       </div>
 
       <div class="two">
-        <div class="panel"><h3><svg class="ic"><use href="#i-clock"/></svg> If a clinic stops updating</h3>
-          <ul><li><b>1 missed day:</b> shows “Not updated today”</li><li><b>3 missed days:</b> shows “Status unknown” and drops in search</li><li><b>7 missed days:</b> hidden until the clinic updates</li></ul></div>
+        <div class="panel"><h3><svg class="ic"><use href="#i-clock"/></svg> If a Health listing stops updating</h3>
+          <ul><li><b>1 missed day:</b> shows “Not updated today”</li><li><b>3 missed days:</b> shows “Status unknown” and drops in search</li><li><b>7 missed days:</b> hidden until the clinic updates</li></ul>
+          <p class="hint">Health is the only category with a daily status, because a clinic’s wait changes by the hour. A salon, bakery or bookshop is judged on its hours and its prices, so there is nothing to miss.</p></div>
         <div class="panel"><h3><svg class="ic"><use href="#i-warn"/></svg> What we will not do</h3>
-          <ul><li>Sell trust badges</li><li>Show invented reviews or ratings</li><li>Claim a clinic is safe or high quality</li></ul></div>
+          <ul><li>Sell trust badges</li><li>Show invented reviews or ratings</li><li>Claim a business is safe, skilled or high quality</li></ul></div>
       </div>
     </div>
   </section>
@@ -420,7 +422,7 @@
 
       <div class="two">
         <div class="panel"><h3>Your listing gives</h3>
-          <ul><li>Name, category, area and opening hours</li><li>Your exact pin, so people nearby find you — not the estate centre</li><li>Phone, WhatsApp and directions straight to your door</li><li>Registration and licence references for review (health businesses)</li><li>For clinics: a quick status update each morning, from your phone</li></ul></div>
+          <ul><li>Name, category, area and opening hours</li><li>Your exact pin, so people nearby find you — not the estate centre</li><li>Phone, WhatsApp and directions straight to your door</li><li>Registration and licence references for review (health businesses)</li><li>For clinics: a quick status update each morning, from your phone</li><li>On Premier only: a link to your own website (paid add-on)</li></ul></div>
         <div class="panel"><h3>Your listing gets</h3>
           <ul><li>A listing in a Kenya-wide directory</li><li>A trust badge based on what we actually checked</li><li>A place in search when someone is near you and ready to buy</li><li>A console to change anything, any day</li><li>A say in how the product is built</li></ul></div>
       </div>
@@ -505,6 +507,7 @@
           </div>
           <ul class="ticks plan-feats">
             <li>Everything in Basic</li>
+            <li>A link to your own website &mdash; add-on, Ksh 1,000 a year</li>
             <li>Up to 15 photos and a full menu or price list</li>
             <li>An &ldquo;offer of the month&rdquo; card on your listing</li>
             <li>Up to 3 branches under one account</li>
@@ -523,6 +526,7 @@
           <tbody>
             <tr><td>Photos on your listing</td><td>3</td><td><strong>15</strong></td></tr>
             <tr><td>Menu, price list or service list</td><td>One line</td><td><strong>Full list</strong></td></tr>
+            <tr><td>Link to your own website</td><td class="no">Not available</td><td class="yes">Add-on &middot; Ksh 1,000 a year</td></tr>
             <tr><td>&ldquo;Offer of the month&rdquo; card</td><td class="no">&mdash;</td><td class="yes">Included</td></tr>
             <tr><td>Branches on one account</td><td>1</td><td><strong>Up to 3</strong></td></tr>
             <tr><td>Time to review a change</td><td>2 working days</td><td><strong>1 working day</strong></td></tr>
@@ -589,7 +593,7 @@
         <img src="assets/logo.svg" width="96" height="96" alt="The Front Belt mark">
         <div>
           <p class="slogan">Connect, Compare &amp; Access</p>
-          <p class="muted small">Each wedge in the mark is one category. The belt is the reason for the method: connect both ends, compare which fits, then lock it.</p>
+          <p class="muted small">An F inside a buckle frame, with the middle bar as the prong pushing through. Monogram and metaphor in one: <strong>F</strong> for Front, the frame is the buckle, and the prong is the piece that holds a belt closed &mdash; the same idea as the name.</p>
         </div>
       </div>
 
@@ -669,7 +673,7 @@
         <div class="panel">
           <h3><svg class="ic"><use href="#i-users"/></svg> Who we are</h3>
           <p class="muted small">Front Belt Technologies is building this in the open, from Nairobi. The directory is in early access: listings are added and reviewed one at a time, county by county, and every consumer uses it free.</p>
-          <p class="muted small" style="margin-top:.6rem">Next: a maintained base of partners in a few areas, then native apps for Android, iPhone and Windows — the web app already installs to a phone home screen today.</p>
+          <p class="muted small" style="margin-top:.6rem">Next: a maintained base of partners in a few areas, then native apps for <strong>Android and iOS</strong>, then Windows and macOS &mdash; the web app already installs to a phone home screen today.</p>
           <div class="row" style="margin-top:.9rem">
             <a class="linkish" href="#/contact"><svg class="ic"><use href="#i-mail"/></svg> Talk to the team</a>
           </div>
@@ -697,24 +701,87 @@
         <h1>Frequently asked</h1>
       </div>
       <div class="tabs" role="tablist">
-        <button class="tab" role="tab" aria-selected="true" data-tab="pat" id="t-pat">Patients</button>
+        <button class="tab" role="tab" aria-selected="true" data-tab="pat" id="t-pat">Customers</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="cat" id="t-cat">By category</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="own" id="t-own">Partners</button>
       </div>
       <div id="faq-pat" role="tabpanel">
-        <details><summary>Is Front Belt live yet?</summary><p>Not fully. We are in early access and adding real clinics one at a time. Listings marked “Sample” are demonstrations.</p></details>
-        <details><summary>Does a badge mean the clinic gives good care?</summary><p>No. A badge shows which documents and behaviours we have reviewed, such as registration and daily updates. It is not a medical quality rating.</p></details>
-        <details><summary>Do I have to create an account to search?</summary><p>No. Searching, distance sorting and the map all work without signing in. An account only adds saved places.</p></details>
-        <details><summary>Is it an emergency service?</summary><p>No. In an emergency, go to the nearest hospital or call your local emergency number.</p></details>
-        <details><summary>Does it cost anything?</summary><p>Searching is free for consumers, anywhere in Kenya, and stays free — no account needed.</p></details>
+        <details><summary>Is Front Belt live yet?</summary><p>Not fully. We are in early access and adding real businesses one at a time, across all seven categories &mdash; not just health. Listings marked “Sample” are demonstrations.</p></details>
+        <details><summary>What do the four numbers on every listing mean?</summary><p>Distance from where you are, travel time to get there, the cost the business published, and how long you would wait. The same four appear on every listing, in the same order and under the same labels, so two places can be compared without guesswork. Where a business has not shared something, the tile says so rather than guessing.</p></details>
+        <details><summary>Does a badge mean the business is good?</summary><p>No. A badge shows what Front Belt actually checked &mdash; documents where the category has them, the pin, the phone number, the hours, and for Health whether the daily status is kept up. It is not a rating of care, skill or quality.</p></details>
+        <details><summary>Do I have to create an account to search?</summary><p>No. Searching, distance sorting and the map all work without signing in, in every category. An account only adds saved places.</p></details>
+        <details><summary>Is it an emergency service?</summary><p>No. In an emergency, go to the nearest hospital or call your local emergency number. A Front Belt listing is not a triage line and does not replace medical advice.</p></details>
+        <details><summary>Does it cost anything?</summary><p>Searching is free for consumers, anywhere in Kenya, and stays free &mdash; no account needed.</p></details>
+        <details><summary>Why does only Health show “open now” and a wait?</summary><p>Because that is the one category where the answer changes by the hour. A clinic’s queue moves; a bakery’s price and a bookshop’s hours do not. So Health listings carry a daily status from the business itself, and the other six are compared on distance, travel, prices and hours.</p></details>
+        <details><summary>How do I get my own business on here?</summary><p>Create a partner account and send your listing for review &mdash; any of the seven categories. The first month is free. <a href="#/partners">What partners get</a>.</p></details>
+      </div>
+
+      <div id="faq-cat" role="tabpanel" hidden>
+        <p class="lead" style="max-width:62ch">The same questions do not apply to a pharmacy and a lodge. These are the ones that come up in each category.</p>
+
+        <div class="faqcats">
+          <section class="faqcat" style="--cc:#0E7490">
+            <h2><svg class="ic"><use href="#i-clinic"/></svg> Health</h2>
+            <p class="hint">Clinics, hospitals, pharmacies, dental clinics, laboratories, physiotherapy, optical.</p>
+            <details><summary>Why is Health the only category with a wait time?</summary><p>Because a clinic’s queue changes hour to hour while a bakery’s price does not. The clinic updates its own status each morning, and every listing shows how long ago that was. If it stops updating, the site says so instead of pretending.</p></details>
+            <details><summary>What does the cost figure show?</summary><p>The price line the business published, such as “Consultation KES 1,000” or “Medicine from KES 50”. It is what they chose to tell you, not a quote for your case and not a bill.</p></details>
+            <details><summary>Does a badge mean the care is good?</summary><p>No. It records what we checked: registration and licences where they apply, the pin, the phone number, and whether the daily status is kept up. We never rate medical quality.</p></details>
+          </section>
+
+          <section class="faqcat" style="--cc:#E8590C">
+            <h2><svg class="ic"><use href="#i-food"/></svg> Food</h2>
+            <p class="hint">Bakeries, restaurants, pizza, chicken, cafés, fast food, butcheries.</p>
+            <details><summary>What can I compare before choosing?</summary><p>Distance, travel time and the price line the place published &mdash; “Bread from KES 60”, “Meals KES 350&ndash;700”, “Pizza from KES 900 · Delivery KES 150” &mdash; plus the hours. There is no queue to report, so the Wait tile stays blank rather than inventing one.</p></details>
+            <details><summary>Can I order or pay through Front Belt?</summary><p>No. Call, WhatsApp, or tap Start for directions: everything goes straight to the business, and we take no cut of the order. Delivery is between you and them.</p></details>
+          </section>
+
+          <section class="faqcat" style="--cc:#7C3AED">
+            <h2><svg class="ic"><use href="#i-beauty"/></svg> Beauty</h2>
+            <p class="hint">Salons, kinyozi, barbers, spas, nail parlours, makeup studios.</p>
+            <details><summary>Are the prices per service?</summary><p>Partners publish their own line, such as “Braids from KES 1,500 · Manicure KES 800” or “Cut KES 300 · Beard trim KES 200”. “From” means exactly that &mdash; the final price depends on length, products and time, so confirm when you call.</p></details>
+            <details><summary>Can I see how busy a salon is?</summary><p>Not yet. Walk-in queues move too fast to keep honest without a dedicated daily update, and we would rather show nothing than a stale guess. Health is the only category that carries a live status today.</p></details>
+          </section>
+
+          <section class="faqcat" style="--cc:#2563EB">
+            <h2><svg class="ic"><use href="#i-tech"/></svg> Tech &amp; Money</h2>
+            <p class="hint">Phone shops, accessories, repairs, M-Pesa and Airtel agents, banks, microfinance, saccos.</p>
+            <details><summary>Can I send money or check a balance here?</summary><p>No. Front Belt is not a bank, an agent or a wallet. It tells you where the nearest agent, bank branch or phone shop is, how far it is and how to get there &mdash; the transaction happens with them.</p></details>
+            <details><summary>Do you vouch for an agent?</summary><p>No. We confirm the business exists at that pin and that the phone number works. For a transaction, use the numbers printed in the shop and the confirmation on your own phone.</p></details>
+          </section>
+
+          <section class="faqcat" style="--cc:#15803D">
+            <h2><svg class="ic"><use href="#i-books"/></svg> Books</h2>
+            <p class="hint">Bookshops, libraries, stationery, printing and photocopy.</p>
+            <details><summary>Will a bookshop have my set book?</summary><p>Ask the shop directly. The listing shows what the business offers &mdash; “School books, Novels, Gifts” &mdash; and its price line, but not live stock. A phone call is faster than a trip.</p></details>
+            <details><summary>Do libraries appear too?</summary><p>Yes, including community libraries. Their hours matter more than anything else, so hours and the reading-room services are listed, and distance is measured from where you stand.</p></details>
+          </section>
+
+          <section class="faqcat" style="--cc:#B45309">
+            <h2><svg class="ic"><use href="#i-home2"/></svg> Home &amp; Living</h2>
+            <p class="hint">Furniture stores, showrooms, décor, kitchenware, bedding, hardware.</p>
+            <details><summary>How do I know the price of a sofa or a bed?</summary><p>Many showrooms publish a starting line, such as “Sofas from KES 25,000”. Where they have not, the Cost tile says “not given” instead of an invented figure. Call before travelling for a specific item.</p></details>
+            <details><summary>Is delivery included?</summary><p>That is between you and the business. Front Belt hands you the phone number and the directions; it does not quote, sell or deliver.</p></details>
+          </section>
+
+          <section class="faqcat" style="--cc:#0891B2">
+            <h2><svg class="ic"><use href="#i-stay"/></svg> Accommodation</h2>
+            <p class="hint">Hotels, lodges, guest houses, hostels, serviced apartments, conference venues.</p>
+            <details><summary>Can I book a room on Front Belt?</summary><p>No &mdash; there is no booking engine and no card taken. The listing shows a price line such as “Rooms from KES 4,500 a night” and gives you the phone and WhatsApp, so the booking is made with the property, at their rate.</p></details>
+            <details><summary>What should I check before travelling?</summary><p>Distance and travel time, the published rate, and the hours (many receptions are 24 hours, others are not). Then call to confirm a room &mdash; a listing is not a reservation.</p></details>
+          </section>
+        </div>
       </div>
       <div id="faq-own" role="tabpanel" hidden>
         <details><summary>Where does the name Front Belt come from?</summary><p>From a belt, and the holes in it. You connect the two ends, pick the hole that fits your waist today, and buckle &mdash; the buckle is what gives you access. That is the method here too: connect to the services near you, compare them on distance, travel time, cost and wait time, then go to the one that fits you at this moment. <a href="#/about">The full story</a>.</p></details>
-        <details><summary>What does it cost to list?</summary><p>The first month is free, counted from the day your listing is approved. After that it is Basic (Ksh 3,000 for six months, or 6,000 for a year) or Premier (3,500 / 7,000). Trust badges are never for sale. <a href="#/plans">See the plans</a>.</p></details>
+        <details><summary>What does it cost to list?</summary><p>The first month is free, counted from the day your listing is approved. After that it is Basic (Ksh 3,000 for six months, or 6,000 for a year) or Premier (3,500 / 7,000). A website link is a paid extra, and Premier only. Trust badges are never for sale. <a href="#/plans">See the plans</a>.</p></details>
+        <details><summary>Can I put my website on my listing?</summary><p>Yes, on <strong>Premier</strong> &mdash; as an add-on at Ksh 1,000 a year, added to the same invoice. Customers then get a labelled “Visit website” button that opens your site in a new tab; we never frame it, redirect it or put our name on it. <strong>Basic listings cannot add a link</strong>: they keep phone, WhatsApp and directions, which is what most customers use anyway. <a href="#/plans">Plans and pricing</a>.</p></details>
+        <details><summary>What if I downgrade from Premier to Basic once I have a website link?</summary><p>The link stops showing on the public listing at the end of the Premier term, and your details stay saved. Nothing is deleted: coming back to Premier turns it on again, without re-entering the address.</p></details>
         <details><summary>How long does approval take, and what if I am turned down?</summary><p>We aim for two working days. Your console shows the status the whole time — received, in review, then the decision. If a listing is not approved you see the exact requirement that was not met, fix it, and resubmit.</p></details>
         <details><summary>Can I change my own listing?</summary><p>Yes. Your partner console lets you edit your details, pin, hours and services, and update today's status whenever it changes. Changes to an approved listing go back for a quick re-check.</p></details>
-        <details><summary>Can I upgrade my own trust level?</summary><p>You can apply for it with your documents, but only the Front Belt team can grant it. That is deliberate: if clinics could upgrade themselves, the badge would mean nothing.</p></details>
+        <details><summary>Can I upgrade my own trust level?</summary><p>You can apply for it with your documents, but only the Front Belt team can grant it. That is deliberate: if businesses could upgrade themselves, the badge would mean nothing.</p></details>
         <details><summary>How do I remove my business from the listing?</summary><p>Use “Hide my listing” in your console — it comes off the public site immediately and your data stays for when you return. The Front Belt team can delete a listing completely on request.</p></details>
         <details><summary>How long does the daily update take?</summary><p>Under a minute: open or closed, expected wait and how busy you are.</p></details>
+        <details><summary>Will you remind me to update it?</summary><p>Yes. Open your console and, if today's status is missing, Front Belt asks first &mdash; two buttons, “Open now” or “Closed today”, which save on the spot. You can also set a reminder time and allow phone notifications; then the reminder arrives at that time whenever Front Belt is open in a tab or on your home screen. Only Health listings have a status to update, so other categories are not pestered.</p></details>
         <details><summary>What documents do you need?</summary><p>Health businesses: your facility registration and the licences that apply to your services. Other categories: no documents at first — we confirm the pin and that the phone number works.</p></details>
       </div>
     </div>
@@ -726,7 +793,7 @@
       <div class="viewhead">
         <span class="eyebrow"><svg class="ic"><use href="#i-mail"/></svg> Contact</span>
         <h1>Talk to the team</h1>
-        <p class="lead">Questions, feedback, a clinic to introduce, or something on the site that looks wrong? Write to us — a person reads every message.</p>
+        <p class="lead">Questions, feedback, a business to introduce, or something on the site that looks wrong? Write to us — a person reads every message.</p>
       </div>
       <div class="two">
         <div class="contactcard">
@@ -853,7 +920,7 @@
       <div class="viewhead">
         <span class="eyebrow"><svg class="ic"><use href="#i-lock"/></svg> Front Belt team</span>
         <h1>Team access</h1>
-        <p class="lead">This console is for Front Belt staff: it enlists clinics, sets trust levels and removes listings. Patients and clinics sign in from the normal sign-in page.</p>
+        <p class="lead">This console is for Front Belt staff: it enlists businesses in every category, sets trust levels and removes listings. Customers and partners sign in from the normal sign-in page.</p>
       </div>
 
       <div id="team-signedin" hidden>
@@ -898,7 +965,7 @@
       <div class="statrow" id="admin-stats"></div>
       <div class="toolbar">
         <label class="srch"><svg class="ic"><use href="#i-search"/></svg>
-          <input class="field" id="admin-q" type="search" placeholder="Search clinics" aria-label="Search all clinics">
+          <input class="field" id="admin-q" type="search" placeholder="Search listings" aria-label="Search all listings">
         </label>
         <select class="field" id="admin-filter" aria-label="Filter listings">
           <option value="">All listings</option>
@@ -976,7 +1043,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<noscript><p class="note" style="margin:2rem auto;max-width:60ch">Front Belt needs JavaScript for the clinic search and consoles. You can still reach us at frontbelttechnologiesltd@gmail.com.</p></noscript>
+<noscript><p class="note" style="margin:2rem auto;max-width:60ch">Front Belt needs JavaScript for the directory search and consoles. You can still reach us at frontbelttechnologiesltd@gmail.com.</p></noscript>
 
 <script src="assets/data.js"></script>
 <script src="assets/firebase-config.js"></script>

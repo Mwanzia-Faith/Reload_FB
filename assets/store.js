@@ -368,6 +368,16 @@
         registrationNo: String(data.registrationNo || '').trim(),
         licenceRef: String(data.licenceRef || '').trim()
       };
+      /* the website link is a Premier add-on. Only touched when the caller sent
+         it, so a Basic edit cannot erase a saved address. */
+      if (data.website !== undefined) {
+        var web = String(data.website || '').trim();
+        if (web && !/^https?:\/\//i.test(web)) web = 'https://' + web;
+        if (web && !/^https?:\/\/[^\s/$.?#][^\s]*\.[^\s]+$/i.test(web)) {
+          return Promise.reject(new Error('That website address does not look right. Use something like https://yourbusiness.co.ke.'));
+        }
+        payload.website = web;
+      }
       /* a partner submitting or resubmitting puts the listing back in the queue */
       if (data.reviewState) payload.reviewState = String(data.reviewState);
       if (!payload.name) return Promise.reject(new Error('Give the listing a name.'));

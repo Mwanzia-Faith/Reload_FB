@@ -1075,3 +1075,37 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 /* the Premier share card in the partner console */
 .cardstudio canvas{width:100%;max-width:520px;border-radius:16px;display:block;background:#12305A;box-shadow:var(--sh-2)}
 .cardstudio .chip.live{margin-left:.4rem}
+
+/* ---------- FAQ by category ---------- */
+.faqcats{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin-top:1.2rem}
+.faqcat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.1rem 1.15rem;
+  border-top:4px solid var(--cc,var(--pink))}
+.faqcat h2{font-size:1.02rem;display:flex;align-items:center;gap:.5rem;margin:0 0 .2rem}
+.faqcat h2 .ic{width:18px;height:18px;color:var(--cc,var(--pink))}
+.faqcat > .hint{margin:0 0 .4rem}
+.faqcat details{margin-top:.5rem;background:var(--surface-2);border-color:var(--line)}
+.faqcat details p{font-size:.9rem}
+
+/* ---------- website link: Premier add-on ---------- */
+.webrow{background:var(--surface-2);border:1px dashed var(--line-2);border-radius:var(--r);padding:.85rem 1rem;margin-top:.8rem}
+.webrow h4{font-size:.92rem;margin:0 0 .2rem;display:flex;align-items:center;gap:.45rem}
+.webrow h4 .ic{width:16px;height:16px;color:var(--pink)}
+.webrow.locked{background:var(--surface);border-style:solid;border-color:var(--line)}
+.webrow .btn{margin-top:.55rem}
+
+/* ---------- the daily reminder pop-up ---------- */
+.remind-lead{color:var(--muted);font-size:.95rem;margin:.2rem 0 .1rem}
+.remind-pick{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.9rem 0 .3rem}
+.remind-pick button{display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  padding:1rem .7rem;border-radius:var(--r);border:1px solid var(--line-2);background:var(--surface);
+  font:700 .95rem/1.2 var(--body);color:var(--fg);cursor:pointer}
+.remind-pick button .ic{width:22px;height:22px}
+.remind-pick button[data-st="open"]{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+.remind-pick button[data-st="closed"]{border-color:var(--line-2)}
+.remind-pick button:hover{transform:translateY(-1px);box-shadow:var(--sh-1)}
+.remind-foot{display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+.remind-foot .linkish{font-size:.85rem}
+.reminder-set{display:grid;gap:.5rem}
+.reminder-set label{display:flex;align-items:center;gap:.55rem;font-size:.9rem;font-weight:600}
+.reminder-set input[type="time"]{border:1px solid var(--line-2);background:var(--surface);border-radius:10px;
+  padding:.35rem .5rem;font:inherit;color:var(--fg)}

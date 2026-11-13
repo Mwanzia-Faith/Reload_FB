@@ -29,6 +29,22 @@
   function reviewState(c) { return (c && c.reviewState) || 'approved'; }
   /* the paid plan a listing is on; the team sets it, everyone starts on Trial */
   function planOf(c) { return (c && c.plan) || 'Trial'; }
+  function isPremier(c) { return planOf(c) === 'Premier'; }
+  /* A website address, cleaned up. Returns '' for anything that is not http(s),
+     so a stored value can never become a javascript: link on the public side. */
+  function webURL(raw) {
+    var s = String(raw || '').trim();
+    if (!s) return '';
+    if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+    return /^https?:\/\/[^\s/$.?#][^\s]*$/i.test(s) ? s : '';
+  }
+  function webHost(raw) {
+    var s = webURL(raw);
+    return s ? s.replace(/^https?:\/\//i, '').replace(/\/$/, '') : '';
+  }
+  /* the link is a Premier add-on, so a Basic listing never shows one — even if
+     the address was saved while the partner was on Premier */
+  function webOf(c) { return isPremier(c) ? webURL(c && c.website) : ''; }
   function approved(c) { return reviewState(c) === 'approved'; }
   function isAwaiting(c) { var s = reviewState(c); return s === 'pending' || s === 'in_review'; }
 
@@ -207,6 +223,186 @@
 
   function isTeam() { return !!(me && me.role === 'admin'); }
 
+  /* ---------------- the daily nudge ----------------
+     A partner cannot be expected to remember, and a listing whose status is
+     three days old is the thing that makes a directory useless. So: if today's
+     status is missing, the console asks on open (two buttons, saved on the
+     spot), and — if they allowed it — a phone notification arrives at the time
+     they chose. The notification can only fire while Front Belt is open in a
+     tab or on the home screen; the console prompt covers the rest. */
+  var REMIND_PREFS = 'frontbelt.remind.prefs';
+  var REMIND_SEEN = 'frontbelt.remind.seen';
+  var reminderShown = '';
+  var reminderTimer = null;
+
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function readStore(key, fallback) {
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch (x) { return fallback; }
+  }
+  function writeStore(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (x) {}
+  }
+  function remindPrefs() {
+    var p = readStore(REMIND_PREFS, null) || {};
+    return { on: p.on !== false, time: /^\d\d:\d\d$/.test(String(p.time || '')) ? p.time : '08:00' };
+  }
+  function remindedToday(id) {
+    return !!readStore(REMIND_SEEN, {})[id + ':' + todayKey()];
+  }
+  function markReminded(id) {
+    var s = readStore(REMIND_SEEN, {});
+    s[id + ':' + todayKey()] = 1;
+    writeStore(REMIND_SEEN, s);
+  }
+  function updatedToday(c) {
+    return !!(c && c.lastStatusAt) && dayDiff(c.lastStatusAt) <= 0;
+  }
+  /* only Health has a status to keep, and only a live listing is worth
+     interrupting anyone about */
+  function needsStatus(c) {
+    return !!(c && isHealth(c) && approved(c) && c.published && !updatedToday(c));
+  }
+
+  function remindHTML(c) {
+    var s = statusOf(c);
+    return '<p class="remind-lead">' +
+      (c.lastStatusAt ? 'You last updated it ' + esc(ago(c.lastStatusAt)) + '.' : 'You have not set a status yet.') +
+      ' Someone searching near you now sees <strong>“' + esc(s.text) + '”</strong>.</p>' +
+      '<div class="remind-pick">' +
+      '<button type="button" data-remind="open"><svg class="ic"><use href="#i-check"/></svg> Open now</button>' +
+      '<button type="button" data-remind="closed"><svg class="ic"><use href="#i-close"/></svg> Closed today</button>' +
+      '</div>' +
+      '<p class="hint">One tap saves it and people see it immediately. A wait time and a note can be added in your console.</p>' +
+      '<div class="remind-foot">' +
+      '<button class="linkish" type="button" data-remind="details">Add a wait time instead</button>' +
+      '<button class="linkish" type="button" data-remind="later">Not today</button>' +
+      '</div>';
+  }
+
+  function maybeRemind(c) {
+    if (!c || !needsStatus(c)) return;
+    if (reminderShown === c.id) return;
+    if (!remindPrefs().on) return;
+    reminderShown = c.id;
+
+    openModal('Has anything changed today?', remindHTML(c), 'remind');
+    var body = $('modal-body');
+    if (!body) return;
+
+    body.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-remind]');
+      if (!b) return;
+      var what = b.getAttribute('data-remind');
+      if (what === 'later') { markReminded(c.id); closeModal(); toast('We will ask again next time you open your console.'); return; }
+      if (what === 'details') {
+        markReminded(c.id);
+        closeModal();
+        var form = $('status-form');
+        if (form) { form.scrollIntoView({ block: 'center' }); var w = form.querySelector('#st-wait'); if (w) w.focus(); }
+        return;
+      }
+      var buttons = body.querySelectorAll('[data-remind]');
+      buttons.forEach(function (x) { x.disabled = true; });
+      FB.logStatus(c.id, {
+        status: what,
+        waitMinutes: what === 'open' ? (c.waitMinutes == null ? null : c.waitMinutes) : null,
+        busy: c.busy || 0,
+        note: c.note || ''
+      }).then(function () {
+        markReminded(c.id);
+        toast(what === 'open' ? 'Open now — people see it immediately.' : 'Closed today — people see it immediately.');
+        closeModal();
+        renderProvider();
+      }).catch(function (err) {
+        buttons.forEach(function (x) { x.disabled = false; });
+        toast(err.message);
+      });
+    });
+  }
+
+  function reminderCard(c) {
+    var p = remindPrefs();
+    return '<section class="prov-card stack">' +
+      '<h3><svg class="ic"><use href="#i-bell"/></svg> Daily reminder</h3>' +
+      '<p class="hint">Today\'s status is what people see first. Front Belt asks once a day when it is missing, and never nags once it is saved.</p>' +
+      '<div class="reminder-set">' +
+      '<label><input type="checkbox" id="rem-on"' + (p.on ? ' checked' : '') + '> Remind me every day</label>' +
+      '<label>At <input type="time" id="rem-time" value="' + esc(p.time) + '"></label>' +
+      '<button class="btn btn-ghost btn-sm" type="button" id="rem-perm"><svg class="ic"><use href="#i-bell"/></svg> Allow phone notifications</button>' +
+      '</div>' +
+      '<p class="hint">The reminder appears when you open Front Belt, and as a phone notification at the time you choose while it is open in a tab or on your home screen.</p>' +
+      '</section>';
+  }
+
+  function wireReminderCard(root) {
+    var on = root.querySelector('#rem-on');
+    var time = root.querySelector('#rem-time');
+    var perm = root.querySelector('#rem-perm');
+    if (!on || !time) return;
+    function save() {
+      writeStore(REMIND_PREFS, { on: !!on.checked, time: time.value || '08:00' });
+    }
+    on.addEventListener('change', save);
+    time.addEventListener('change', save);
+    if (!perm) return;
+    if (!('Notification' in window)) { perm.hidden = true; return; }
+    if (Notification.permission === 'granted') {
+      perm.textContent = 'Phone notifications are on';
+      perm.disabled = true;
+      return;
+    }
+    perm.addEventListener('click', function () {
+      Notification.requestPermission().then(function (r) {
+        if (r === 'granted') {
+          perm.textContent = 'Phone notifications are on';
+          perm.disabled = true;
+          toast('Notifications allowed. The reminder will arrive at ' + (remindPrefs().time) + '.');
+        } else {
+          toast('No notification permission — the reminder will still appear in the console.');
+        }
+      });
+    });
+  }
+
+  function checkReminderClock() {
+    if (!me || (me.role !== 'provider' && me.role !== 'admin')) return;
+    /* on the console the pop-up already asks, so do not also buzz */
+    var r = currentRoute();
+    if (r === 'partner' || r === 'provider') return;
+    var c = clinicForMe();
+    if (!needsStatus(c)) return;
+    var p = remindPrefs();
+    if (!p.on) return;
+    var hm = p.time.split(':');
+    var now = new Date();
+    if (now.getHours() * 60 + now.getMinutes() < Number(hm[0]) * 60 + Number(hm[1])) return;
+    if (remindedToday(c.id)) return;
+    markReminded(c.id);
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        var n = new Notification('Front Belt · update your status', {
+          body: 'Has ' + (c.name || 'your business') + ' opened today? One tap keeps your listing current.',
+          icon: 'assets/icon-192.png',
+          tag: 'frontbelt-status'
+        });
+        n.onclick = function () { window.focus(); location.hash = '#/provider'; n.close(); };
+        return;
+      } catch (x) { /* fall through to the in-app toast */ }
+    }
+    toast('Time to update today’s status — it takes under a minute.');
+  }
+
+  function startReminderClock() {
+    if (reminderTimer) clearInterval(reminderTimer);
+    reminderTimer = setInterval(checkReminderClock, 60000);
+    checkReminderClock();
+  }
+
   /* ---------------- modal ---------------- */
   function openModal(title, html, cls) {
     $('modal-title').textContent = title;
@@ -261,6 +457,7 @@
     if (dist != null) rows += '<dt>From you</dt><dd>' + esc(fmtDist(dist)) + ' away · ' + esc(fmtTravel(dist)) + '</dd>';
     if (c.hours) rows += '<dt>Hours</dt><dd>' + esc(c.hours) + '</dd>';
     if (c.pricing) rows += '<dt>Typical prices</dt><dd>' + esc(c.pricing) + '</dd>';
+    if (webOf(c)) rows += '<dt>Website</dt><dd><a href="' + esc(webOf(c)) + '" target="_blank" rel="noopener nofollow">' + esc(webHost(c)) + '</a></dd>';
     if (c.phone) rows += '<dt>Phone</dt><dd>' + esc(c.phone) + '</dd>';
     if (k.health && (s.key === 'open' || s.key === 'closed' || s.key === 'stale' || s.key === 'unknown')) {
       rows += '<dt>Status</dt><dd>' + esc(s.text) + '</dd>';
@@ -307,6 +504,7 @@
       '<svg class="ic"><use href="#i-nav"/></svg> Start</a>' +
       (c.phone ? '<a class="btn btn-ghost" href="tel:' + esc(String(c.phone).replace(/\s+/g, '')) + '"><svg class="ic"><use href="#i-phone"/></svg> Call</a>' : '') +
       (waURL(c) ? '<a class="btn btn-ghost" href="' + esc(waURL(c)) + '" target="_blank" rel="noopener"><svg class="ic"><use href="#i-whatsapp"/></svg> WhatsApp</a>' : '') +
+      (webOf(c) ? '<a class="btn btn-ghost" href="' + esc(webOf(c)) + '" target="_blank" rel="noopener nofollow"><svg class="ic"><use href="#i-globe"/></svg> Website</a>' : '') +
       '<button class="btn btn-ghost" type="button" data-save="' + esc(c.id) + '"><svg class="ic"><use href="#i-heart"/></svg> ' + (saved ? 'Saved' : 'Save') + '</button>' +
       '</div>' +
       (dist == null ? '<p class="hint">Share your location and the Start button begins from where you are standing.</p>' : '') +
@@ -535,6 +733,7 @@
     me = u;
     savedIds = (u && u.saved) || [];
     syncAccountBtn();
+    startReminderClock();
     var r = currentRoute();
     if (r === 'account' || r === 'partner' || r === 'provider' || r === 'admin' || r === 'team') render();
   });
@@ -1164,7 +1363,14 @@
       '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also paste them from Google Maps (right-click the spot → copy coordinates).</p>' +
       svcBlock +
       '<label>Typical prices<input class="field" id="pf-pricing" value="' + esc(c.pricing || '') + '" placeholder="e.g. Consultation KES 1,000 · Braids from KES 1,500"></label>' +
-      '<p class="hint">This is the cost people compare you on, so write it the way you would say it at the door — &ldquo;from KES 500&rdquo;, &ldquo;KES 1,000&ndash;1,500&rdquo; or &ldquo;free&rdquo;. It appears on your listing and your share card. Change it any time.</p>';
+      '<p class="hint">This is the cost people compare you on, so write it the way you would say it at the door — &ldquo;from KES 500&rdquo;, &ldquo;KES 1,000&ndash;1,500&rdquo; or &ldquo;free&rdquo;. It appears on your listing and your share card. Change it any time.</p>' +
+      (isPremier(c)
+        ? '<div class="webrow"><h4><svg class="ic"><use href="#i-globe"/></svg> Your website</h4>' +
+          '<label>Address of your website<input class="field" id="pf-web" type="text" inputmode="url" autocomplete="url" value="' + esc(c.website || '') + '" placeholder="yourbusiness.co.ke"></label>' +
+          '<p class="hint">Premier add-on: Ksh 1,000 a year, on the same invoice. Customers get a “Visit website” button that opens your site in a new tab.</p></div>'
+        : '<div class="webrow locked"><h4><svg class="ic"><use href="#i-lock"/></svg> Website link &mdash; Premier only</h4>' +
+          '<p class="hint">Putting a link to your own website on your listing is a <strong>Premier</strong> add-on (Ksh 1,000 a year). On Basic, customers reach you by phone, WhatsApp and directions &mdash; which is how most of them arrive anyway.</p>' +
+          (c.id ? '<a class="btn btn-ghost btn-sm" href="#/plans">See what Premier adds</a>' : '') + '</div>');
   }
 
   function readClinicForm(root, extra) {
@@ -1190,6 +1396,10 @@
       lng: Number(root.querySelector('#pf-lng').value),
       services: services
     };
+    /* only sent when the field is on screen, so saving a Basic listing never
+       wipes an address the partner entered while on Premier */
+    var webEl = root.querySelector('#pf-web');
+    if (webEl) o.website = webEl.value.trim();
     if (areaSel && !area) {
       /* allow an area we have not listed yet */
       var typed = prompt('That area is not in the list yet. Type the Nairobi area name:');
@@ -1575,6 +1785,7 @@
       '<div id="prov-request"></div>' +
       '<button class="btn btn-ghost btn-sm" type="button" data-verify="' + esc(c.id) + '"><svg class="ic"><use href="#i-shield"/></svg> Apply for an upgrade</button>' +
       '</section>' +
+      (k.health ? reminderCard(c) : '') +
       '</div></div>' +
 
       '<form class="prov-card stack" id="profile-form" style="margin-top:1rem">' +
@@ -1601,6 +1812,8 @@
     if ($('pf-area')) $('pf-area').value = c.area || '';
     provClinicId = c.id;
     wireProviderForm(body, c, false);
+    wireReminderCard(body);
+    maybeRemind(c);
 
     FB.history(c.id).then(function (rows) {
       var box = $('p-history');
@@ -1925,7 +2138,9 @@
       : '';
     return '<tr class="' + (c.published ? '' : 'unpub') + '">' +
       '<td data-l="Listing"><div class="name">' + esc(c.name) + '</div>' +
-      '<div class="sub">' + esc(k.label) + ' · ' + esc(c.area) + (c.sample ? ' · sample' : '') + ' · ' + esc(Number(c.lat).toFixed(4)) + ', ' + esc(Number(c.lng).toFixed(4)) + '</div></td>' +
+      '<div class="sub">' + esc(k.label) + ' · ' + esc(c.area) + (c.sample ? ' · sample' : '') + ' · ' + esc(Number(c.lat).toFixed(4)) + ', ' + esc(Number(c.lng).toFixed(4)) +
+      (webURL(c.website) ? ' · <a href="' + esc(webURL(c.website)) + '" target="_blank" rel="noopener nofollow">' + esc(webHost(c.website)) + '</a>' + (isPremier(c) ? ' (website add-on)' : ' (not Premier — link hidden)') : '') +
+      '</div></td>' +
       '<td data-l="Trust"><select data-trust="' + esc(c.id) + '" aria-label="Trust level for ' + esc(c.name) + '">' +
       DATA.levels.map(function (l) { return '<option' + (l === (c.trust || 'Listed') ? ' selected' : '') + '>' + l + '</option>'; }).join('') +
       '</select></td>' +
@@ -2652,10 +2867,13 @@
 
     if ((t = e.target.closest('[data-tab]'))) {
       var w = t.getAttribute('data-tab');
-      $('t-pat').setAttribute('aria-selected', String(w === 'pat'));
-      $('t-own').setAttribute('aria-selected', String(w === 'own'));
-      $('faq-pat').hidden = w !== 'pat';
-      $('faq-own').hidden = w !== 'own';
+      document.querySelectorAll('.tabs [data-tab]').forEach(function (b) {
+        b.setAttribute('aria-selected', String(b === t));
+      });
+      ['pat', 'cat', 'own'].forEach(function (key) {
+        var panel = $('faq-' + key);
+        if (panel) panel.hidden = key !== w;
+      });
       return;
     }
 
