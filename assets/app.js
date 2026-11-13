@@ -439,7 +439,7 @@
 
   /* ---------------- place detail: the “Start” sheet ----------------
      Tap any listing and it opens here with the map, the facts, and a
-     Start button that hands over to Google Maps for turn-by-turn. */
+     Start button that hands over to the phone's own map app for turn-by-turn. */
   function openPlace(id) {
     var c = all.filter(function (x) { return x.id === id; })[0];
     if (!c && samplesOn) c = fallbackRows().filter(function (x) { return x.id === id; })[0];
@@ -906,7 +906,7 @@
       '</article>';
   }
 
-  /* Google Maps opens with the destination pinned and, when the visitor
+  /* The directions handoff opens with the destination pinned and, when the visitor
      shared a location, their position as the origin — the app finds the
      place, Maps does the turn-by-turn and the “Start” button drives it. */
   function dirURL(c, mode) {
@@ -1360,7 +1360,7 @@
       '<label>Longitude<input class="field" id="pf-lng" type="number" step="any" value="' + esc(c.lng != null ? c.lng : '') + '" placeholder="36.7836" required></label>' +
       '<label>&nbsp;<button class="btn btn-ghost btn-sm" type="button" id="pf-capture"><svg class="ic"><use href="#i-crosshair"/></svg> Use my current location</button></label>' +
       '</div>' +
-      '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also paste them from Google Maps (right-click the spot → copy coordinates).</p>' +
+      '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also copy them from any map app (right-click or long-press the spot).</p>' +
       svcBlock +
       '<label>Typical prices<input class="field" id="pf-pricing" value="' + esc(c.pricing || '') + '" placeholder="e.g. Consultation KES 1,000 · Braids from KES 1,500"></label>' +
       '<p class="hint">This is the cost people compare you on, so write it the way you would say it at the door — &ldquo;from KES 500&rdquo;, &ldquo;KES 1,000&ndash;1,500&rdquo; or &ldquo;free&rdquo;. It appears on your listing and your share card. Change it any time.</p>' +
@@ -2277,7 +2277,7 @@
     box.setAttribute('data-painted', '1');
     box.innerHTML = '<div class="prov-card stack importcard">' +
       '<h3><svg class="ic"><use href="#i-globe"/></svg> Open map data — OpenStreetMap</h3>' +
-      '<p class="hint">Front Belt does not rent its map from Google. The tiles are OpenStreetMap, and this tool reads the same open database (Overpass API) to find businesses near an area that are <em>not</em> on Front Belt yet. Everything it finds arrives as a draft for a reviewer to confirm by phone — nothing is published automatically. Data &copy; OpenStreetMap contributors, ODbL.</p>' +
+      '<p class="hint">Front Belt does not rent its map from a commercial provider. The tiles are OpenStreetMap, and this tool reads the same open database (Overpass API) to find businesses near an area that are <em>not</em> on Front Belt yet. Everything it finds arrives as a draft for a reviewer to confirm by phone — nothing is published automatically. Data &copy; OpenStreetMap contributors, ODbL.</p>' +
       '<div class="grid3">' +
       '<label>Category<select class="field" id="imp-cat">' + CATS.map(function (k) {
         return '<option value="' + esc(k.id) + '">' + esc(k.label) + '</option>';

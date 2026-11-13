@@ -9,6 +9,7 @@
   --bg:#FFFAF7; --bg-2:#F1F8FA; --surface:#FFFFFF; --surface-2:#F3F9FA;
   --fg:#22121A; --fg-2:#31454E; --muted:#587480; --line:#DCEAEE; --line-2:#C3DBE2;
   --pink:#0E7490; --pink-deep:#0A5B72; --orange:#2D9CDB; --yellow:#BFE3F0; --soft:#E4F2F6;
+  --logo-ink:#0C2346;
   --ok:#0B7A46; --ok-soft:#DCF6E8; --warn:#A5560B; --warn-soft:#FFEFD2; --off:#5F7A84;
   /* Both ends of the gradient carry white text at 5:1 or better. */
   --grad:linear-gradient(115deg,#0E7490,#1D6FA8);
@@ -25,7 +26,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0C1418; --bg-2:#111C21; --surface:#16232A; --surface-2:#1C2C34;
   --fg:#ECF5F7; --fg-2:#D5E6EA; --muted:#9FB6C0; --line:#273B44; --line-2:#33505B;
-  --pink:#5AC4DC; --pink-deep:#8AD9EC; --soft:#12262D;
+  --pink:#5AC4DC; --pink-deep:#8AD9EC; --soft:#12262D; --logo-ink:#FFFFFF;
   --ok:#57E39B; --ok-soft:#12321F; --warn:#F5B35A; --warn-soft:#3B2A15; --off:#A3BCC5;
   --grad:linear-gradient(115deg,#2A9BB4,#4FA8E8);
   --on-brand:#06222B;
@@ -35,7 +36,7 @@
 :root[data-theme="dark"]{
   --bg:#0C1418; --bg-2:#111C21; --surface:#16232A; --surface-2:#1C2C34;
   --fg:#ECF5F7; --fg-2:#D5E6EA; --muted:#9FB6C0; --line:#273B44; --line-2:#33505B;
-  --pink:#5AC4DC; --pink-deep:#8AD9EC; --soft:#12262D;
+  --pink:#5AC4DC; --pink-deep:#8AD9EC; --soft:#12262D; --logo-ink:#FFFFFF;
   --ok:#57E39B; --ok-soft:#12321F; --warn:#F5B35A; --warn-soft:#3B2A15; --off:#A3BCC5;
   --grad:linear-gradient(115deg,#2A9BB4,#4FA8E8);
   --on-brand:#06222B;
@@ -153,6 +154,14 @@ label{display:flex;flex-direction:column;gap:.35rem;font-size:.86rem;font-weight
 .hdr-in{max-width:1240px;margin:0 auto;padding:.6rem 20px;display:flex;align-items:center;gap:1rem}
 .brand{display:flex;align-items:center;gap:.55rem;font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:-.03em;text-decoration:none;color:var(--fg);flex:none}
 .brand svg,.brand img{display:block}
+
+/* ---------- the mark: frame and F follow the surface they sit on ----------
+   Navy on cream, white on navy or dark, so it never disappears into a
+   footer, a hero panel or dark mode. The prong stays sky blue either way. */
+.logo-mark{width:36px;height:36px;flex:none;display:block;color:var(--logo-ink,#0C2346)}
+.logo-mark-lg{width:96px;height:96px}
+.logo-mark-ftr{width:40px;height:40px;color:#fff}
+.art-mark{color:#fff}
 .mainnav{display:flex;align-items:center;gap:.15rem;margin-left:auto}
 .mainnav a{
   display:inline-flex;align-items:center;gap:.42rem;padding:.5rem .7rem;border-radius:999px;

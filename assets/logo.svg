@@ -1,11 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Front Belt">
   <title>Front Belt</title>
-  <!-- Buckle frame: a rounded square with a gap on the right, where the prong goes through. -->
-  <path d="M20.5 8H43.5A13.75 13.75 0 0 1 57.25 21.75V26.5M57.25 37.5V42.25A13.75 13.75 0 0 1 43.5 56H20.5A13.75 13.75 0 0 1 6.75 42.25V21.75A13.75 13.75 0 0 1 20.5 8Z"
-        fill="none" stroke="#12305A" stroke-width="6.4" stroke-linecap="butt" stroke-linejoin="round"/>
-  <!-- The F: stem, top bar, and the middle bar that leaves the frame as the prong. -->
-  <path d="M24 17.5V46.5M24 17.5H38"
-        fill="none" stroke="#12305A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M24 31.5H44.5" fill="none" stroke="#12305A" stroke-width="7" stroke-linecap="round"/>
-  <path d="M43 31.5H57" fill="none" stroke="#12B5C9" stroke-width="7" stroke-linecap="round"/>
+  <!-- Buckle frame: a rounded square with a slot on the right for the prong.
+       Drawn as two open runs, so nothing closes across the middle. -->
+  <path d="M21 8.5H43Q56 8.5 56 21.5V26.6M56 38.4V42.5Q56 55.5 43 55.5H21Q8 55.5 8 42.5V21.5Q8 8.5 21 8.5"
+        fill="none" stroke="#0C2346" stroke-width="5.8" stroke-linecap="butt" stroke-linejoin="round"/>
+  <!-- The prong goes under the F, so the stem stays unbroken. -->
+  <path d="M23 32.5H56.4" fill="none" stroke="#12B5C9" stroke-width="7.4" stroke-linecap="round"/>
+  <!-- The F: stem and top arm. Its middle arm is the prong that buckles the belt. -->
+  <path d="M23 20.5V46.5M23 20.5H41"
+        fill="none" stroke="#0C2346" stroke-width="7.4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

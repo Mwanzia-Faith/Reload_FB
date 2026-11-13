@@ -57,6 +57,16 @@
   <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 5h4.5A1.5 1.5 0 0 1 20 6.5v11a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8.5 6.5 12l3.5 3.5"/><path d="M6.8 12H15"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.5V12l3.2 2"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 2.2H4.4L6 16.5z"/><path d="M9.8 21.4a2.4 2.4 0 0 0 4.4 0"/></symbol>
+  <!-- The mark: a belt buckle, an F, and the sky-blue prong that buckles it.
+       Frame and F take currentColor, so the mark is navy on light surfaces and
+       white on navy or dark ones, while the prong stays sky blue on both. -->
+  <symbol id="i-logo" viewBox="0 0 64 64">
+    <path d="M21 8.5H43Q56 8.5 56 21.5V26.6M56 38.4V42.5Q56 55.5 43 55.5H21Q8 55.5 8 42.5V21.5Q8 8.5 21 8.5"
+          fill="none" stroke="currentColor" stroke-width="5.8" stroke-linecap="butt" stroke-linejoin="round"/>
+    <path d="M23 32.5H56.4" fill="none" stroke="var(--logo-accent,#12B5C9)" stroke-width="7.4" stroke-linecap="round"/>
+    <path d="M23 20.5V46.5M23 20.5H41"
+          fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.4 3.6h3l1.5 4-2 1.6a11.4 11.4 0 0 0 5.9 5.9l1.6-2 4 1.5v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.4 5.8a2 2 0 0 1 2-2.2z"/></symbol>
   <symbol id="i-crosshair" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.4"/><path d="M12 2.5v3.6M12 17.9v3.6M2.5 12h3.6M17.9 12h3.6"/><circle cx="12" cy="12" r="1.6"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13"/><path d="m13 7 5 5-5 5"/></symbol>
@@ -98,7 +108,7 @@
 <header class="hdr">
   <div class="hdr-in">
     <a class="brand" href="#/home" aria-label="Front Belt home">
-      <img src="assets/logo.svg" width="36" height="36" alt="">
+      <svg class="logo-mark" aria-hidden="true"><use href="#i-logo"/></svg>
       <span>Front <span class="grad-text">Belt</span></span>
     </a>
 
@@ -152,7 +162,7 @@
 
           <div class="hero2-art" aria-hidden="true">
             <span class="art-ring"></span>
-            <img class="art-mark" src="assets/logo.svg" alt="">
+            <svg class="art-mark" aria-hidden="true"><use href="#i-logo"/></svg>
             <div class="art-card art-c1">
               <span class="ac-type">Pharmacy · Kilimani</span>
               <strong>Sample Health Point</strong>
@@ -255,7 +265,7 @@
       <section class="home-block">
         <div class="split">
           <div class="split-copy">
-            <h2>Google tells you what exists.<br><span class="grad-text">Front Belt tells you which one to pick.</span></h2>
+            <h2>A directory tells you what exists.<br><span class="grad-text">Front Belt tells you which one to pick.</span></h2>
             <p class="lead">Search engines and social feeds are built to show you ads and posts. Front Belt does one job: telling you which provider to go to right now, anywhere in Kenya.</p>
             <ul class="ticks">
               <li><strong>Maintained, not scraped.</strong> Partners keep their own listing current, and every listing shows the date it was last confirmed.</li>
@@ -590,7 +600,7 @@
       </div>
 
       <div class="aboutband">
-        <img src="assets/logo.svg" width="96" height="96" alt="The Front Belt mark">
+        <svg class="logo-mark logo-mark-lg" role="img" aria-label="The Front Belt mark"><use href="#i-logo"/></svg>
         <div>
           <p class="slogan">Connect, Compare &amp; Access</p>
           <p class="muted small">An F inside a buckle frame, with the middle bar as the prong pushing through. Monogram and metaphor in one: <strong>F</strong> for Front, the frame is the buckle, and the prong is the piece that holds a belt closed &mdash; the same idea as the name.</p>
@@ -651,7 +661,7 @@
         <div class="hstep" style="--cc:#B45309">
           <span class="hstep-ic"><svg class="ic"><use href="#i-globe"/></svg></span>
           <h3>Open map, open data</h3>
-          <p>The map is OpenStreetMap, not Google — so there is no map bill and no licence to lose. Our team also finds missing businesses in the open map data, then phones them before anything goes live.</p>
+          <p>The map is built on OpenStreetMap, an open dataset we do not rent from anyone — so there is no map bill and no licence to lose. Our team also finds missing businesses in the open map data, then phones them before anything goes live.</p>
         </div>
         <div class="hstep" style="--cc:#15803D">
           <span class="hstep-ic"><svg class="ic"><use href="#i-shield"/></svg></span>
@@ -987,7 +997,7 @@
   <div class="wrap ftr-top">
     <div class="ftr-brand">
       <a class="brand" href="#/home" aria-label="Front Belt home">
-        <img src="assets/logo.svg" width="40" height="40" alt="">
+        <svg class="logo-mark logo-mark-ftr" aria-hidden="true"><use href="#i-logo"/></svg>
         <span>Front <span class="grad-text">Belt</span></span>
       </a>
       <p>Connect, Compare &amp; Access — a real-time service intelligence platform for Kenya: seven categories, kept current by the businesses themselves.</p>
