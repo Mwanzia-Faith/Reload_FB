@@ -195,6 +195,26 @@ That signup email is itself the proof you were asking for: if that key arrives i
 
 Notes on this choice: Web3Forms' free tier is 250 submissions a month, it removes the need for a server, and the access key is public by design — it can only submit to the address it was issued for, so it cannot be abused to send from your identity. If you later want submissions stored in your own database instead of only emailed, the same handler is one place to change.
 
+## Telling people an update has shipped
+
+`assets/version.json` is the single switch the app checks:
+
+```json
+{ "app": "2026-11-13.4", "icon": "buckle-f-2", "note": "what changed" }
+```
+
+- Bump **`app`** on every release. Anyone with Front Belt open, or installed on a
+  home screen, gets a bar: *“A newer Front Belt is ready — …”* with **Update now**,
+  which reloads into the new build. The check runs on load, when the app comes back
+  into view, and every five minutes.
+- Bump **`icon`** when the icon changes. An installed app then says the icon has
+  changed and asks the owner to remove the shortcut and add it again — no browser
+  swaps a home-screen icon on its own.
+- **`note`** is the few words shown in the bar. Keep it short.
+
+Nothing is cached, so there is no cache to purge: the bar exists because an open
+page — or an installed app — can be running yesterday's HTML until it reloads.
+
 ## Status
 
 Early access. Listings marked *Sample* are demonstrations, not real places — an empty category offers a **Preview sample listings** button so the layouts can be seen without adding real data first. The contact form opens the visitor's email app with the details filled in, addressed to `frontbelttechnologiesltd@gmail.com`.

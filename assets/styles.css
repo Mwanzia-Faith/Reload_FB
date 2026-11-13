@@ -1118,3 +1118,23 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 .reminder-set label{display:flex;align-items:center;gap:.55rem;font-size:.9rem;font-weight:600}
 .reminder-set input[type="time"]{border:1px solid var(--line-2);background:var(--surface);border-radius:10px;
   padding:.35rem .5rem;font:inherit;color:var(--fg)}
+
+/* ---------- the update bar: a newer build is ready ---------- */
+.updatebar{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  z-index:75;display:flex;align-items:center;gap:.75rem;max-width:min(94vw,600px);
+  background:var(--navy-2,#0C2346);color:#fff;border-radius:999px;
+  padding:.55rem .55rem .55rem 1.05rem;box-shadow:0 16px 40px -14px rgba(0,0,0,.6);
+  font-size:.86rem;font-weight:600;line-height:1.35;
+}
+@media(max-width:760px){.updatebar{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+.updatebar p{margin:0}
+.updatebar .btn{
+  background:#fff;color:var(--navy-2,#0C2346);box-shadow:none;white-space:nowrap;flex:none;
+  padding:.45rem .9rem;font-size:.82rem;
+}
+.updatebar .ub-x{
+  background:transparent;border:0;color:#fff;opacity:.65;font-size:1rem;line-height:1;
+  cursor:pointer;padding:.45rem .5rem;flex:none;
+}
+.updatebar .ub-x:hover{opacity:1}

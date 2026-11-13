@@ -3075,6 +3075,90 @@
     });
   });
 
+  /* ---------------- telling people an update exists ----------------
+     A change is only useful if the people who installed Front Belt hear about
+     it. assets/version.json is the single switch: bump "app" when the code
+     changes and "icon" when the icon changes. The page checks it on load, when
+     it comes back into view, and every few minutes, then offers a reload —
+     and for an installed app, says plainly that the home-screen icon only
+     changes when the shortcut is made again. */
+  var SEEN_APP = 'frontbelt.versionSeen';
+  var SEEN_ICON = 'frontbelt.iconSeen';
+  var lastVersionCheck = 0;
+  var pendingApp = '';
+
+  function installedApp() {
+    if (navigator.standalone === true) return true;
+    return !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  }
+
+  function store(key, val) {
+    try { (key === SEEN_APP ? sessionStorage : localStorage).setItem(key, val); } catch (x) {}
+  }
+  function stored(key) {
+    try { return (key === SEEN_APP ? sessionStorage : localStorage).getItem(key) || ''; } catch (x) { return ''; }
+  }
+
+  function updateBar(text, label, onGo) {
+    var bar = $('update-bar'), t = $('update-text'), go = $('update-go');
+    if (!bar || !t || !go) return;
+    t.textContent = text;
+    go.textContent = label;
+    go.onclick = onGo;
+    bar.hidden = false;
+  }
+  function hideUpdateBar() {
+    var b = $('update-bar');
+    if (b) b.hidden = true;
+  }
+
+  function checkVersion() {
+    lastVersionCheck = Date.now();
+    return fetch('assets/version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (v) {
+        if (!v || !v.app) return;
+
+        var seen = stored(SEEN_APP);
+        if (!seen) store(SEEN_APP, v.app);
+        else if (seen !== v.app) {
+          pendingApp = v.app;
+          updateBar('A newer Front Belt is ready' + (v.note ? ' — ' + v.note : '') + '.',
+            'Update now', function () {
+              store(SEEN_APP, v.app);
+              pendingApp = '';
+              location.reload();
+            });
+        }
+
+        /* the icon lives on a home screen, and only a new shortcut picks it up */
+        var seenIcon = stored(SEEN_ICON);
+        if (!seenIcon) store(SEEN_ICON, v.icon || '');
+        else if (v.icon && seenIcon !== v.icon && installedApp()) {
+          updateBar('The Front Belt icon has changed. Remove the app from your home screen, then add it again to see the new one.',
+            'Got it', function () { store(SEEN_ICON, v.icon); hideUpdateBar(); });
+        }
+      })
+      .catch(function () { /* offline: nothing to say */ });
+  }
+
+  function watchUpdates() {
+    var x = $('update-x');
+    if (x) x.addEventListener('click', function () {
+      if (pendingApp) store(SEEN_APP, pendingApp);
+      pendingApp = '';
+      hideUpdateBar();
+    });
+
+    checkVersion();
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && Date.now() - lastVersionCheck > 300000) checkVersion();
+    });
+    setInterval(function () {
+      if (Date.now() - lastVersionCheck > 300000) checkVersion();
+    }, 300000);
+  }
+
   /* theme before first paint where possible */
   try {
     var savedTheme = localStorage.getItem('frontbelt.theme');
@@ -3086,4 +3170,5 @@
   window.addEventListener('hashchange', render);
   if (!location.hash) location.hash = '#/home';
   render();
+  watchUpdates();
 })();
