@@ -1,0 +1,37 @@
+name: Daily status reminders
+
+# Emails a Health partner whose listing has no status for today, on a day they
+# are open. The job reads the published listings (public read, same as the site)
+# and sends through Brevo. Without the BREVO_API_KEY secret it only prints the
+# list, so it is safe to run before setup.
+
+on:
+  schedule:
+    - cron: '0 5 * * *' # 08:00 East Africa Time (UTC+3)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only list who would be emailed'
+        type: boolean
+        default: true
+
+concurrency:
+  group: status-reminders
+  cancel-in-progress: false
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Send the reminders
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          SENDER_NAME: Front Belt
+          APP_URL: ${{ vars.APP_URL }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
+        run: node scripts/status-reminders.mjs

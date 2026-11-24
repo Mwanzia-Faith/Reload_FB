@@ -470,6 +470,20 @@
       return setField(id, { published: !!val });
     },
 
+    /* where the daily email nudge should go. A partner may set this itself —
+       it is its own address, and refusing it would mean we cannot remind them. */
+    setReminders: function (id, opts) {
+      opts = opts || {};
+      var email = String(opts.email || '').trim();
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return Promise.reject(new Error('That email address does not look right. Use something like owner@yourbusiness.co.ke.'));
+      }
+      if (opts.on && !email) {
+        return Promise.reject(new Error('Type the email address the reminder should go to.'));
+      }
+      return setField(id, { remindEmail: email, remindOn: !!opts.on });
+    },
+
     /* the partner's plan: Trial, Basic or Premier. A team action — a partner
        can never set this on their own record (see firestore.rules). */
     setPlan: function (id, plan) {

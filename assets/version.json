@@ -1,5 +1,5 @@
 {
-  "app": "2026-11-24.3",
+  "app": "2026-11-24.4",
   "icon": "buckle-f-2",
-  "note": "the console now says exactly why a listing is not on the public site"
+  "note": "partners can now get the daily reminder by email, even when the site is closed"
 }

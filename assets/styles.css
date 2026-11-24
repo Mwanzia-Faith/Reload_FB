@@ -1150,3 +1150,9 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 .daybox{display:inline-flex;align-items:center;gap:.32rem;border:1.5px solid var(--line-2);border-radius:999px;padding:.32rem .62rem;font-size:.87rem;cursor:pointer;background:var(--surface);user-select:none}
 .daybox input{accent-color:var(--brand);margin:0}
 .daybox:has(input:checked){border-color:var(--brand);background:var(--soft)}
+
+/* ---------- email reminder prefs in the partner console ---------- */
+.remmail{border-top:1px solid var(--line);margin-top:.7rem;padding-top:.75rem}
+.remmail h4{display:flex;align-items:center;gap:.4rem;font-size:.95rem;margin:0 0 .35rem}
+.remmail .chipcheck{margin:.45rem 0}
+.remmail .field{margin-top:.3rem}

@@ -215,6 +215,55 @@ Notes on this choice: Web3Forms' free tier is 250 submissions a month, it remove
 Nothing is cached, so there is no cache to purge: the bar exists because an open
 page — or an installed app — can be running yesterday's HTML until it reloads.
 
+## Reminding a partner to update their status
+
+A Health listing is only as good as today's status, and a partner who never
+opens the site cannot be reminded by an in-page pop-up. There are two reminders,
+and they are different jobs:
+
+- **In the browser** — when a partner opens the console and today's status is
+  missing, the console asks (two buttons). The phone notification at their chosen
+  time also works, but only while Front Belt is open in a tab or on the home
+  screen. This is built in and needs nothing.
+- **By email** — reaches them even when the site is closed. The partner switches
+  it on in their console under *Daily reminder*, and gives the address it should
+  go to (`remindEmail` on their listing). The public listing never shows it.
+
+`.github/workflows/status-reminders.yml` runs `scripts/status-reminders.mjs` every
+day at **08:00 East Africa Time** (05:00 UTC):
+
+1. It reads the published listings from Firestore's REST API — the same public
+   read the site does, so it needs no service account and no Firebase key.
+2. It keeps the Health listings where **today is one of the partner's working
+   days** and **today's status is still missing**. A day they are closed is never
+   a reason to write to them, and a reminder switched off is respected.
+3. It emails each one through [Brevo](https://www.brevo.com) — one short message
+   with a button back to the console.
+
+**To switch it on** (once):
+
+1. Create a Brevo account and an API key (Settings → SMTP & API → API keys).
+   Verify `frontbelttechnologiesltd@gmail.com` as a sender address first
+   (Senders, domains & IPs → Senders → Add a sender). Brevo emails the address a
+   code; without that step every send is refused.
+2. In GitHub: **Settings → Secrets and variables → Actions** → new secret
+   **`BREVO_API_KEY`**, and (optionally) **`SENDER_EMAIL`** if the sender is not
+   the Front Belt address.
+3. Run the workflow once by hand with *Only list who would be emailed* ticked to
+   see who it would write to, then untick it and run again.
+
+Until the key is set the workflow runs happily and sends nothing: it prints
+`No BREVO_API_KEY set` and the list it would have emailed. Check the job log if a
+morning goes by with no mail — it says, listing by listing, why someone was
+skipped (`no reminder email saved`, `closed today`, `status already saved today`).
+
+Test the decision rules without touching anyone's inbox:
+
+```bash
+node scripts/status-reminders.mjs --self-test     # the eight cases
+node scripts/status-reminders.mjs --dry-run --explain   # live listings, nothing sent
+```
+
 ## Status
 
 Early access. Listings marked *Sample* are demonstrations, not real places — an empty category offers a **Preview sample listings** button so the layouts can be seen without adding real data first. The contact form opens the visitor's email app with the details filled in, addressed to `frontbelttechnologiesltd@gmail.com`.
