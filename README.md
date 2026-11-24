@@ -215,6 +215,21 @@ Notes on this choice: Web3Forms' free tier is 250 submissions a month, it remove
 Nothing is cached, so there is no cache to purge: the bar exists because an open
 page — or an installed app — can be running yesterday's HTML until it reloads.
 
+### The build stamp on the scripts
+
+`index.html` loads its own files with the same version on the end:
+
+```html
+<script src="assets/app.js?v=2026-11-24.6"></script>
+```
+
+That `?v=` is what stops a browser replaying a cached `app.js` from before your
+change — the case where a partner insists a button is missing but the live file
+has it. **Bump it in the same commit as `assets/version.json`, on every release:**
+the stylesheet link, `data.js`, `firebase-config.js`, `store.js` and `app.js` all
+carry it. If the two ever disagree, the site keeps working, but a fresh visit may
+still be served the previous release until the stamped URL changes.
+
 ## Reminding a partner to update their status
 
 A Health listing is only as good as today's status, and a partner who never
