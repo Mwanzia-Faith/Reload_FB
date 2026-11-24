@@ -1,5 +1,5 @@
 {
-  "app": "2026-11-24.2",
+  "app": "2026-11-24.3",
   "icon": "buckle-f-2",
-  "note": "working days: the days you are closed no longer count as missed"
+  "note": "the console now says exactly why a listing is not on the public site"
 }

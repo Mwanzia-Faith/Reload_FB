@@ -251,6 +251,32 @@
     return count;
   }
 
+  function workingDaysAgo(c) {
+    var n = missedWorkDays(c);
+    if (n === 99) return 'never recorded';
+    if (n <= 0) return 'today';
+    return n + (n === 1 ? ' working day ago' : ' working days ago');
+  }
+
+  /* Why the public cannot see this listing, in the partner's own words. Three
+     very different situations look identical from outside — the partner hid it,
+     it is still in the review queue, or it went quiet for seven working days —
+     so name the one that actually applies instead of leaving them to guess. */
+  function visibilityReason(c) {
+    if (!c) return '';
+    var s = reviewState(c);
+    if (s === 'pending') return 'Waiting for the Front Belt team to review it. Nothing appears publicly until they approve it.';
+    if (s === 'in_review') return 'A reviewer is looking at it now. It goes live when they approve it.';
+    if (s === 'denied') return 'Not approved yet — the exact reason is in the review status above.';
+    if (c.published === false) return 'It is hidden from the public site. Your details are safe; ask the team to relist it when you want it back.';
+    var st = statusOf(c);
+    if (st.key === 'hidden') {
+      return 'Hidden from the public site: today’s status has not been updated for ' + st.days +
+        ' working days, and we hide a Health listing after 7. Save today’s status below and it comes back the moment you do.';
+    }
+    return '';
+  }
+
   function statusOf(c) {
     /* only Health carries a daily status. Everything else is found by
        where it is, not by whether it reported in this morning. */
@@ -1839,9 +1865,9 @@
       lastStat +
       '</div>' +
 
-      (c.lastStatusAt && (s.key === 'stale' || s.key === 'unknown')
+      (c.lastStatusAt && (s.key === 'stale' || s.key === 'unknown' || s.key === 'hidden')
         ? '<div class="panel" style="border-color:var(--warn)"><h3><svg class="ic"><use href="#i-warn"/></svg> Your status is out of date</h3>' +
-        '<p class="muted small">' + esc(s.text) + '. Clinics that stop updating drop in search, and after seven working days the listing hides itself. Only your working days are counted — a day you are closed is never a missed day. Save today\'s status below to fix it.</p></div>'
+        '<p class="muted small">Your last update was ' + esc(workingDaysAgo(c)) + '. A Health listing drops in search after <strong>3 working days</strong> without an update and hides itself after <strong>7 working days</strong>. Only the days you tick as working days are counted — a day you are closed is never a missed day. Save today\'s status below and it is fixed immediately.</p></div>'
         : '') +
 
       '<div class="two">' +
@@ -1868,9 +1894,9 @@
       '<div class="stack">' +
       '<section class="prov-card stack">' +
       '<h3><svg class="ic"><use href="#i-eye"/></svg> Your listing</h3>' +
-      '<p class="hint">' + (c.published
-        ? 'Your business is visible to people searching nearby. Hiding it takes effect immediately and keeps your data.'
-        : 'Your listing is hidden. Ask the team to relist it when you are ready.') + '</p>' +
+      (visibilityReason(c)
+        ? '<p class="hint"><strong>Not on the public site right now.</strong> ' + esc(visibilityReason(c)) + '</p>'
+        : '<p class="hint">Your business is visible to people searching nearby. Hiding it takes effect immediately and keeps your data.</p>') +
       (c.published
         ? '<button class="btn btn-ghost btn-sm" type="button" data-hide="' + esc(c.id) + '"><svg class="ic"><use href="#i-eye"/></svg> Hide my listing</button>'
         : '<button class="btn btn-ghost btn-sm" type="button" data-relist="' + esc(c.id) + '"><svg class="ic"><use href="#i-refresh"/></svg> Ask to be relisted</button>') +
