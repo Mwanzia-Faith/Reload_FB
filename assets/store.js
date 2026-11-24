@@ -378,6 +378,20 @@
         }
         payload.website = web;
       }
+      /* the days the business opens. Every missed-update count is measured in
+         these days, so a day it is closed never counts against it. Left alone
+         when the caller did not send the list (a status-only save). */
+      if (data.openDays !== undefined) {
+        var days = [];
+        (Array.isArray(data.openDays) ? data.openDays : []).forEach(function (n) {
+          n = Number(n);
+          if (isFinite(n) && n >= 0 && n <= 6 && n === Math.floor(n) && days.indexOf(n) < 0) days.push(n);
+        });
+        if (!days.length) {
+          return Promise.reject(new Error('Tick at least one working day — the days you open.'));
+        }
+        payload.openDays = days.sort(function (a, b) { return a - b; });
+      }
       /* a partner submitting or resubmitting puts the listing back in the queue */
       if (data.reviewState) payload.reviewState = String(data.reviewState);
       if (!payload.name) return Promise.reject(new Error('Give the listing a name.'));

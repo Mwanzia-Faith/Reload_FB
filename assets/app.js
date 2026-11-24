@@ -195,20 +195,81 @@
      1–2 days             -> "Not updated today"
      3–6 days             -> "Status unknown" (drops in the list)
      7+ days              -> hidden from the public site          */
+  /* ---------- working days ----------
+     A business is not neglecting anyone because it is shut on a Sunday. The
+     partner ticks the days it opens; every missed-update count, every
+     reminder and the public status are measured in those days only, so a day
+     it is closed can never cost it anything. Listings saved before this
+     existed have no openDays and keep working as every day. */
+  var DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var DAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
+  function workDays(c) {
+    var d = c && c.openDays;
+    if (!Array.isArray(d) || !d.length) return ALL_DAYS.slice();
+    var out = [];
+    d.forEach(function (n) {
+      n = Number(n);
+      if (isFinite(n) && n >= 0 && n <= 6 && n === Math.floor(n) && out.indexOf(n) < 0) out.push(n);
+    });
+    if (!out.length || out.length === 7) return ALL_DAYS.slice();
+    return out.sort(function (a, b) { return a - b; });
+  }
+  function isWorkDay(c, when) {
+    return workDays(c).indexOf((when || new Date()).getDay()) > -1;
+  }
+  /* “Mon–Sat”, “Mon, Wed, Fri”, “Every day” */
+  function workDayLabel(c) {
+    var days = workDays(c);
+    if (days.length === 7) return 'Every day';
+    var parts = [], i = 0;
+    while (i < days.length) {
+      var j = i;
+      while (j + 1 < days.length && days[j + 1] === days[j] + 1) j++;
+      parts.push(j - i >= 2
+        ? DAY_SHORT[days[i]] + '–' + DAY_SHORT[days[j]]
+        : days.slice(i, j + 1).map(function (n) { return DAY_SHORT[n]; }).join(', '));
+      i = j + 1;
+    }
+    return parts.join(' · ');
+  }
+  /* working days gone by since the status was saved — not counting the day it
+     was saved, and never counting a day the business is shut */
+  function missedWorkDays(c) {
+    if (!c || !c.lastStatusAt) return 99;
+    var last = new Date(c.lastStatusAt);
+    if (isNaN(last)) return 99;
+    var d = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+    var n = new Date();
+    var today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    var count = 0;
+    while (d < today && count < 60) {
+      d.setDate(d.getDate() + 1);
+      if (isWorkDay(c, d)) count++;
+    }
+    return count;
+  }
+
   function statusOf(c) {
     /* only Health carries a daily status. Everything else is found by
        where it is, not by whether it reported in this morning. */
     if (!isHealth(c)) return { key: 'na', text: '', days: 0 };
-    if (!c.lastStatusAt) return { key: 'unknown', text: 'Status unknown', days: 99 };
-    var days = dayDiff(c.lastStatusAt);
-    if (days <= 0 && (c.status === 'open' || c.status === 'closed')) {
+    if (c.lastStatusAt && dayDiff(c.lastStatusAt) <= 0 && (c.status === 'open' || c.status === 'closed')) {
       return c.status === 'open'
         ? { key: 'open', text: 'Open today · updated ' + clock(new Date(c.lastStatusAt)), days: 0 }
         : { key: 'closed', text: 'Closed today', days: 0 };
     }
+    /* a day the business does not work is not a missed update. It is closed,
+       and saying which day it is answers the question honestly. */
+    if (!isWorkDay(c)) {
+      return { key: 'closed', text: 'Closed today · ' + DAY_LONG[new Date().getDay()] + ' is not a working day', days: 0 };
+    }
+    if (!c.lastStatusAt) return { key: 'unknown', text: 'Status unknown', days: 99 };
+    var days = missedWorkDays(c);
     if (days < 3) return { key: 'stale', text: 'Not updated today', days: days };
     if (days < 7) return { key: 'unknown', text: 'Status unknown', days: days };
-    return { key: 'hidden', text: 'Not updated for ' + days + ' days', days: days };
+    return { key: 'hidden', text: 'Not updated for ' + days + ' working days', days: days };
   }
 
   function publicClinics() {
@@ -276,7 +337,7 @@
   /* only Health has a status to keep, and only a live listing is worth
      interrupting anyone about */
   function needsStatus(c) {
-    return !!(c && isHealth(c) && approved(c) && c.published && !updatedToday(c));
+    return !!(c && isHealth(c) && approved(c) && c.published && isWorkDay(c) && !updatedToday(c));
   }
 
   function remindHTML(c) {
@@ -340,7 +401,7 @@
     var p = remindPrefs();
     return '<section class="prov-card stack">' +
       '<h3><svg class="ic"><use href="#i-bell"/></svg> Daily reminder</h3>' +
-      '<p class="hint">Today\'s status is what people see first. Front Belt asks once a day when it is missing, and never nags once it is saved.</p>' +
+      '<p class="hint">Today\'s status is what people see first. Front Belt asks once a day when it is missing — and only on the days you tick as working days, never on a day you are closed.</p>' +
       '<div class="reminder-set">' +
       '<label><input type="checkbox" id="rem-on"' + (p.on ? ' checked' : '') + '> Remind me every day</label>' +
       '<label>At <input type="time" id="rem-time" value="' + esc(p.time) + '"></label>' +
@@ -469,6 +530,8 @@
     if (c.address) rows += '<dt>Address</dt><dd>' + esc(c.address) + '</dd>';
     if (dist != null) rows += '<dt>From you</dt><dd>' + esc(fmtDist(dist)) + ' away · ' + esc(fmtTravel(dist)) + '</dd>';
     if (c.hours) rows += '<dt>Hours</dt><dd>' + esc(c.hours) + '</dd>';
+    rows += '<dt>Working days</dt><dd>' + esc(workDayLabel(c)) +
+      (isWorkDay(c) ? '' : ' · <span class="muted">closed today</span>') + '</dd>';
     if (c.pricing) rows += '<dt>Typical prices</dt><dd>' + esc(c.pricing) + '</dd>';
     if (webOf(c)) rows += '<dt>Website</dt><dd><a href="' + esc(webOf(c)) + '" target="_blank" rel="noopener nofollow">' + esc(webHost(c)) + '</a></dd>';
     if (c.phone) rows += '<dt>Phone</dt><dd>' + esc(c.phone) + '</dd>';
@@ -1352,6 +1415,11 @@
     var typeOpts = (cur.types || []).map(function (t) {
       return '<option' + (t === c.type ? ' selected' : '') + '>' + esc(t) + '</option>';
     }).join('');
+    var open = workDays(c);
+    var dayBoxes = [1, 2, 3, 4, 5, 6, 0].map(function (n) {
+      return '<label class="daybox"><input type="checkbox" value="' + n + '"' +
+        (open.indexOf(n) > -1 ? ' checked' : '') + '><span>' + DAY_SHORT[n] + '</span></label>';
+    }).join('');
     var svcBlock =
       '<div id="pf-svc"' + (cur.health ? '' : ' hidden') + '><strong class="small">Services offered</strong><div class="chips">' + svc + '</div></div>' +
       '<div id="pf-tags-wrap"' + (cur.health ? ' hidden' : '') + '><label>What you offer (comma separated)' +
@@ -1374,6 +1442,11 @@
       '<label>Latitude<input class="field" id="pf-lat" type="number" step="any" value="' + esc(c.lat != null ? c.lat : '') + '" placeholder="-1.2921" required></label>' +
       '<label>Longitude<input class="field" id="pf-lng" type="number" step="any" value="' + esc(c.lng != null ? c.lng : '') + '" placeholder="36.7836" required></label>' +
       '<label>&nbsp;<button class="btn btn-ghost btn-sm" type="button" id="pf-capture"><svg class="ic"><use href="#i-crosshair"/></svg> Use my current location</button></label>' +
+      '</div>' +
+      '<div class="daypick" id="pf-days">' +
+      '<strong class="small">Working days</strong>' +
+      '<p class="hint">Tick every day you open. On a day you leave unticked your listing shows <strong>Closed</strong> and nothing counts against you &mdash; no reminder, no missed day, no drop in search. A public holiday is one you simply untick for that week.</p>' +
+      '<div class="dayrow">' + dayBoxes + '</div>' +
       '</div>' +
       '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also copy them from any map app (right-click or long-press the spot).</p>' +
       '<div id="pf-map" aria-label="Map of your pin"></div>' +
@@ -1417,6 +1490,15 @@
        wipes an address the partner entered while on Premier */
     var webEl = root.querySelector('#pf-web');
     if (webEl) o.website = webEl.value.trim();
+    /* only read when the picker is on screen, so a status-only save never
+       touches the days a partner chose */
+    var daysWrap = root.querySelector('#pf-days');
+    if (daysWrap) {
+      var picked = Array.prototype.slice.call(daysWrap.querySelectorAll('input:checked'))
+        .map(function (i) { return Number(i.value); });
+      if (!picked.length) throw new Error('Tick at least one working day — the days you open.');
+      o.openDays = picked.sort(function (a, b) { return a - b; });
+    }
     if (areaSel && !area) {
       /* allow an area we have not listed yet */
       var typed = prompt('That area is not in the list yet. Type the Nairobi area name:');
@@ -1759,13 +1841,14 @@
 
       (c.lastStatusAt && (s.key === 'stale' || s.key === 'unknown')
         ? '<div class="panel" style="border-color:var(--warn)"><h3><svg class="ic"><use href="#i-warn"/></svg> Your status is out of date</h3>' +
-        '<p class="muted small">' + esc(s.text) + '. Clinics that stop updating drop in search, and after seven days the listing hides itself. Save today\'s status below to fix it.</p></div>'
+        '<p class="muted small">' + esc(s.text) + '. Clinics that stop updating drop in search, and after seven working days the listing hides itself. Only your working days are counted — a day you are closed is never a missed day. Save today\'s status below to fix it.</p></div>'
         : '') +
 
       '<div class="two">' +
       '<form class="prov-card stack" id="status-form">' +
       '<h3><svg class="ic"><use href="#i-clock"/></svg> Today\'s status</h3>' +
-      '<p class="hint">This is what people see first. It takes under a minute.</p>' +
+      '<p class="hint">This is what people see first. It takes under a minute. Your working days are <strong>' + esc(workDayLabel(c)) + '</strong>, and only those days are ever counted against you.</p>' +
+      (isWorkDay(c) ? '' : '<p class="hint">Today is <strong>' + DAY_LONG[new Date().getDay()] + '</strong> — a day you are closed, so no update is due. If you opened anyway, save the status and people will see it.</p>') +
       '<div class="statuspick" id="st-pick">' +
       '<button type="button" data-st="open" aria-pressed="' + (c.status === 'open') + '"><svg class="ic"><use href="#i-check"/></svg> Open now</button>' +
       '<button type="button" data-st="closed" aria-pressed="' + (c.status === 'closed') + '"><svg class="ic"><use href="#i-close"/></svg> Closed today</button>' +
@@ -1964,7 +2047,11 @@
         e.preventDefault();
         var errBox = form.querySelector('.ok-msg');
         var data;
-        try { data = readClinicForm(form); } catch (x) { return; }
+        try { data = readClinicForm(form); } catch (x) {
+          if (errBox) { errBox.textContent = x.message; errBox.hidden = false; }
+          else toast(x.message);
+          return;
+        }
         var btn = form.querySelector('[type="submit"]');
         btn.disabled = true;
         var payload = Object.assign({}, data);
@@ -2677,6 +2764,11 @@
       '<div id="ed-tags-wrap"' + (cur.health ? ' hidden' : '') + '><label>What they offer (comma separated)' +
       '<input class="field" id="ed-tags" value="' + esc((c.services || []).join(', ')) + '" placeholder="e.g. Fresh bread, Cakes"></label></div>';
 
+    var edDays = [1, 2, 3, 4, 5, 6, 0].map(function (n) {
+      var on = workDays(c).indexOf(n) > -1;
+      return '<label class="daybox"><input type="checkbox" value="' + n + '"' + (on ? ' checked' : '') + '><span>' + DAY_SHORT[n] + '</span></label>';
+    }).join('');
+
     openModal(isNew ? 'Add a listing' : 'Edit listing',
       '<form class="stack" id="ed-form" novalidate>' +
       '<div class="grid2">' +
@@ -2699,6 +2791,9 @@
       '</div>' +
       '<div id="ed-map"></div>' +
       '<p class="hint">Tap the map or drag the pin to the entrance. The coordinates are what distance search uses, so they should be the actual door, not the estate centre.</p>' +
+      '<div class="daypick" id="ed-days"><strong class="small">Working days</strong>' +
+      '<p class="hint">The days this business opens. On any other day it shows Closed, no update is due, and the day is not counted as missed.</p>' +
+      '<div class="dayrow">' + edDays + '</div></div>' +
       svcBlock +
       '<div class="grid2">' +
       '<label>Trust level<select class="field" id="ed-trust">' +
@@ -2776,6 +2871,7 @@
         address: $('ed-address').value.trim(),
         phone: $('ed-phone').value.trim(),
         hours: $('ed-hours').value.trim(),
+        openDays: Array.prototype.slice.call(document.querySelectorAll('#ed-days input:checked')).map(function (i) { return Number(i.value); }),
         lat: Number(latEl.value),
         lng: Number(lngEl.value),
         services: tagsEl

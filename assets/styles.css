@@ -1143,3 +1143,10 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 #pf-map{height:210px;border-radius:var(--r);background:var(--soft);z-index:0;margin-top:.2rem}
 #pf-map .leaflet-container{border-radius:var(--r)}
 #pf-map .leaflet-container,#ed-map .leaflet-container{cursor:crosshair}
+
+/* ---------- working days, in the console ---------- */
+.daypick{margin:.4rem 0 .2rem}
+.dayrow{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem}
+.daybox{display:inline-flex;align-items:center;gap:.32rem;border:1.5px solid var(--line-2);border-radius:999px;padding:.32rem .62rem;font-size:.87rem;cursor:pointer;background:var(--surface);user-select:none}
+.daybox input{accent-color:var(--brand);margin:0}
+.daybox:has(input:checked){border-color:var(--brand);background:var(--soft)}

@@ -1,5 +1,5 @@
 {
-  "app": "2026-11-24.1",
+  "app": "2026-11-24.2",
   "icon": "buckle-f-2",
-  "note": "exact map pins: partners can now place and check their door on a map"
+  "note": "working days: the days you are closed no longer count as missed"
 }
