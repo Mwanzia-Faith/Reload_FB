@@ -382,8 +382,18 @@
       if (data.reviewState) payload.reviewState = String(data.reviewState);
       if (!payload.name) return Promise.reject(new Error('Give the listing a name.'));
       if (!payload.area) return Promise.reject(new Error('Choose the area.'));
-      if (!isFinite(payload.lat) || payload.lat < -90 || payload.lat > 90) return Promise.reject(new Error('Latitude must be between -90 and 90.'));
-      if (!isFinite(payload.lng) || payload.lng < -180 || payload.lng > 180) return Promise.reject(new Error('Longitude must be between -180 and 180.'));
+      /* The pin is what customers are routed to, so it has to be a real point
+         in Kenya. This is what stops an empty field saving as 0,0, a swapped
+         pair like 36.8 / -1.29, and a missing minus sign. */
+      if (!isFinite(payload.lat) || !isFinite(payload.lng)) {
+        return Promise.reject(new Error('Put the pin on the map, or tap “Use my current location”, so the listing has a location.'));
+      }
+      if (Math.abs(payload.lat) < 0.0005 && Math.abs(payload.lng) < 0.0005) {
+        return Promise.reject(new Error('That pin is at 0,0 — out in the ocean. Tap the map at your entrance, then save again.'));
+      }
+      if (payload.lat < -4.9 || payload.lat > 5.2 || payload.lng < 33.8 || payload.lng > 42.2) {
+        return Promise.reject(new Error('That point is outside Kenya. Check the two numbers are not swapped: in Nairobi, latitude is about -1.29 and longitude about 36.82.'));
+      }
 
       payload.updatedAt = new Date().toISOString();
 

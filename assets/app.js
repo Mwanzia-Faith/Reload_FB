@@ -65,7 +65,7 @@
       encodeURIComponent('Hello ' + (c.name || '') + ', I found you on Front Belt.');
   }
   function osmURL(c) {
-    if (!isFinite(c.lat) || !isFinite(c.lng)) return '';
+    if (!hasPin(c)) return '';
     return 'https://www.openstreetmap.org/?mlat=' + c.lat + '&mlon=' + c.lng + '#map=17/' + c.lat + '/' + c.lng;
   }
 
@@ -171,6 +171,18 @@
     if (mins >= 95) return '≈ ' + Math.round(mins / 60) + ' hr drive';
     return '≈ ' + mins + ' min drive';
   }
+  /* A pin is only usable if it is a real place in Kenya. This catches a swapped
+     pair (36.8, -1.29), an empty field saved as 0,0, and a missing minus sign —
+     all of which would send a customer to the wrong place with confidence. */
+  function inKenya(lat, lng) {
+    return isFinite(lat) && isFinite(lng) &&
+      !(Math.abs(lat) < 0.0005 && Math.abs(lng) < 0.0005) &&
+      lat >= -4.9 && lat <= 5.2 && lng >= 33.8 && lng <= 42.2;
+  }
+  function hasPin(c) {
+    return !!c && inKenya(Number(c.lat), Number(c.lng));
+  }
+
   function firstName(s) {
     s = String(s || '').trim();
     if (!s) return 'You';
@@ -445,10 +457,11 @@
     if (!c && samplesOn) c = fallbackRows().filter(function (x) { return x.id === id; })[0];
     if (!c) return;
     var k = catOf(c);
-    var dist = (meGeo && isFinite(c.lat) && isFinite(c.lng))
+    var dist = (meGeo && hasPin(c))
       ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
     var saved = savedIds.indexOf(c.id) > -1;
     var s = statusOf(c);
+    var pinned = hasPin(c);
 
     var rows = '';
     if (c.type) rows += '<dt>Type</dt><dd>' + esc(c.type) + '</dd>';
@@ -493,21 +506,22 @@
       '</span></div>' +
       cmpStrip +
       '<dl class="pd-kv">' + rows + '</dl>' +
-      (isFinite(c.lat) ? '<div id="pd-map" aria-label="Map preview of ' + esc(c.name) + '"></div>' : '') +
-      '<div class="modes" id="pd-modes">' +
-      '<button type="button" data-mode="driving" aria-pressed="true">Drive</button>' +
-      '<button type="button" data-mode="walking" aria-pressed="false">Walk</button>' +
-      '<button type="button" data-mode="transit" aria-pressed="false">Transit</button>' +
-      '</div>' +
+      (pinned ? '<div id="pd-map" aria-label="Map preview of ' + esc(c.name) + '"></div>' : '') +
+      (pinned ? '<div class="modes" id="pd-modes">' +
+        '<button type="button" data-mode="driving" aria-pressed="true">Drive</button>' +
+        '<button type="button" data-mode="walking" aria-pressed="false">Walk</button>' +
+        '<button type="button" data-mode="transit" aria-pressed="false">Transit</button>' +
+        '</div>' : '') +
       '<div class="pd-actions">' +
-      '<a class="btn btn-primary" id="pd-start" href="' + esc(dirURL(c, 'driving')) + '" target="_blank" rel="noopener">' +
-      '<svg class="ic"><use href="#i-nav"/></svg> Start</a>' +
+      (pinned ? '<a class="btn btn-primary" id="pd-start" href="' + esc(dirURL(c, 'driving')) + '" target="_blank" rel="noopener">' +
+        '<svg class="ic"><use href="#i-nav"/></svg> Start</a>' : '') +
       (c.phone ? '<a class="btn btn-ghost" href="tel:' + esc(String(c.phone).replace(/\s+/g, '')) + '"><svg class="ic"><use href="#i-phone"/></svg> Call</a>' : '') +
       (waURL(c) ? '<a class="btn btn-ghost" href="' + esc(waURL(c)) + '" target="_blank" rel="noopener"><svg class="ic"><use href="#i-whatsapp"/></svg> WhatsApp</a>' : '') +
       (webOf(c) ? '<a class="btn btn-ghost" href="' + esc(webOf(c)) + '" target="_blank" rel="noopener nofollow"><svg class="ic"><use href="#i-globe"/></svg> Website</a>' : '') +
       '<button class="btn btn-ghost" type="button" data-save="' + esc(c.id) + '"><svg class="ic"><use href="#i-heart"/></svg> ' + (saved ? 'Saved' : 'Save') + '</button>' +
       '</div>' +
-      (dist == null ? '<p class="hint">Share your location and the Start button begins from where you are standing.</p>' : '') +
+      (!pinned ? '<p class="hint"><strong>No confirmed pin yet.</strong> This business has not placed its exact location, so Front Belt will not send you somewhere it cannot vouch for — call first.</p>' : '') +
+      (pinned && dist == null ? '<p class="hint">Share your location and the Start button begins from where you are standing.</p>' : '') +
       (osmURL(c) ? '<p class="hint">Start opens whichever map app your phone has. <a href="' + esc(osmURL(c)) + '" target="_blank" rel="noopener">See this place on OpenStreetMap</a>.</p>' : '');
 
     openModal(k.label + ' · ' + (c.type || 'listing'), html, 'place');
@@ -522,7 +536,7 @@
       if (st) st.href = dirURL(c, pdMode);
     });
 
-    if (isFinite(c.lat)) {
+    if (pinned) {
       loadLeaflet().then(function () {
         var box = $('pd-map');
         if (!box || !window.L) return;
@@ -798,7 +812,7 @@
     var list = publicClinics().slice();
 
     list.forEach(function (c) {
-      c._dist = (meGeo && isFinite(c.lat) && isFinite(c.lng))
+      c._dist = (meGeo && hasPin(c))
         ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
     });
     if (q) {
@@ -877,7 +891,7 @@
 
   function cardHTML(c, isPick) {
     var s = statusOf(c);
-    var dist = (meGeo && isFinite(c.lat) && isFinite(c.lng))
+    var dist = (meGeo && hasPin(c))
       ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
     var saved = savedIds.indexOf(c.id) > -1;
     var busyLabel = c.busy >= 70 ? 'busy' : c.busy >= 40 ? 'steady' : 'quiet';
@@ -895,8 +909,8 @@
       (c.pricing ? '<div class="meta"><span class="cost"><svg class="ic"><use href="#i-scale"/></svg>' + esc(c.pricing) + '</span></div>' : '') +
       (c.services && c.services.length ? '<div class="meta"><span>' + esc(c.services.slice(0, 2).join(' · ')) + '</span></div>' : '') +
       '<div class="card-foot">' +
-      '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
-      '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' +
+      (hasPin(c) ? '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
+      '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' : '') +
       '<span class="row" style="gap:.5rem">' +
       '<small>' + (c.sample ? 'Sample listing' : 'Updated ' + esc(ago(c.lastStatusAt))) + '</small>' +
       (waURL(c) ? '<a class="savebtn" href="' + esc(waURL(c)) + '" target="_blank" rel="noopener" title="Message on WhatsApp" aria-label="WhatsApp ' + esc(c.name) + '"><svg class="ic"><use href="#i-whatsapp"/></svg></a>' : '') +
@@ -910,12 +924,13 @@
      shared a location, their position as the origin — the app finds the
      place, Maps does the turn-by-turn and the “Start” button drives it. */
   function dirURL(c, mode) {
-    var dest = (isFinite(c.lat) && isFinite(c.lng))
-      ? c.lat + ',' + c.lng
-      : encodeURIComponent((c.name || '') + ' ' + (c.address || '') + ' ' + (c.area || ''));
+    /* no pin, no directions: a name search would drop the customer wherever
+       the map guesses, which is exactly the wrong-location problem */
+    if (!hasPin(c)) return '';
+    var dest = Number(c.lat) + ',' + Number(c.lng);
     var u = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest) +
       '&travelmode=' + (mode || 'driving');
-    if (meGeo && isFinite(c.lat)) u += '&origin=' + meGeo.lat + ',' + meGeo.lng;
+    if (meGeo && hasPin(c)) u += '&origin=' + meGeo.lat + ',' + meGeo.lng;
     return u;
   }
 
@@ -927,7 +942,7 @@
      type, tags, hours and a directions button, no wait time */
   function placeCardHTML(c) {
     var k = catOf(c);
-    var dist = (meGeo && isFinite(c.lat) && isFinite(c.lng))
+    var dist = (meGeo && hasPin(c))
       ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
     var saved = savedIds.indexOf(c.id) > -1;
     var tags = (c.services || []).slice(0, 3).join(' · ');
@@ -948,8 +963,8 @@
       (tags ? '<div class="meta"><span>' + esc(tags) + '</span></div>' : '') +
       '</div>' +
       '<div class="card-foot">' +
-      '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
-      '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' +
+      (hasPin(c) ? '<a class="pdir" href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener" data-dir="' + esc(c.id) + '" title="Get directions to ' + esc(c.name) + '">' +
+      '<svg class="ic"><use href="#i-nav"/></svg> Directions</a>' : '') +
       '<span class="row" style="gap:.4rem">' +
       (waURL(c) ? '<a class="savebtn" href="' + esc(waURL(c)) + '" target="_blank" rel="noopener" title="Message on WhatsApp" aria-label="WhatsApp ' + esc(c.name) + '"><svg class="ic"><use href="#i-whatsapp"/></svg></a>' : '') +
       '<button class="savebtn" type="button" data-save="' + esc(c.id) + '" aria-pressed="' + saved + '" title="Save this place" aria-label="Save ' + esc(c.name) + '">' +
@@ -1012,7 +1027,7 @@
     });
 
     list.forEach(function (c) {
-      c._dist = meGeo && isFinite(c.lat) ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
+      c._dist = meGeo && hasPin(c) ? distanceKm(meGeo.lat, meGeo.lng, c.lat, c.lng) : null;
     });
 
     list.sort(function (a, b) {
@@ -1183,7 +1198,7 @@
           (c.sample ? '<br><em>Sample listing</em>' : '') +
           '<br>' + esc(isHealth(c) ? s.text : (c.type || catOf(c).label)) +
           '<br><span style="font-size:13px;color:#6E5560">' + esc(c.trust || 'Listed') + '</span>' +
-          '<br><a href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener">Directions</a>')
+          (hasPin(c) ? '<br><a href="' + esc(dirURL(c)) + '" target="_blank" rel="noopener">Directions</a>' : ''))
         .addTo(mapLayer);
       pts.push([c.lat, c.lng]);
     });
@@ -1361,6 +1376,8 @@
       '<label>&nbsp;<button class="btn btn-ghost btn-sm" type="button" id="pf-capture"><svg class="ic"><use href="#i-crosshair"/></svg> Use my current location</button></label>' +
       '</div>' +
       '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also copy them from any map app (right-click or long-press the spot).</p>' +
+      '<div id="pf-map" aria-label="Map of your pin"></div>' +
+      '<p class="hint">Look at the pin before you save: it must sit on your door, not on the road outside or the middle of the estate. Drag it, or tap the map where you are — the numbers follow. Customers&rsquo; directions go to exactly this point.</p>' +
       svcBlock +
       '<label>Typical prices<input class="field" id="pf-pricing" value="' + esc(c.pricing || '') + '" placeholder="e.g. Consultation KES 1,000 · Braids from KES 1,500"></label>' +
       '<p class="hint">This is the cost people compare you on, so write it the way you would say it at the door — &ldquo;from KES 500&rdquo;, &ldquo;KES 1,000&ndash;1,500&rdquo; or &ldquo;free&rdquo;. It appears on your listing and your share card. Change it any time.</p>' +
@@ -1830,6 +1847,52 @@
     paintProviderRequest();
   }
 
+  /* A partner can only give the right location if they can see it. This puts
+     their pin on a map inside their own console: drag it, tap the map, or type
+     the numbers — all three stay in step, and what is saved is exactly the
+     point a customer's directions will use. */
+  function wirePinMap(root, mapSel, latSel, lngSel, captureSel) {
+    var box = root.querySelector(mapSel);
+    var latEl = root.querySelector(latSel);
+    var lngEl = root.querySelector(lngSel);
+    if (!box || !latEl || !lngEl) return;
+
+    loadLeaflet().then(function () {
+      if (!window.L || !document.body.contains(box)) return;
+      var home = [DATA.nairobi.lat, DATA.nairobi.lng];
+      var lat = parseFloat(latEl.value), lng = parseFloat(lngEl.value);
+      var has = inKenya(lat, lng);
+      var m = L.map(box, { scrollWheelZoom: false }).setView(has ? [lat, lng] : home, has ? 17 : 12);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(m);
+      var marker = L.marker(has ? [lat, lng] : home, { draggable: true }).addTo(m);
+      marker.bindTooltip('Your exact pin');
+
+      function write(ll) {
+        latEl.value = ll.lat.toFixed(6);
+        lngEl.value = ll.lng.toFixed(6);
+      }
+      marker.on('dragend', function () { write(marker.getLatLng()); });
+      m.on('click', function (e) { marker.setLatLng(e.latlng); write(e.latlng); });
+
+      function follow() {
+        var a = parseFloat(latEl.value), b = parseFloat(lngEl.value);
+        if (!inKenya(a, b)) return;
+        marker.setLatLng([a, b]);
+        if (m.getZoom() < 15) m.setView([a, b], 17);
+      }
+      latEl.addEventListener('change', follow);
+      lngEl.addEventListener('change', follow);
+
+      /* “use my location” writes the numbers after the phone answers */
+      var cap = captureSel ? root.querySelector(captureSel) : null;
+      if (cap) cap.addEventListener('click', function () { setTimeout(follow, 1200); });
+
+      setTimeout(function () { m.invalidateSize(); }, 220);
+    }).catch(function () { /* no map: the numbers still save */ });
+  }
+
   function wireProviderForm(root, clinic, isNew) {
     var pickState = clinic ? clinic.status : null;
 
@@ -1870,6 +1933,8 @@
         if (tagsBox) tagsBox.hidden = !!k.health;
       });
     }
+
+    wirePinMap(root, '#pf-map', '#pf-lat', '#pf-lng', '#pf-capture');
 
     var statusForm = root.querySelector('#status-form');
     if (statusForm) {

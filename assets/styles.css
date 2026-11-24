@@ -1138,3 +1138,8 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
   cursor:pointer;padding:.45rem .5rem;flex:none;
 }
 .updatebar .ub-x:hover{opacity:1}
+
+/* ---------- choosing the exact pin, in the console ---------- */
+#pf-map{height:210px;border-radius:var(--r);background:var(--soft);z-index:0;margin-top:.2rem}
+#pf-map .leaflet-container{border-radius:var(--r)}
+#pf-map .leaflet-container,#ed-map .leaflet-container{cursor:crosshair}
