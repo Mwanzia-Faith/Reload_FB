@@ -1492,6 +1492,7 @@
       '<label>Phone<input class="field" id="pf-phone" type="tel" value="' + esc(c.phone || '') + '" placeholder="+254 …"></label>' +
       '<label>Opening hours<input class="field" id="pf-hours" value="' + esc(c.hours || '') + '" placeholder="Mon–Sat 8:00–18:00"></label>' +
       '</div>' +
+      (hasPin(c) ? '<p class="pinnote">Customers are being sent to <strong>' + esc(Number(c.lat).toFixed(5)) + ', ' + esc(Number(c.lng).toFixed(5)) + '</strong> · <a href="https://www.openstreetmap.org/?mlat=' + esc(Number(c.lat)) + '&mlon=' + esc(Number(c.lng)) + '#map=18/' + esc(Number(c.lat)) + '/' + esc(Number(c.lng)) + '" target="_blank" rel="noopener">open this pin in a map</a></p>' : '') +
       '<div class="grid3">' +
       '<label>Latitude<input class="field" id="pf-lat" type="number" step="any" value="' + esc(c.lat != null ? c.lat : '') + '" placeholder="-1.2921" required></label>' +
       '<label>Longitude<input class="field" id="pf-lng" type="number" step="any" value="' + esc(c.lng != null ? c.lng : '') + '" placeholder="36.7836" required></label>' +
@@ -1505,6 +1506,7 @@
       '<p class="hint">Stand at the entrance and tap the button: your phone gives the coordinates, so people nearby find you. You can also copy them from any map app (right-click or long-press the spot).</p>' +
       '<div id="pf-map" aria-label="Map of your pin"></div>' +
       '<p class="hint">Look at the pin before you save: it must sit on your door, not on the road outside or the middle of the estate. Drag it, or tap the map where you are — the numbers follow. Customers&rsquo; directions go to exactly this point.</p>' +
+      '<p class="hint"><strong>Have you moved, or moved to a new shop?</strong> Change the area above, drag the pin to the new door and save — customers&rsquo; directions and distance follow the new pin the moment you save. Nothing is lost from the old listing.</p>' +
       svcBlock +
       '<label>Typical prices<input class="field" id="pf-pricing" value="' + esc(c.pricing || '') + '" placeholder="e.g. Consultation KES 1,000 · Braids from KES 1,500"></label>' +
       '<p class="hint">This is the cost people compare you on, so write it the way you would say it at the door — &ldquo;from KES 500&rdquo;, &ldquo;KES 1,000&ndash;1,500&rdquo; or &ldquo;free&rdquo;. It appears on your listing and your share card. Change it any time.</p>' +
@@ -1944,6 +1946,7 @@
 
       '<form class="prov-card stack" id="profile-form" style="margin-top:1rem">' +
       '<h3><svg class="ic"><use href="#i-edit"/></svg> Details and exact location</h3>' +
+      (c.locationMovedAt ? '<p class="hint">You last moved this pin ' + esc(ago(c.locationMovedAt)) + '. Customers have been sent to the new point since then.</p>' : '') +
       clinicFormFields(c) +
       '<button class="btn btn-primary" type="submit">Save listing details</button>' +
       '<p class="ok-msg err" id="pf-err" hidden></p>' +
@@ -2110,6 +2113,7 @@
         btn.disabled = true;
         var payload = Object.assign({}, data);
         var resubmitting = !isNew && reviewState(clinic) === 'denied';
+        var moved = false;
         if (isNew) {
           payload.ownerUid = me.uid;
           payload.published = false;
@@ -2119,13 +2123,20 @@
         } else {
           payload.id = clinic.id;
           if (resubmitting) payload.reviewState = 'pending';
+          /* a move changes what customers are routed to, so it is stamped —
+             the partner sees when, and the team can re-check the pin */
+          if (isFinite(clinic.lat) && (Number(clinic.lat) !== payload.lat || Number(clinic.lng) !== payload.lng)) {
+            payload.locationMovedAt = new Date().toISOString();
+            moved = true;
+          }
         }
         FB.saveClinic(payload).then(function () {
           btn.disabled = false;
           if (errBox) errBox.hidden = true;
           toast(isNew ? 'Sent. The Front Belt team will review it — you can follow the status here.'
             : resubmitting ? 'Sent back for review. We will tell you as soon as it is decided.'
-              : 'Listing details saved.');
+              : moved ? 'Saved. Customers’ directions now go to your new pin.'
+                : 'Listing details saved.');
           renderProvider();
         }).catch(function (err) {
           btn.disabled = false;

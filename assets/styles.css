@@ -1156,3 +1156,7 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 .remmail h4{display:flex;align-items:center;gap:.4rem;font-size:.95rem;margin:0 0 .35rem}
 .remmail .chipcheck{margin:.45rem 0}
 .remmail .field{margin-top:.3rem}
+
+/* ---------- the pin a partner is currently on ---------- */
+.pinnote{font-size:.9rem;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:var(--r);padding:.55rem .75rem;margin:.4rem 0 .2rem}
+.pinnote strong{color:var(--ink)}

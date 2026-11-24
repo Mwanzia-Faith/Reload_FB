@@ -409,6 +409,10 @@
         return Promise.reject(new Error('That point is outside Kenya. Check the two numbers are not swapped: in Nairobi, latitude is about -1.29 and longitude about 36.82.'));
       }
 
+      /* stamped by the console when the pin itself changes, so a move is
+         visible afterwards instead of silently rewriting the location */
+      if (data.locationMovedAt) payload.locationMovedAt = String(data.locationMovedAt);
+
       payload.updatedAt = new Date().toISOString();
 
       if (MODE === 'demo') {

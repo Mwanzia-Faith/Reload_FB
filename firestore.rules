@@ -38,7 +38,7 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['category', 'type', 'name', 'area', 'address', 'lat', 'lng',
                           'phone','hours','openDays','services','pricing','website','note','registrationNo',
-                          'remindEmail','remindOn',
+                          'remindEmail','remindOn','locationMovedAt',
                   'licenceRef', 'submittedAt', 'reviewState', 'partnerNote',
                   'deniedReason', 'deniedChecks', 'reviewedAt', 'reviewStartedAt',
                   'updatedAt']);
