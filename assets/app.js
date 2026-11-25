@@ -429,10 +429,18 @@
     return '<strong>Not on yet.</strong> Save an address below and tick \u201cEmail me when I forget\u201d \u2014 that is all it needs.';
   }
 
+  function smsStateText(phone, live) {
+    if (live) return '<strong>On.</strong> We text ' + esc(phone) + ' at 8:00 on a day you are open, if today\u2019s status is still missing. It arrives with no internet at all.';
+    if (phone) return '<strong>Paused.</strong> We have ' + esc(phone) + ' saved, but the tick below is off, so no text is sent.';
+    return '<strong>Not on yet.</strong> Add a phone number below and tick \u201cText me when I forget\u201d \u2014 this is the one that reaches you without internet.';
+  }
+
   function reminderCard(c) {
     var p = remindPrefs();
     var remAddr = c.remindEmail || '';
     var remLive = !!remAddr && c.remindOn !== false;
+    var remPhone = c.remindPhone || c.phone || '';
+    var smsLive = !!c.remindPhone && c.remindSmsOn === true;
     return '<section class="prov-card stack">' +
       '<h3><svg class="ic"><use href="#i-bell"/></svg> Daily reminder</h3>' +
       '<p class="hint">Today\'s status is what people see first. Front Belt asks once a day when it is missing — and only on the days you tick as working days, never on a day you are closed.</p>' +
@@ -448,34 +456,59 @@
       '<p class="hint">This is the one that reaches you even when Front Belt is closed. Every morning at 8:00, on a day you are open, if today\'s status is still missing we email you a single line with a link straight back here. Days you are closed are skipped.</p>' +
       '<label>Send it to<input class="field" id="rem-email" type="email" autocomplete="email" value="' + esc(c.remindEmail || (me && me.email) || '') + '" placeholder="you@example.com"></label>' +
       '<label class="chipcheck"><input type="checkbox" id="rem-mail"' + (c.remindOn === false ? '' : ' checked') + '> Email me when I forget</label>' +
-      '<button class="btn btn-ghost btn-sm" type="button" id="rem-save"><svg class="ic"><use href="#i-check"/></svg> Save email reminders</button>' +
       '</div>' +
+      '<div class="remsms">' +
+      '<h4><svg class="ic"><use href="#i-phone"/></svg> Text message</h4>' +
+      '<p class="rem-state' + (smsLive ? ' on' : '') + '" id="rem-sms-state">' + smsStateText(remPhone, smsLive) + '</p>' +
+      '<p class="hint">The one that works when the internet does not. One text to the phone in your pocket, at 8:00 on a day you are open, if today\'s status is still missing — you open the console later, when you are back online, and fix it. Each text costs Front Belt a few shillings, so it only goes to partners who ask for it.</p>' +
+      '<label>Text it to<input class="field" id="rem-phone" type="tel" autocomplete="tel" value="' + esc(remPhone) + '" placeholder="0712 345 678"></label>' +
+      '<label class="chipcheck"><input type="checkbox" id="rem-sms"' + (c.remindSmsOn ? ' checked' : '') + '> Text me when I forget</label>' +
+      '</div>' +
+      '<button class="btn btn-ghost btn-sm" type="button" id="rem-save"><svg class="ic"><use href="#i-check"/></svg> Save reminders</button>' +
       '</section>';
   }
 
   function wireReminderCard(root) {
     var emailEl = root.querySelector('#rem-email');
     var mailEl = root.querySelector('#rem-mail');
-    var mailBtn = root.querySelector('#rem-save');
+    var phoneEl = root.querySelector('#rem-phone');
+    var smsEl = root.querySelector('#rem-sms');
+    var saveBtn = root.querySelector('#rem-save');
     var stateEl = root.querySelector('#rem-state');
-    if (emailEl && mailEl && mailBtn) {
-      mailBtn.addEventListener('click', function () {
-        var email = emailEl.value.trim();
-        if (mailEl.checked && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    var smsStateEl = root.querySelector('#rem-sms-state');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        var email = emailEl ? emailEl.value.trim() : '';
+        var mailOn = !!(mailEl && mailEl.checked);
+        var phone = phoneEl ? phoneEl.value.trim() : '';
+        var textOn = !!(smsEl && smsEl.checked);
+        if (mailOn && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           toast('Type the email address the reminder should go to.');
           return;
         }
-        mailBtn.disabled = true;
-        FB.setReminders(provClinicId, { email: email, on: !!mailEl.checked }).then(function () {
-          mailBtn.disabled = false;
+        if (textOn && !/^(\+?254|0)[17]\d{8}$/.test(phone.replace(/[\s()-]/g, ''))) {
+          toast('Type the phone number the text should go to, for example 0712 345 678.');
+          return;
+        }
+        saveBtn.disabled = true;
+        FB.setReminders(provClinicId, { email: email, on: mailOn, phone: phone, smsOn: textOn }).then(function () {
+          saveBtn.disabled = false;
           if (stateEl) {
-            var live = !!mailEl.checked && !!email;
+            var live = mailOn && !!email;
             stateEl.className = 'rem-state' + (live ? ' on' : '');
             stateEl.innerHTML = remStateText(email, live);
           }
-          toast(mailEl.checked ? 'Reminder email saved — we will write to ' + email + '.' : 'Email reminders are off.');
+          if (smsStateEl) {
+            var smsLive = textOn && !!phone;
+            smsStateEl.className = 'rem-state' + (smsLive ? ' on' : '');
+            smsStateEl.innerHTML = smsStateText(phone, smsLive);
+          }
+          var bits = [];
+          if (mailOn) bits.push('email to ' + email);
+          if (textOn) bits.push('a text to ' + phone);
+          toast(bits.length ? 'Saved — we will send ' + bits.join(' and ') + ' when the status is missing.' : 'Reminders are off.');
         }).catch(function (err) {
-          mailBtn.disabled = false;
+          saveBtn.disabled = false;
           toast(err.message);
         });
       });

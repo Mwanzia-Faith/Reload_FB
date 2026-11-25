@@ -485,7 +485,17 @@
       if (opts.on && !email) {
         return Promise.reject(new Error('Type the email address the reminder should go to.'));
       }
-      return setField(id, { remindEmail: email, remindOn: !!opts.on });
+      /* the text channel: stored as one Kenyan number, +2547… / +2541…, so the
+         reminder job never has to guess a prefix or a leading zero */
+      var phone = String(opts.phone || '').replace(/[\s()\-]/g, '');
+      if (phone && !/^(\+?254|0)[17]\d{8}$/.test(phone)) {
+        return Promise.reject(new Error('That phone number does not look right. Use a Kenyan mobile, for example 0712 345 678.'));
+      }
+      if (opts.smsOn && !phone) {
+        return Promise.reject(new Error('Type the phone number the text should go to.'));
+      }
+      var e164 = phone ? '+254' + phone.slice(-9) : '';
+      return setField(id, { remindEmail: email, remindOn: !!opts.on, remindPhone: e164, remindSmsOn: !!opts.smsOn });
     },
 
     /* the partner's plan: Trial, Basic or Premier. A team action — a partner

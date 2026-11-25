@@ -35,6 +35,8 @@ jobs:
       - name: Send the reminders
         env:
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_SMS_API_KEY: ${{ secrets.BREVO_SMS_API_KEY }}
+          SMS_SENDER: FrontBelt
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
           SENDER_NAME: Front Belt
           APP_URL: ${{ vars.APP_URL }}

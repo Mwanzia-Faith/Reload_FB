@@ -1,5 +1,5 @@
 {
-  "app": "2026-11-25.2",
+  "app": "2026-11-25.3",
   "icon": "buckle-f-2",
-  "note": "console pairs today's status with the reminder, so no empty column"
+  "note": "a partner can ask for a text as well as an email, for days with no internet"
 }
