@@ -1152,10 +1152,10 @@ code.sel{background:var(--soft);padding:.35rem .6rem;border-radius:8px;user-sele
 .daybox:has(input:checked){border-color:var(--brand);background:var(--soft)}
 
 /* ---------- email reminder prefs in the partner console ---------- */
-.remmail,.remsms{border-top:1px solid var(--line);margin-top:.7rem;padding-top:.75rem}
-.remmail h4,.remsms h4{display:flex;align-items:center;gap:.4rem;font-size:.95rem;margin:0 0 .35rem}
-.remmail .chipcheck,.remsms .chipcheck{margin:.45rem 0}
-.remmail .field,.remsms .field{margin-top:.3rem}
+.remmail{border-top:1px solid var(--line);margin-top:.7rem;padding-top:.75rem}
+.remmail h4{display:flex;align-items:center;gap:.4rem;font-size:.95rem;margin:0 0 .35rem}
+.remmail .chipcheck{margin:.45rem 0}
+.remmail .field{margin-top:.3rem}
 .rem-state{
   font-size:.86rem;line-height:1.4;margin:.1rem 0 .5rem;padding:.45rem .65rem;
   border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--line);color:var(--muted);

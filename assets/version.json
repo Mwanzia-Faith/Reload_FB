@@ -1,5 +1,5 @@
 {
-  "app": "2026-11-25.3",
+  "app": "2026-11-25.4",
   "icon": "buckle-f-2",
-  "note": "a partner can ask for a text as well as an email, for days with no internet"
+  "note": "the daily reminder is email only again until texts are revisited"
 }

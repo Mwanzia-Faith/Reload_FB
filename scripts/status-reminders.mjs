@@ -9,9 +9,7 @@
      2. decides in East Africa Time which Health listings are due a nudge:
         today is one of the partner's working days, and today's status is
         still missing
-     3. reaches that partner through Brevo — by email, by SMS, or both, on the
-        channels the partner switched on in its console. The text is the one
-        that arrives when the business has no internet at all that morning.
+     3. emails that partner through Brevo
 
    With no BREVO_API_KEY (or DRY_RUN=1) it sends nothing and prints who it
    would have emailed — which is how it is safe to run before setup.
@@ -27,11 +25,6 @@ const APP_URL = process.env.APP_URL || 'https://mwanzia-faith.github.io/Reload_F
 const SENDER_EMAIL = (process.env.SENDER_EMAIL || 'frontbelttechnologiesltd@gmail.com').trim();
 const SENDER_NAME = (process.env.SENDER_NAME || 'Front Belt').trim();
 const KEY = (process.env.BREVO_API_KEY || '').trim();
-/* the same Brevo account sends the text, but its own key may be used if the
-   email key is kept to email only. Sender is the alphanumeric ID Brevo allows
-   (11 characters) and must carry the Front Belt name, never a person's. */
-const SMS_KEY = (process.env.BREVO_SMS_API_KEY || KEY).trim();
-const SMS_SENDER = (process.env.SMS_SENDER || 'FrontBelt').trim();
 const DRY = !KEY || process.env.DRY_RUN === '1' || process.argv.includes('--dry-run');
 
 /* ---------- firebase config (public by design, so no secret needed) ---------- */
@@ -91,22 +84,13 @@ function workDays(c) {
   return d.length ? d : [0, 1, 2, 3, 4, 5, 6];
 }
 
-/* ---------- which channels a partner actually switched on ---------- */
-function emailOn(c) {
-  return c.remindOn !== false
-    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(c.remindEmail || ''));
-}
-function smsOn(c) {
-  return c.remindSmsOn === true
-    && /^\+254[17]\d{8}$/.test(String(c.remindPhone || ''));
-}
-
-/* a listing is due when it is open today, has a channel switched on, and today
-   has no status yet */
+/* a listing is due when it is open today and today has no status yet */
 function isDue(c, now) {
   if (String(c.category || '') !== 'health') return false;
   if (c.reviewState && c.reviewState !== 'approved') return false;
-  if (!emailOn(c) && !smsOn(c)) return false;
+  if (c.remindOn === false) return false;
+  if (!c.remindEmail) return false;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(c.remindEmail))) return false;
   if (!workDays(c).includes(weekday(now))) return false;
   if (!c.lastStatusAt) return true;
   return dayKey(new Date(c.lastStatusAt)) !== dayKey(now);
@@ -151,13 +135,6 @@ function maskAddr(e) {
   return (parts[0] || '').slice(0, 2) + '***@' + (parts[1] || '');
 }
 
-/* same reason for a phone number: a public log should not print a partner's
-   number in full */
-function maskPhone(p) {
-  const s = String(p || '');
-  return s.length > 6 ? s.slice(0, 4) + ' *** ' + s.slice(-2) : s;
-}
-
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
@@ -178,31 +155,7 @@ async function send(c, mail) {
   return res.json().catch(() => ({}));
 }
 
-/* ---------- the text: the channel that works with no internet ---------- */
-function smsFor(c) {
-  const name = String(c.name || 'your business').slice(0, 28);
-  const link = APP_URL.replace(/\/$/, '') + '/#/partner';
-  const text = `Front Belt: today's status for ${name} is missing. Update when you are online: ${link}`;
-  /* over 160 characters is charged as a second message, so keep it to one */
-  return text.length <= 160 ? text : text.slice(0, 157) + '...';
-}
-
-async function sendSms(c) {
-  const res = await fetch('https://api.brevo.com/v3/transactionalSMS/sms', {
-    method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': SMS_KEY },
-    body: JSON.stringify({
-      sender: SMS_SENDER,
-      recipient: String(c.remindPhone).trim(),
-      content: smsFor(c),
-      type: 'transactional'
-    })
-  });
-  if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 300)}`);
-  return res.json().catch(() => ({}));
-}
-
-/* ---------- self-test: the rules that decide who gets a reminder ---------- */
+/* ---------- self-test: the rules that decide who gets an email ---------- */
 if (process.argv.includes('--self-test')) {
   const today = new Date();
   const stale = new Date(Date.now() - 2 * 86400000).toISOString();
@@ -214,10 +167,7 @@ if (process.argv.includes('--self-test')) {
     ['closed today', Object.assign({}, base, { openDays: [(weekday(today) + 1) % 7] }), false],
     ['no working days given (opens every day)', Object.assign({}, base), true],
     ['email reminders switched off', Object.assign({}, base, openToday, { remindOn: false }), false],
-    ['no reminder channel on', Object.assign({}, base, openToday, { remindEmail: '' }), false],
-    ['text only, no email', Object.assign({}, base, openToday, { remindEmail: '', remindPhone: '+254712345678', remindSmsOn: true }), true],
-    ['text switched off and no email', Object.assign({}, base, openToday, { remindEmail: '', remindPhone: '+254712345678', remindSmsOn: false }), false],
-    ['phone saved in the wrong shape', Object.assign({}, base, openToday, { remindEmail: '', remindPhone: '0712345678', remindSmsOn: true }), false],
+    ['no email address', Object.assign({}, base, openToday, { remindEmail: '' }), false],
     ['not a Health listing', Object.assign({}, base, openToday, { category: 'food' }), false],
     ['still waiting for review', Object.assign({}, base, openToday, { reviewState: 'pending' }), false]
   ];
@@ -225,7 +175,7 @@ if (process.argv.includes('--self-test')) {
   for (const [label, listing, expected] of cases) {
     const got = isDue(listing, today);
     if (got !== expected) bad++;
-    console.log(`${got === expected ? 'ok  ' : 'FAIL'} ${label}: ${got ? 'due' : 'skipped'}`);
+    console.log(`${got === expected ? 'ok  ' : 'FAIL'} ${label}: ${got ? 'emailed' : 'skipped'}`);
   }
   console.log(bad ? `${bad} case(s) wrong` : 'All cases behave as intended.');
   process.exit(bad ? 1 : 0);
@@ -292,13 +242,11 @@ if (process.argv.includes('--explain')) {
     const why = [];
     if (String(c.category || '') !== 'health') why.push('not Health');
     if (c.reviewState && c.reviewState !== 'approved') why.push('not approved (' + c.reviewState + ')');
-    if (!emailOn(c) && !smsOn(c)) why.push('no reminder channel on');
-    else if (c.remindEmail && !emailOn(c)) why.push('email reminder off');
-    if (c.remindPhone && c.remindSmsOn && !smsOn(c)) why.push('phone number not a Kenyan mobile');
+    if (c.remindOn === false) why.push('email reminders off');
+    if (!c.remindEmail) why.push('no reminder email saved');
     if (!workDays(c).includes(weekday(now))) why.push('closed today');
     if (c.lastStatusAt && dayKey(new Date(c.lastStatusAt)) === dayKey(now)) why.push('status already saved today');
-    const via = [emailOn(c) ? 'email' : '', smsOn(c) ? 'text' : ''].filter(Boolean).join(' + ');
-    console.log(`  ${c.name}: ${why.length ? 'skip — ' + why.join(', ') : 'DUE via ' + via}`);
+    console.log(`  ${c.name}: ${why.length ? 'skip — ' + why.join(', ') : 'DUE'}`);
   }
 }
 
@@ -306,35 +254,19 @@ if (!due.length) process.exit(0);
 
 if (DRY) {
   console.log(KEY ? 'Dry run requested — nothing sent.' : 'No BREVO_API_KEY set — nothing sent. This is the list it would have emailed:');
-  due.forEach((c) => {
-    const via = [emailOn(c) ? 'email ' + maskAddr(c.remindEmail) : '', smsOn(c) ? 'text ' + maskPhone(c.remindPhone) : ''].filter(Boolean).join(' + ');
-    console.log(`  • ${c.name} — ${via} — last status ${c.lastStatusAt || 'never'}`);
-  });
+  due.forEach((c) => console.log(`  • ${c.name} <${maskAddr(c.remindEmail)}> — last status ${c.lastStatusAt || 'never'}`));
   process.exit(0);
 }
 
-let mails = 0, texts = 0, failed = 0;
+let failed = 0;
 for (const c of due) {
-  if (emailOn(c)) {
-    try {
-      await send(c, emailFor(c));
-      mails++;
-      console.log(`email sent → ${c.name} <${maskAddr(c.remindEmail)}>`);
-    } catch (err) {
-      failed++;
-      console.error(`email failed → ${c.name} <${maskAddr(c.remindEmail)}>: ${err.message}`);
-    }
-  }
-  if (smsOn(c)) {
-    try {
-      await sendSms(c);
-      texts++;
-      console.log(`text sent → ${c.name} <${maskPhone(c.remindPhone)}>`);
-    } catch (err) {
-      failed++;
-      console.error(`text failed → ${c.name} <${maskPhone(c.remindPhone)}>: ${err.message}`);
-    }
+  try {
+    await send(c, emailFor(c));
+    console.log(`sent → ${c.name} <${maskAddr(c.remindEmail)}>`);
+  } catch (err) {
+    failed++;
+    console.error(`failed → ${c.name} <${maskAddr(c.remindEmail)}>: ${err.message}`);
   }
 }
-console.log(`Done. ${mails} email(s), ${texts} text(s) sent, ${failed} failed.`);
+console.log(`Done. ${due.length - failed} sent, ${failed} failed.`);
 process.exit(failed ? 1 : 0);

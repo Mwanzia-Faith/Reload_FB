@@ -220,7 +220,7 @@ page — or an installed app — can be running yesterday's HTML until it reload
 `index.html` loads its own files with the same version on the end:
 
 ```html
-<script src="assets/app.js?v=2026-11-25.3"></script>
+<script src="assets/app.js?v=2026-11-25.4"></script>
 ```
 
 That `?v=` is what stops a browser replaying a cached `app.js` from before your
@@ -246,12 +246,6 @@ and they are different jobs:
   card says where it stands: **On** with the address and the 8:00 time, **Paused**
   when an address is saved but the tick is off, **Not on yet** when no address is
   saved — so nobody has to guess whether the email will come.
-- **By text message** — the only channel that still reaches a partner whose
-  internet is down that morning. The partner ticks *Text me when I forget* and
-  gives a Kenyan mobile number (`remindPhone`, stored as `+254…`); the same 08:00
-  job sends one short SMS through Brevo, pointing to the console to update when
-  they are back online. Either channel can be on, or both; each is used only if
-  the partner switched it on, because every text spends SMS credit.
 
 `.github/workflows/status-reminders.yml` runs `scripts/status-reminders.mjs` every
 day at **08:00 East Africa Time** (05:00 UTC):
@@ -272,22 +266,12 @@ day at **08:00 East Africa Time** (05:00 UTC):
    code; without that step every send is refused.
 
    When the key is created, choose **Restricted** access and give it one row:
-   **Transactional email → All**. `Read` on *Transactional email* can look at the
-   log but cannot send, so `All` is the only setting that lets the workflow work.
-
-   **Texts are separate.** To send them, buy **SMS credits** in Brevo and add
-   **Transactional SMS → All** to the same key — or leave email on its own key and
-   set a second secret, `BREVO_SMS_API_KEY`. Every other row still stays **None**.
-   The sender is the short alphanumeric ID `FrontBelt` (11 characters is Brevo's
-   limit) and it has to be approved before the first text lands. Brevo lists Kenya
-   (code 254) as a supported SMS country; check the current per-text price there,
-   because the credit is spent per message, not per partner.
+   **Transactional email → All**. Every other row stays **None**. `Read` on
+   *Transactional email* can look at the log but cannot send, so `All` is the
+   only setting that lets the workflow work.
 2. In GitHub: **Settings → Secrets and variables → Actions** → new secret
    **`BREVO_API_KEY`**, and (optionally) **`SENDER_EMAIL`** if the sender is not
-   the Front Belt address, and **`BREVO_SMS_API_KEY`** if texts use their own key.
-   The console writes `remindPhone` / `remindSmsOn`, so **republish
-   `firestore.rules`** — an older copy rejects those two fields and saving the
-   card will fail.
+   the Front Belt address.
 3. Run the workflow once by hand with *Only list who would be emailed* ticked to
    see who it would write to, then untick it and run again.
 
