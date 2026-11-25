@@ -220,7 +220,7 @@ page — or an installed app — can be running yesterday's HTML until it reload
 `index.html` loads its own files with the same version on the end:
 
 ```html
-<script src="assets/app.js?v=2026-11-25.1"></script>
+<script src="assets/app.js?v=2026-11-25.2"></script>
 ```
 
 That `?v=` is what stops a browser replaying a cached `app.js` from before your

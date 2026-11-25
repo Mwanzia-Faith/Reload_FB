@@ -1,5 +1,5 @@
 {
-  "app": "2026-11-25.1",
+  "app": "2026-11-25.2",
   "icon": "buckle-f-2",
-  "note": "reminder card shows whether the daily email is on, and to which address"
+  "note": "console pairs today's status with the reminder, so no empty column"
 }

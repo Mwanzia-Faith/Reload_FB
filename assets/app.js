@@ -1902,6 +1902,26 @@
       ? '<div class="stat"><b>' + (c.lastStatusAt ? esc(ago(c.lastStatusAt)) : 'No update yet') + '</b><span>Last update</span></div>'
       : '<div class="stat"><b>' + esc(c.hours || 'Not set') + '</b><span>Opening hours</span></div>';
 
+    var listingCardHTML = '<section class="prov-card stack">' +
+      '<h3><svg class="ic"><use href="#i-eye"/></svg> Your listing</h3>' +
+      (visibilityReason(c)
+        ? '<p class="hint"><strong>Not on the public site right now.</strong> ' + esc(visibilityReason(c)) + '</p>'
+        : '<p class="hint">Your business is visible to people searching nearby. Hiding it takes effect immediately and keeps your data.</p>') +
+      (c.published
+        ? '<button class="btn btn-ghost btn-sm" type="button" data-hide="' + esc(c.id) + '"><svg class="ic"><use href="#i-eye"/></svg> Hide my listing</button>'
+        : '<button class="btn btn-ghost btn-sm" type="button" data-relist="' + esc(c.id) + '"><svg class="ic"><use href="#i-refresh"/></svg> Ask to be relisted</button>') +
+      '</section>';
+
+    var trustCardHTML = '<section class="prov-card stack">' +
+      '<h3><svg class="ic"><use href="#i-shield"/></svg> Trust level</h3>' +
+      '<div class="trustpath">' + trustSteps.map(function (t, i) {
+        return '<span class="tstep' + (i <= reached ? ' on' : '') + '">' + esc(t) + '</span>';
+      }).join('') + '</div>' +
+      '<p class="hint">Only the Front Belt team can raise a level. Apply with your documents and a reviewer will check them.</p>' +
+      '<div id="prov-request"></div>' +
+      '<button class="btn btn-ghost btn-sm" type="button" data-verify="' + esc(c.id) + '"><svg class="ic"><use href="#i-shield"/></svg> Apply for an upgrade</button>' +
+      '</section>';
+
     body.innerHTML = trackerHTML(c) + planCard(c) + premierCard(c) +
       '<div class="statrow" style="margin-top:1rem">' +
       '<div class="stat"><b>' + esc(c.trust || 'Listed') + '</b><span>Trust level</span></div>' +
@@ -1916,6 +1936,14 @@
         : '') +
 
       '<div class="two">' +
+      listingCardHTML +
+      trustCardHTML +
+      '</div>' +
+
+      /* today's status and the reminder that nudges it sit together, so neither
+         column is left with a hole where the other one ran out of content */
+      '<div class="two" id="prov-status-row" style="margin-top:1rem">' +
+      '<div class="stack">' +
       '<form class="prov-card stack" id="status-form">' +
       '<h3><svg class="ic"><use href="#i-clock"/></svg> Today\'s status</h3>' +
       '<p class="hint">This is what people see first. It takes under a minute. Your working days are <strong>' + esc(workDayLabel(c)) + '</strong>, and only those days are ever counted against you.</p>' +
@@ -1936,28 +1964,14 @@
       '<button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-refresh"/></svg> Save today\'s status</button>' +
       '</form>' +
 
-      '<div class="stack">' +
-      '<section class="prov-card stack">' +
-      '<h3><svg class="ic"><use href="#i-eye"/></svg> Your listing</h3>' +
-      (visibilityReason(c)
-        ? '<p class="hint"><strong>Not on the public site right now.</strong> ' + esc(visibilityReason(c)) + '</p>'
-        : '<p class="hint">Your business is visible to people searching nearby. Hiding it takes effect immediately and keeps your data.</p>') +
-      (c.published
-        ? '<button class="btn btn-ghost btn-sm" type="button" data-hide="' + esc(c.id) + '"><svg class="ic"><use href="#i-eye"/></svg> Hide my listing</button>'
-        : '<button class="btn btn-ghost btn-sm" type="button" data-relist="' + esc(c.id) + '"><svg class="ic"><use href="#i-refresh"/></svg> Ask to be relisted</button>') +
+      '<section class="prov-card">' +
+      '<h3><svg class="ic"><use href="#i-chart"/></svg> Recent updates</h3>' +
+      '<div class="timeline" id="p-history"><p class="hint">Loading…</p></div>' +
       '</section>' +
+      '</div>' +
 
-      '<section class="prov-card stack">' +
-      '<h3><svg class="ic"><use href="#i-shield"/></svg> Trust level</h3>' +
-      '<div class="trustpath">' + trustSteps.map(function (t, i) {
-        return '<span class="tstep' + (i <= reached ? ' on' : '') + '">' + esc(t) + '</span>';
-      }).join('') + '</div>' +
-      '<p class="hint">Only the Front Belt team can raise a level. Apply with your documents and a reviewer will check them.</p>' +
-      '<div id="prov-request"></div>' +
-      '<button class="btn btn-ghost btn-sm" type="button" data-verify="' + esc(c.id) + '"><svg class="ic"><use href="#i-shield"/></svg> Apply for an upgrade</button>' +
-      '</section>' +
       (k.health ? reminderCard(c) : '') +
-      '</div></div>' +
+      '</div>' +
 
       '<form class="prov-card stack" id="profile-form" style="margin-top:1rem">' +
       '<h3><svg class="ic"><use href="#i-edit"/></svg> Details and exact location</h3>' +
@@ -1965,12 +1979,7 @@
       clinicFormFields(c) +
       '<button class="btn btn-primary" type="submit">Save listing details</button>' +
       '<p class="ok-msg err" id="pf-err" hidden></p>' +
-      '</form>' +
-
-      '<section class="prov-card" style="margin-top:1rem">' +
-      '<h3><svg class="ic"><use href="#i-chart"/></svg> Recent updates</h3>' +
-      '<div class="timeline" id="p-history"><p class="hint">Loading…</p></div>' +
-      '</section>';
+      '</form>';
 
     /* non-health listings have no daily status to keep */
     if (!k.health) {
@@ -1979,6 +1988,8 @@
       Array.prototype.slice.call(body.querySelectorAll('section.prov-card')).forEach(function (sec) {
         if (sec.querySelector('#p-history')) sec.remove();
       });
+      var stRow = body.querySelector('#prov-status-row');
+      if (stRow && !stRow.querySelector('.prov-card')) stRow.remove();
     }
 
     if ($('pf-area')) $('pf-area').value = c.area || '';
