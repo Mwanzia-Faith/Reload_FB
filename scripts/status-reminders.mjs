@@ -13,6 +13,10 @@
 
    With no BREVO_API_KEY (or DRY_RUN=1) it sends nothing and prints who it
    would have emailed — which is how it is safe to run before setup.
+
+   --test-to=you@example.com sends one real message now (subject marked
+   [Test]) through the same call, ignoring who is due, so the key and sender
+   can be proved without waiting for a morning where a status is missing.
 -------------------------------------------------------------------*/
 import { readFileSync } from 'node:fs';
 
@@ -193,6 +197,35 @@ try {
 } catch (err) {
   console.error('Could not read the listings:', err.message);
   process.exit(1);
+}
+
+/* --test-to (or TEST_TO in the workflow): one real message now, through the
+   same Brevo call the morning run uses. It ignores who is due, so the key, the
+   sender and the inbox can be proved today instead of waiting for a morning
+   where the status is missing. */
+const testArg = process.argv.find((a) => a.startsWith('--test-to='))
+  || (String(process.env.TEST_TO || '').trim() ? '--test-to=' + String(process.env.TEST_TO).trim() : '');
+if (testArg) {
+  const to = testArg.slice('--test-to='.length).trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    console.error('--test-to needs an email address, e.g. --test-to=you@example.com');
+    process.exit(1);
+  }
+  if (!KEY) {
+    console.error('No BREVO_API_KEY set here — cannot send the test. Run it from the workflow, where the secret is.');
+    process.exit(1);
+  }
+  const sample = listings.find((c) => String(c.category || '') === 'health') || { name: 'your business' };
+  const mail = emailFor(Object.assign({}, sample, { remindEmail: to }));
+  mail.subject = '[Test] ' + mail.subject;
+  try {
+    await send({ remindEmail: to, name: sample.name || '' }, mail);
+    console.log(`test sent → ${maskAddr(to)} — check that inbox, including spam.`);
+  } catch (err) {
+    console.error(`test failed → ${maskAddr(to)}: ${err.message}`);
+    process.exit(1);
+  }
+  process.exit(0);
 }
 
 const due = listings.filter((c) => isDue(c, now));

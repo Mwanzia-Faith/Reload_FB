@@ -14,6 +14,11 @@ on:
         description: 'Only list who would be emailed'
         type: boolean
         default: true
+      test_to:
+        description: 'Send one test email to this address now (overrides the dry run tick)'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: status-reminders
@@ -33,5 +38,6 @@ jobs:
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
           SENDER_NAME: Front Belt
           APP_URL: ${{ vars.APP_URL }}
+          TEST_TO: ${{ inputs.test_to }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
         run: node scripts/status-reminders.mjs

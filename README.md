@@ -276,6 +276,12 @@ day at **08:00 East Africa Time** (05:00 UTC):
 3. Run the workflow once by hand with *Only list who would be emailed* ticked to
    see who it would write to, then untick it and run again.
 
+   To prove the key, the sender and the inbox *before* a morning depends on them,
+   run it once with **Send one test email to this address now** filled in: it
+   sends the same message at once, subject marked `[Test]`, and ignores the
+   dry-run tick. A `401` or `Access denied for resource` in that run means the
+   key's permission row is not `Transactional email → All`.
+
 Until the key is set the workflow runs happily and sends nothing: it prints
 `No BREVO_API_KEY set` and the list it would have emailed. Check the job log if a
 morning goes by with no mail — it says, listing by listing, why someone was
