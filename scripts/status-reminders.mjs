@@ -190,6 +190,10 @@ if (!cfg.apiKey || !cfg.projectId) {
 
 const now = new Date();
 console.log(`Front Belt reminders · ${dayKey(now)} (${DAY_LONG[weekday(now)]}) · ${TZ}`);
+/* the From line in the log, so every morning shows the name and address a
+   partner will actually see — and a SENDER_EMAIL secret set to something else
+   is visible here instead of being discovered in an inbox */
+console.log(`from: ${SENDER_NAME} <${SENDER_EMAIL}>`);
 
 let listings;
 try {
