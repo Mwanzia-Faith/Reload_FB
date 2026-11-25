@@ -423,8 +423,16 @@
     });
   }
 
+  function remStateText(email, live) {
+    if (live) return '<strong>On.</strong> We email ' + esc(email) + ' at 8:00 on a day you are open, if today\u2019s status is still missing.';
+    if (email) return '<strong>Paused.</strong> We have ' + esc(email) + ' saved, but the tick below is off, so no email is sent.';
+    return '<strong>Not on yet.</strong> Save an address below and tick \u201cEmail me when I forget\u201d \u2014 that is all it needs.';
+  }
+
   function reminderCard(c) {
     var p = remindPrefs();
+    var remAddr = c.remindEmail || '';
+    var remLive = !!remAddr && c.remindOn !== false;
     return '<section class="prov-card stack">' +
       '<h3><svg class="ic"><use href="#i-bell"/></svg> Daily reminder</h3>' +
       '<p class="hint">Today\'s status is what people see first. Front Belt asks once a day when it is missing — and only on the days you tick as working days, never on a day you are closed.</p>' +
@@ -436,6 +444,7 @@
       '<p class="hint">The reminder appears when you open Front Belt, and as a phone notification at the time you choose while it is open in a tab or on your home screen.</p>' +
       '<div class="remmail">' +
       '<h4><svg class="ic"><use href="#i-bell"/></svg> Email reminder</h4>' +
+      '<p class="rem-state' + (remLive ? ' on' : '') + '" id="rem-state">' + remStateText(remAddr, remLive) + '</p>' +
       '<p class="hint">This is the one that reaches you even when Front Belt is closed. Every morning at 8:00, on a day you are open, if today\'s status is still missing we email you a single line with a link straight back here. Days you are closed are skipped.</p>' +
       '<label>Send it to<input class="field" id="rem-email" type="email" autocomplete="email" value="' + esc(c.remindEmail || (me && me.email) || '') + '" placeholder="you@example.com"></label>' +
       '<label class="chipcheck"><input type="checkbox" id="rem-mail"' + (c.remindOn === false ? '' : ' checked') + '> Email me when I forget</label>' +
@@ -448,6 +457,7 @@
     var emailEl = root.querySelector('#rem-email');
     var mailEl = root.querySelector('#rem-mail');
     var mailBtn = root.querySelector('#rem-save');
+    var stateEl = root.querySelector('#rem-state');
     if (emailEl && mailEl && mailBtn) {
       mailBtn.addEventListener('click', function () {
         var email = emailEl.value.trim();
@@ -458,6 +468,11 @@
         mailBtn.disabled = true;
         FB.setReminders(provClinicId, { email: email, on: !!mailEl.checked }).then(function () {
           mailBtn.disabled = false;
+          if (stateEl) {
+            var live = !!mailEl.checked && !!email;
+            stateEl.className = 'rem-state' + (live ? ' on' : '');
+            stateEl.innerHTML = remStateText(email, live);
+          }
           toast(mailEl.checked ? 'Reminder email saved — we will write to ' + email + '.' : 'Email reminders are off.');
         }).catch(function (err) {
           mailBtn.disabled = false;

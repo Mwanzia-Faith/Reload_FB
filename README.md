@@ -220,7 +220,7 @@ page — or an installed app — can be running yesterday's HTML until it reload
 `index.html` loads its own files with the same version on the end:
 
 ```html
-<script src="assets/app.js?v=2026-11-24.6"></script>
+<script src="assets/app.js?v=2026-11-25.1"></script>
 ```
 
 That `?v=` is what stops a browser replaying a cached `app.js` from before your
@@ -242,7 +242,10 @@ and they are different jobs:
   screen. This is built in and needs nothing.
 - **By email** — reaches them even when the site is closed. The partner switches
   it on in their console under *Daily reminder*, and gives the address it should
-  go to (`remindEmail` on their listing). The public listing never shows it.
+  go to (`remindEmail` on their listing). The public listing never shows it. The
+  card says where it stands: **On** with the address and the 8:00 time, **Paused**
+  when an address is saved but the tick is off, **Not on yet** when no address is
+  saved — so nobody has to guess whether the email will come.
 
 `.github/workflows/status-reminders.yml` runs `scripts/status-reminders.mjs` every
 day at **08:00 East Africa Time** (05:00 UTC):
@@ -261,6 +264,12 @@ day at **08:00 East Africa Time** (05:00 UTC):
    Verify `frontbelttechnologiesltd@gmail.com` as a sender address first
    (Senders, domains & IPs → Senders → Add a sender). Brevo emails the address a
    code; without that step every send is refused.
+
+   When the key is created, choose **Restricted** access and give it one row:
+   **Transactional email → All**. Every other row stays **None** — including
+   `Transactional SMS`, which is a separate, paid permission. `Read` on
+   *Transactional email* can look at the log but cannot send, so `All` is the
+   only setting that lets the workflow work.
 2. In GitHub: **Settings → Secrets and variables → Actions** → new secret
    **`BREVO_API_KEY`**, and (optionally) **`SENDER_EMAIL`** if the sender is not
    the Front Belt address.
