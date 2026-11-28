@@ -1,5 +1,5 @@
 {
-  "app": "2026-11-25.4",
+  "app": "2026-11-28.1",
   "icon": "buckle-f-2",
-  "note": "the daily reminder is email only again until texts are revisited"
+  "note": "the reminder goes out at 8:00 and again in the afternoon if the status is still missing"
 }

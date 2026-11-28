@@ -220,7 +220,7 @@ page — or an installed app — can be running yesterday's HTML until it reload
 `index.html` loads its own files with the same version on the end:
 
 ```html
-<script src="assets/app.js?v=2026-11-25.4"></script>
+<script src="assets/app.js?v=2026-11-28.1"></script>
 ```
 
 That `?v=` is what stops a browser replaying a cached `app.js` from before your
@@ -242,13 +242,14 @@ and they are different jobs:
   screen. This is built in and needs nothing.
 - **By email** — reaches them even when the site is closed. The partner switches
   it on in their console under *Daily reminder*, and gives the address it should
-  go to (`remindEmail` on their listing). The public listing never shows it. The
-  card says where it stands: **On** with the address and the 8:00 time, **Paused**
+  go to (`remindEmail` on their listing). The public listing never shows it. It
+  goes out at 8:00, and once more in the afternoon if the status is still
+  missing. The card says where it stands: **On** with the address and the 8:00 time, **Paused**
   when an address is saved but the tick is off, **Not on yet** when no address is
   saved — so nobody has to guess whether the email will come.
 
-`.github/workflows/status-reminders.yml` runs `scripts/status-reminders.mjs` every
-day at **08:00 East Africa Time** (05:00 UTC):
+`.github/workflows/status-reminders.yml` runs `scripts/status-reminders.mjs` twice
+a day — **08:00** and **16:00 East Africa Time** (05:00 and 13:00 UTC):
 
 1. It reads the published listings from Firestore's REST API — the same public
    read the site does, so it needs no service account and no Firebase key.
@@ -256,7 +257,19 @@ day at **08:00 East Africa Time** (05:00 UTC):
    days** and **today's status is still missing**. A day they are closed is never
    a reason to write to them, and a reminder switched off is respected.
 3. It emails each one through [Brevo](https://www.brevo.com) — one short message
-   with a button back to the console.
+   with a button back to the console. The afternoon run says plainly that the
+   status is *still* missing, and a partner who updated in between is not
+   written to again.
+
+   **The clock, not the schedule, picks the message.** GitHub's scheduled runs
+   sit in a best-effort queue and often start hours late, which is why a run
+   meant for the morning could arrive in the evening. So each reminder is
+   offered three times (07:00, 08:00, 09:00 and then 15:00, 16:00, 17:00 EAT)
+   and the script reads the Nairobi hour when it actually starts: before 12:00
+   it sends the morning message, after it the afternoon one, and outside
+   07:00–21:00 it sends nothing. A late start is caught by the next run, and
+   `.reminder-state.json` (carried between runs by the Actions cache) stops the
+   same reminder going out twice in a day.
 
 **To switch it on** (once):
 
@@ -289,7 +302,7 @@ skipped (`no reminder email saved`, `closed today`, `status already saved today`
 Test the decision rules without touching anyone's inbox:
 
 ```bash
-node scripts/status-reminders.mjs --self-test     # the eight cases
+node scripts/status-reminders.mjs --self-test     # the listing, clock and once-a-day cases
 node scripts/status-reminders.mjs --dry-run --explain   # live listings, nothing sent
 ```
 

@@ -1,13 +1,19 @@
 name: Daily status reminders
 
 # Emails a Health partner whose listing has no status for today, on a day they
-# are open. The job reads the published listings (public read, same as the site)
+# are open: once in the morning, and once again in the afternoon if it is still
+# missing. The job reads the published listings (public read, same as the site)
 # and sends through Brevo. Without the BREVO_API_KEY secret it only prints the
 # list, so it is safe to run before setup.
 
 on:
   schedule:
-    - cron: '0 5 * * *' # 08:00 East Africa Time (UTC+3)
+    # East Africa Time is UTC+3. GitHub starts scheduled runs on a best-effort
+    # queue and can be hours late, so each reminder is offered three times: the
+    # script reads the Nairobi clock at run time (morning before 12:00,
+    # afternoon after) and the cache below stops the same one going out twice.
+    - cron: '0 4,5,6 * * *' # 07:00, 08:00, 09:00 EAT — the morning reminder
+    - cron: '0 12,13,14 * * *' # 15:00, 16:00, 17:00 EAT — the afternoon one
   workflow_dispatch:
     inputs:
       dry_run:
@@ -32,6 +38,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      # Which reminders already went out today. Kept in the Actions cache
+      # because the repo is public and this is the job's own bookkeeping.
+      - name: Restore today's reminder state
+        uses: actions/cache/restore@v4
+        with:
+          path: .reminder-state.json
+          key: reminders-${{ github.run_id }}
+          restore-keys: reminders-
       - name: Send the reminders
         env:
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
@@ -41,3 +55,9 @@ jobs:
           TEST_TO: ${{ inputs.test_to }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
         run: node scripts/status-reminders.mjs
+      - name: Save today's reminder state
+        if: always() && hashFiles('.reminder-state.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .reminder-state.json
+          key: reminders-${{ github.run_id }}

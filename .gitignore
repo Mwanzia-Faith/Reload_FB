@@ -1,0 +1,2 @@
+# the reminder job's own bookkeeping, written only inside the workflow
+.reminder-state.json

@@ -445,7 +445,7 @@
       '<div class="remmail">' +
       '<h4><svg class="ic"><use href="#i-bell"/></svg> Email reminder</h4>' +
       '<p class="rem-state' + (remLive ? ' on' : '') + '" id="rem-state">' + remStateText(remAddr, remLive) + '</p>' +
-      '<p class="hint">This is the one that reaches you even when Front Belt is closed. Every morning at 8:00, on a day you are open, if today\'s status is still missing we email you a single line with a link straight back here. Days you are closed are skipped.</p>' +
+      '<p class="hint">This is the one that reaches you even when Front Belt is closed. On a day you are open, if today\'s status is still missing we email you at 8:00, and once more in the afternoon if it is still missing by then. One line, with a link straight back here. Days you are closed are skipped.</p>' +
       '<label>Send it to<input class="field" id="rem-email" type="email" autocomplete="email" value="' + esc(c.remindEmail || (me && me.email) || '') + '" placeholder="you@example.com"></label>' +
       '<label class="chipcheck"><input type="checkbox" id="rem-mail"' + (c.remindOn === false ? '' : ' checked') + '> Email me when I forget</label>' +
       '<button class="btn btn-ghost btn-sm" type="button" id="rem-save"><svg class="ic"><use href="#i-check"/></svg> Save email reminders</button>' +
